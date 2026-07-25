@@ -1,0 +1,29 @@
+# Dependencias
+node_modules/
+**/node_modules/
+
+# Variables de entorno
+.env
+**/.env
+
+# Builds
+build/
+dist/
+**/android/app/build/
+**/ios/build/
+
+# Arduino
+firmware/**/build/
+*.hex
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
