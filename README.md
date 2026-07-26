@@ -43,9 +43,6 @@ del riego.
 | Diseño UI | Figma |
 | Control de versiones | Git + GitHub |
 
-## Equipo
-
-Proyecto desarrollado por estudiantes de Ingeniería de Software - FET.
 
 ## Convención de ramas
 
