@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 import {
   Animated,
-  Dimensions,
   Image,
   Pressable,
   StyleSheet,
@@ -12,8 +11,9 @@ import {
 import GradientBackground from '../components/GradientBackground';
 import { illustrations } from '../constants/images';
 import { colors, radius, spacing, typography } from '../constants/theme';
+import { contentMaxWidth, moderateScale, screen } from '../utils/responsive';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const SCREEN_WIDTH = screen.width;
 
 // FlatList normal no soporta useNativeDriver en su onScroll porque no es
 // un componente "animado". Animated.FlatList sí lo es (por eso el fix).
@@ -141,7 +141,7 @@ function Slide({ item, index, scrollX }) {
         <Image source={item.image} style={styles.image} resizeMode="cover" />
       </Animated.View>
 
-      <Animated.View style={{ opacity }}>
+      <Animated.View style={[styles.textBlock, { opacity }]}>
         <Text style={styles.title}>{item.title}</Text>
         <Text style={styles.description}>{item.description}</Text>
       </Animated.View>
@@ -183,7 +183,9 @@ function Dot({ index, scrollX }) {
   );
 }
 
-const CIRCLE_SIZE = SCREEN_WIDTH * 0.72;
+// Capamos el círculo a un máximo: en un tablet, el 72% del ancho de
+// pantalla sería enorme y se vería desproporcionado frente al texto.
+const CIRCLE_SIZE = Math.min(SCREEN_WIDTH * 0.72, 320);
 
 const styles = StyleSheet.create({
   slide: {
@@ -204,6 +206,10 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  textBlock: {
+    width: '100%',
+    maxWidth: contentMaxWidth,
+  },
   title: {
     ...typography.h1,
     textAlign: 'center',
@@ -213,12 +219,15 @@ const styles = StyleSheet.create({
     ...typography.body,
     textAlign: 'center',
     color: colors.textMuted,
-    lineHeight: 22,
+    lineHeight: moderateScale(22),
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: contentMaxWidth,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xl,
     paddingTop: spacing.md,
@@ -229,8 +238,8 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   dot: {
-    width: 20,
-    height: 8,
+    width: moderateScale(20),
+    height: moderateScale(8),
     borderRadius: radius.pill,
     backgroundColor: colors.primary,
   },

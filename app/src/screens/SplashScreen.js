@@ -3,6 +3,7 @@ import { Animated, StyleSheet } from 'react-native';
 
 import GradientBackground from '../components/GradientBackground';
 import { logo } from '../constants/images';
+import { moderateScale } from '../utils/responsive';
 
 // Cuánto dura el splash antes de pasar al onboarding. Lo dejamos como
 // constante para poder ajustarlo fácil si se siente muy largo/corto.
@@ -53,8 +54,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logo: {
-    width: 96,
-    height: 138,
+    width: moderateScale(96),
+    height: moderateScale(138),
     tintColor: '#FFFFFF',
   },
 });

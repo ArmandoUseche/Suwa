@@ -4,6 +4,7 @@ import GradientBackground from '../components/GradientBackground';
 import { PrimaryButton, SecondaryButton } from '../components/Buttons';
 import { illustrations } from '../constants/images';
 import { spacing, typography } from '../constants/theme';
+import { contentMaxWidth, moderateVerticalScale } from '../utils/responsive';
 
 // Pantalla "Bienvenido a SUWA" (mockup 5): ilustración del kit,
 // título, y los dos accesos a Registro / Login.
@@ -41,18 +42,24 @@ const styles = StyleSheet.create({
   },
   content: {
     alignItems: 'center',
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: contentMaxWidth,
     paddingTop: spacing.xl * 1.5,
     paddingHorizontal: spacing.lg,
   },
   hero: {
     width: '80%',
-    height: 260,
+    height: moderateVerticalScale(260),
     marginBottom: spacing.lg,
   },
   title: {
     textAlign: 'center',
   },
   actions: {
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: contentMaxWidth,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xl,
   },
