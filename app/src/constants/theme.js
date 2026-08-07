@@ -1,6 +1,12 @@
 // Paleta y estilos base de SUWA, tomados de los mockups de Figma.
 // Centralizamos esto acá para no repetir valores hardcodeados en cada pantalla
 // y para poder ajustar el look completo de la app desde un solo lugar.
+//
+// spacing y typography pasan por moderateScale: los valores de abajo son
+// los del diseño de referencia (celular), pero el resultado ya viene
+// ajustado al tamaño real del dispositivo (celular chico, celular grande
+// o tablet), sin tener que tocar cada pantalla una por una.
+import { moderateScale } from '../utils/responsive';
 
 export const colors = {
   // Verde principal: botones, iconos activos, textos destacados
@@ -34,38 +40,41 @@ export const colors = {
 export const typography = {
   // Títulos grandes tipo "Bienvenido a SUWA"
   h1: {
-    fontSize: 28,
+    fontSize: moderateScale(28),
     fontWeight: '700',
     color: colors.primaryDark,
   },
   h2: {
-    fontSize: 20,
+    fontSize: moderateScale(20),
     fontWeight: '700',
     color: colors.textDark,
   },
   body: {
-    fontSize: 15,
+    fontSize: moderateScale(15),
     fontWeight: '400',
     color: colors.textDark,
   },
   caption: {
-    fontSize: 13,
+    fontSize: moderateScale(13),
     fontWeight: '400',
     color: colors.textMuted,
   },
   button: {
-    fontSize: 16,
+    fontSize: moderateScale(16),
     fontWeight: '600',
     color: colors.textOnPrimary,
   },
 };
 
+// El spacing usa un factor de escalado más bajo (0.3) a propósito: si
+// escalara igual que las fuentes, en tablets los márgenes quedarían
+// enormes y el contenido se vería perdido en el centro de la pantalla.
 export const spacing = {
-  xs: 4,
-  sm: 8,
-  md: 16,
-  lg: 24,
-  xl: 32,
+  xs: moderateScale(4, 0.3),
+  sm: moderateScale(8, 0.3),
+  md: moderateScale(16, 0.3),
+  lg: moderateScale(24, 0.3),
+  xl: moderateScale(32, 0.3),
 };
 
 export const radius = {
