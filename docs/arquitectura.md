@@ -40,3 +40,17 @@
 - Wireframes de las pantallas (Figma).
 - Mecanismo real para que el firmware reciba `comando_riego`
   (WebSocket en ESP32 vs. polling HTTP).
+
+## Pendiente de definir en la siguiente sesión
+
+- Diagrama de casos de uso.
+- Mecanismo real para que el firmware reciba `comando_riego`
+  (WebSocket en ESP32 vs. polling HTTP).
+
+  ## Nota de arquitectura — Frontend
+
+El cliente de usuario es una **aplicación móvil nativa** desarrollada con
+**React Native (Expo)**, ubicada en `app/`. No existe una versión web del
+dashboard; se descartó un scaffold inicial en Vite/React (web) para
+mantener coherencia con la Propuesta de Proyecto aprobada por el Comité
+Curricular, que especifica React Native como tecnología de frontend.
