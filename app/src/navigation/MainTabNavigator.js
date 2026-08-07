@@ -1,5 +1,6 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import MonitoreoScreen from '../screens/MonitoreoScreen';
 import HistorialScreen from '../screens/HistorialScreen';
@@ -8,6 +9,7 @@ import MisPlantasScreen from '../screens/MisPlantasScreen';
 import PerfilScreen from '../screens/PerfilScreen';
 import { icons } from '../constants/images';
 import { colors, spacing, typography } from '../constants/theme';
+import { moderateScale } from '../utils/responsive';
 
 const Tab = createBottomTabNavigator();
 
@@ -46,11 +48,16 @@ function ScanTabButton({ onPress }) {
 }
 
 export default function MainTabNavigator() {
+  // En celulares con barra de gestos (Android) o home indicator (iPhone),
+  // la barra de tabs necesita este espacio extra abajo; si no, el sistema
+  // la tapa parcialmente o los toques quedan muy pegados al borde.
+  const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [styles.tabBar, { height: TAB_BAR_HEIGHT + insets.bottom, paddingBottom: insets.bottom + spacing.xs }],
         tabBarShowLabel: false,
       }}
     >
@@ -109,12 +116,15 @@ export default function MainTabNavigator() {
   );
 }
 
-const TAB_BAR_HEIGHT = 64;
-const SCAN_BUTTON_SIZE = 56;
+// Estas son las medidas "base" (sin el inset de seguridad inferior, que
+// se suma aparte según el dispositivo). Se escalan con moderateScale para
+// que la barra no se vea diminuta en un tablet ni exagerada en un celular
+// chico.
+const TAB_BAR_HEIGHT = moderateScale(64, 0.3);
+const SCAN_BUTTON_SIZE = moderateScale(56);
 
 const styles = StyleSheet.create({
   tabBar: {
-    height: TAB_BAR_HEIGHT,
     backgroundColor: colors.background,
     borderTopWidth: 1,
     borderTopColor: colors.border,
@@ -126,15 +136,15 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   tabIcon: {
-    width: 22,
-    height: 22,
+    width: moderateScale(22),
+    height: moderateScale(22),
   },
   tabLabel: {
     ...typography.caption,
-    fontSize: 11,
+    fontSize: moderateScale(11),
   },
   scanButtonWrapper: {
-    top: -20,
+    top: -moderateScale(20),
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
@@ -154,8 +164,8 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   scanIcon: {
-    width: 26,
-    height: 26,
+    width: moderateScale(26),
+    height: moderateScale(26),
     tintColor: colors.textOnPrimary,
   },
 });
