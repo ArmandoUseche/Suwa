@@ -2,23 +2,47 @@ import { useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  View,
 } from 'react-native';
 
 import GradientBackground from '../components/GradientBackground';
 import FormTextInput from '../components/FormTextInput';
 import { PrimaryButton } from '../components/Buttons';
-import { spacing, typography } from '../constants/theme';
+import { colors, spacing, typography } from '../constants/theme';
 
-// Formulario de Login (mockup 9). Por ahora solo maneja el estado de los
-// campos; la validación y el submit real van en el siguiente commit.
-export default function LoginScreen() {
+function getFormErrors(form) {
+  const errors = {};
+  if (!form.correo.trim()) errors.correo = 'Ingresa tu correo electrónico';
+  if (!form.contrasena) errors.contrasena = 'Ingresa tu contraseña';
+  return errors;
+}
+
+// Formulario de Login (mockup 9).
+export default function LoginScreen({ navigation }) {
   const [form, setForm] = useState({ correo: '', contrasena: '' });
+  const [errorMessage, setErrorMessage] = useState(null);
 
   const updateField = (field) => (value) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  const handleSubmit = () => {
+    const errors = getFormErrors(form);
+    const firstError = Object.values(errors)[0];
+
+    if (firstError) {
+      setErrorMessage(firstError);
+      return;
+    }
+
+    setErrorMessage(null);
+    // TODO(backend): conectar con el endpoint real de login cuando
+    // esté disponible en el contrato de API.
+    navigation.replace('Main');
+  };
 
   return (
     <GradientBackground>
@@ -46,11 +70,28 @@ export default function LoginScreen() {
             isPassword
           />
 
+          <Pressable style={styles.forgotPasswordRow}>
+            <Text style={styles.forgotPasswordText}>
+              ¿Olvidaste tu contraseña?
+            </Text>
+          </Pressable>
+
+          {errorMessage && (
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          )}
+
           <PrimaryButton
             label="Iniciar sesión"
-            onPress={() => {}}
+            onPress={handleSubmit}
             style={styles.submitButton}
           />
+
+          <View style={styles.registerRow}>
+            <Text style={typography.caption}>¿No tienes una cuenta? </Text>
+            <Pressable onPress={() => navigation.navigate('Register')}>
+              <Text style={styles.registerLink}>Regístrate</Text>
+            </Pressable>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </GradientBackground>
@@ -76,7 +117,30 @@ const styles = StyleSheet.create({
     ...typography.body,
     marginBottom: spacing.lg,
   },
+  forgotPasswordRow: {
+    alignItems: 'flex-end',
+    marginBottom: spacing.lg,
+  },
+  forgotPasswordText: {
+    ...typography.caption,
+    color: colors.primaryDark,
+  },
+  errorText: {
+    color: colors.danger,
+    fontSize: 13,
+    marginBottom: spacing.md,
+  },
   submitButton: {
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
+  },
+  registerRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: spacing.lg,
+  },
+  registerLink: {
+    ...typography.caption,
+    color: colors.primaryDark,
+    fontWeight: '700',
   },
 });
