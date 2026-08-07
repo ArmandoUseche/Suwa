@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import GradientBackground from '../components/GradientBackground';
 import { PrimaryButton } from '../components/Buttons';
 import { colors, spacing, typography } from '../constants/theme';
+import { contentMaxWidth, moderateScale } from '../utils/responsive';
 
 // Pantalla "¡Cuenta creada con éxito!" (mockup 7). Las dos chispitas
 // verdes hacen un pop-in con rebote en vez de aparecer estáticas.
@@ -37,22 +39,22 @@ export default function RegisterSuccessScreen({ navigation }) {
   return (
     <GradientBackground style={styles.container}>
       <View style={styles.sparksRow}>
-        <Animated.Text
-          style={[styles.sparkBig, { transform: [{ scale: bigSparkScale }] }]}
+        <Animated.View
+          style={{ transform: [{ scale: bigSparkScale }] }}
         >
-          ✦
-        </Animated.Text>
-        <Animated.Text
+          <Ionicons name="sparkles" size={moderateScale(40)} color={colors.primaryDark} />
+        </Animated.View>
+        <Animated.View
           style={[
-            styles.sparkSmall,
+            styles.smallSparkWrapper,
             { transform: [{ scale: smallSparkScale }] },
           ]}
         >
-          ✦
-        </Animated.Text>
+          <Ionicons name="sparkles" size={moderateScale(24)} color={colors.primary} />
+        </Animated.View>
       </View>
 
-      <Animated.View style={{ opacity: contentOpacity }}>
+      <Animated.View style={[styles.content, { opacity: contentOpacity }]}>
         <Text style={styles.title}>¡Cuenta creada con éxito!</Text>
         <Text style={styles.subtitle}>
           Verifica tu correo electrónico para confirmar tu cuenta.
@@ -79,14 +81,13 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     marginBottom: spacing.lg,
   },
-  sparkBig: {
-    fontSize: 40,
-    color: colors.primaryDark,
-    marginRight: spacing.sm,
+  smallSparkWrapper: {
+    marginLeft: spacing.sm,
   },
-  sparkSmall: {
-    fontSize: 24,
-    color: colors.primary,
+  content: {
+    width: '100%',
+    maxWidth: contentMaxWidth,
+    alignItems: 'center',
   },
   title: {
     ...typography.h1,
@@ -101,5 +102,6 @@ const styles = StyleSheet.create({
   },
   button: {
     minWidth: 220,
+    width: '100%',
   },
 });
