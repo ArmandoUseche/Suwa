@@ -2,7 +2,6 @@ import { useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
-  FlatList,
   Image,
   Pressable,
   StyleSheet,
@@ -15,6 +14,10 @@ import { illustrations } from '../constants/images';
 import { colors, radius, spacing, typography } from '../constants/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// FlatList normal no soporta useNativeDriver en su onScroll porque no es
+// un componente "animado". Animated.FlatList sí lo es (por eso el fix).
+const AnimatedFlatList = Animated.FlatList;
 
 // Textos y orden tomados directo de los mockups (slides 2, 3 y 4 de Figma).
 const SLIDES = [
@@ -70,7 +73,7 @@ export default function OnboardingScreen({ navigation }) {
 
   return (
     <GradientBackground>
-      <FlatList
+      <AnimatedFlatList
         ref={listRef}
         data={SLIDES}
         horizontal
