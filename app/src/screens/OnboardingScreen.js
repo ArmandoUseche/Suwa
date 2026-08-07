@@ -149,6 +149,11 @@ function Slide({ item, index, scrollX }) {
   );
 }
 
+// El native driver solo puede animar 'transform' y 'opacity', nunca
+// propiedades de layout como 'width' directamente (por eso este error:
+// "Style property 'width' is not supported by native animated module").
+// Por eso el punto activo se "agranda" con scaleX en vez de cambiar su
+// ancho real.
 function Dot({ index, scrollX }) {
   const inputRange = [
     (index - 1) * SCREEN_WIDTH,
@@ -156,9 +161,9 @@ function Dot({ index, scrollX }) {
     (index + 1) * SCREEN_WIDTH,
   ];
 
-  const dotWidth = scrollX.interpolate({
+  const scaleX = scrollX.interpolate({
     inputRange,
-    outputRange: [8, 20, 8],
+    outputRange: [0.4, 1, 0.4],
     extrapolate: 'clamp',
   });
 
@@ -170,7 +175,10 @@ function Dot({ index, scrollX }) {
 
   return (
     <Animated.View
-      style={[styles.dot, { width: dotWidth, opacity: dotOpacity }]}
+      style={[
+        styles.dot,
+        { opacity: dotOpacity, transform: [{ scaleX }] },
+      ]}
     />
   );
 }
@@ -221,6 +229,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   dot: {
+    width: 20,
     height: 8,
     borderRadius: radius.pill,
     backgroundColor: colors.primary,
