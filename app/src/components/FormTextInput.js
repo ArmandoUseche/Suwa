@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import { colors, radius, spacing, typography } from '../constants/theme';
+import { moderateScale } from '../utils/responsive';
 
 // Input de texto usado en Registro y Login. Soporta un ícono de "ojo"
 // a la derecha para mostrar/ocultar contraseña, porque así está en el
@@ -30,7 +32,11 @@ export default function FormTextInput({
           hitSlop={10}
           style={styles.eyeButton}
         >
-          <Text style={styles.eyeIcon}>{isPasswordVisible ? '🙈' : '👁️'}</Text>
+          <Ionicons
+            name={isPasswordVisible ? 'eye-off' : 'eye'}
+            size={moderateScale(20)}
+            color={colors.textMuted}
+          />
         </Pressable>
       )}
     </View>
@@ -54,8 +60,5 @@ const styles = StyleSheet.create({
   },
   eyeButton: {
     padding: spacing.xs,
-  },
-  eyeIcon: {
-    fontSize: 18,
   },
 });
