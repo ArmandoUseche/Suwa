@@ -13,6 +13,7 @@ import GradientBackground from '../components/GradientBackground';
 import FormTextInput from '../components/FormTextInput';
 import { PrimaryButton } from '../components/Buttons';
 import { colors, spacing, typography } from '../constants/theme';
+import { contentMaxWidth } from '../utils/responsive';
 
 function getFormErrors(form) {
   const errors = {};
@@ -103,6 +104,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: contentMaxWidth,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.xl * 1.5,
     paddingBottom: spacing.xl,

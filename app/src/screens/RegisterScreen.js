@@ -13,6 +13,7 @@ import GradientBackground from '../components/GradientBackground';
 import FormTextInput from '../components/FormTextInput';
 import { PrimaryButton } from '../components/Buttons';
 import { colors, radius, spacing, typography } from '../constants/theme';
+import { contentMaxWidth } from '../utils/responsive';
 
 // Reglas de validación del formulario de Registro. Las separamos de la
 // pantalla para que sean fáciles de testear/ajustar sin tocar el JSX.
@@ -147,6 +148,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: contentMaxWidth,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.xl * 1.5,
     paddingBottom: spacing.xl,
