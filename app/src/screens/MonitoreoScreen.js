@@ -22,14 +22,11 @@ import { moderateScale } from '../utils/responsive';
 // quedan proporcionados entre sí aunque cambie el tamaño.
 const PLANT_PHOTO_SIZE = moderateScale(150);
 
-// Margen fijo extra (además del inset de seguridad) para bajar todo el
-// bloque de "sin dispositivo" y que no quede pegado justo debajo del
-// status bar con todo el espacio libre amontonado al final. No es
-// centrado a toda pantalla (eso se probó y dejaba un hueco raro arriba
-// en mockups con banner pegado al top) — es simplemente más margen
-// superior fijo. Si en el celular real sigue quedando mucho hueco
-// abajo, subir este número; si el banner queda muy abajo, bajarlo.
-const EMPTY_STATE_TOP_PUSH = moderateScale(90, 0.3);
+// Espacio extra (aparte del margen normal) que se agrega DESPUÉS de la
+// foto, antes del título -- así el banner se queda arriba, pegado al
+// notch como en el mockup, y lo que se corre hacia abajo para llenar el
+// hueco que sobraba es justo a partir de la foto, como se pidió.
+const EMPTY_STATE_EXTRA_GAP = moderateScale(70, 0.3);
 
 // Pantalla de Monitoreo (Paso 5).
 //
@@ -62,7 +59,7 @@ function SinDispositivo() {
         contentContainerStyle={styles.emptyStateScroll}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.bannerSection, { paddingTop: insets.top + EMPTY_STATE_TOP_PUSH }]}>
+        <View style={[styles.bannerSection, { paddingTop: insets.top + spacing.md }]}>
           <PlantGreetingBanner nombre={mockUsuario.nombre} />
         </View>
 
@@ -171,7 +168,11 @@ const styles = StyleSheet.create({
     // (ver PlantPhoto.js) deja la foto claramente flotando sobre fondo
     // blanco, como en el mockup, tocando el banner solo un poco.
     marginTop: -PLANT_PHOTO_SIZE * 0.28,
-    marginBottom: spacing.xl,
+    // El espacio extra va acá (después de la foto), no en el banner: el
+    // banner se queda pegado arriba como en el mockup, y lo que se
+    // corre hacia abajo para llenar el hueco vacío es el título+
+    // descripción+botón, a partir de la foto.
+    marginBottom: spacing.xl + EMPTY_STATE_EXTRA_GAP,
   },
   emptyTitle: {
     fontSize: moderateScale(24),
