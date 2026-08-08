@@ -42,14 +42,18 @@ export default function WelcomeScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: {
-    justifyContent: 'space-between',
+    // El bloque de contenido ocupa todo el espacio disponible y centra
+    // su contenido ahí adentro; los botones quedan pegados abajo porque
+    // no tienen flex (les toca lo que sobra, no compiten por espacio).
+    flex: 1,
   },
   content: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
     width: '100%',
     maxWidth: contentMaxWidth,
-    paddingTop: spacing.xl * 1.5,
     paddingHorizontal: spacing.lg,
   },
   // La foto del kit viene con fondo gris de estudio (no transparente).
