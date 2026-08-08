@@ -1,4 +1,5 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createContext, useCallback, useContext, useRef, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -14,36 +15,98 @@ import { moderateScale } from '../utils/responsive';
 
 const Tab = createBottomTabNavigator();
 
-// Tamaño fijo para todos los labels de la barra de tabs. Se probaron dos
-// enfoques que no funcionaron bien: calcular un tamaño "a ciegas" por
-// fórmula (cortaba texto en celulares reales, no hay forma de medir el
-// ancho real de la fuente sin dispositivo) y adjustsFontSizeToFit (en
-// Android achica cada label un % distinto según su largo, así que las 4
-// etiquetas quedan de tamaños visiblemente distintos). La solución final
-// es un tamaño fijo e igual para todas + más ancho real de contenedor
-// (ver scanBarItem, que le resta espacio al botón central sin texto).
-const TAB_LABEL_SIZE = moderateScale(9, 0.25);
+// Tamaño de letra "ideal" (el que se usaría si hubiera espacio de
+// sobra). El tamaño real que se ve en pantalla casi siempre es más
+// chico que esto -- ver TabLabelScaleContext más abajo.
+const TAB_LABEL_SIZE = moderateScale(11, 0.3);
+
+// Ya se probaron dos enfoques que no funcionaron:
+//  1. Calcular un tamaño de letra fijo "a ciegas" por fórmula -- cortaba
+//     texto en celulares reales porque no hay forma de medir el ancho
+//     real de la fuente sin un dispositivo.
+//  2. `adjustsFontSizeToFit` por label -- en Android cada etiqueta se
+//     achica un % distinto según lo larga que sea, así que las 4 quedan
+//     de tamaños visiblemente distintos entre sí (peor que el corte).
+//
+// Solución real: MEDIR en el propio dispositivo. Cada TabIcon renderiza
+// una copia invisible de su label sin límite de ancho (para saber cuánto
+// mide "de verdad" ese texto) y compara contra el ancho real de su
+// columna (medido con onLayout). Con eso calcula el factor de reducción
+// que necesitaría. Todas las columnas reportan ese factor acá, a este
+// contexto compartido, y se usa el factor MÁS CHICO de las 4 para las 4
+// por igual -- así ninguna se corta y todas quedan del mismo tamaño,
+// sin depender de ningún número adivinado.
+const TabLabelScaleContext = createContext({ scale: 0.82, report: () => {} });
+
+function TabLabelScaleProvider({ children }) {
+  const measurements = useRef({});
+  const [scale, setScale] = useState(0.82);
+
+  const report = useCallback((key, requiredScale) => {
+    measurements.current[key] = requiredScale;
+    const values = Object.values(measurements.current);
+    const min = Math.min(1, ...values);
+    // No dejar que baje de un mínimo legible; si ni así entra, que
+    // trunque con "…" antes que ser ilegible.
+    const clamped = Math.max(0.65, min);
+    setScale((prev) => (Math.abs(prev - clamped) > 0.01 ? clamped : prev));
+  }, []);
+
+  return (
+    <TabLabelScaleContext.Provider value={{ scale, report }}>
+      {children}
+    </TabLabelScaleContext.Provider>
+  );
+}
 
 // Ícono + label de un tab normal (Monitoreo, Historial, Mis plantas, Perfil).
 // Tintamos el PNG con la propiedad tintColor en vez de tener dos assets
 // (activo/inactivo) por ícono.
 function TabIcon({ source, label, focused }) {
   const tint = focused ? colors.primary : colors.textMuted;
+  const { scale, report } = useContext(TabLabelScaleContext);
+  const containerWidth = useRef(null);
+  const naturalWidth = useRef(null);
+
+  const maybeReport = () => {
+    if (containerWidth.current != null && naturalWidth.current != null) {
+      report(label, containerWidth.current / naturalWidth.current);
+    }
+  };
+
   return (
-    <View style={styles.tabIconWrapper}>
+    <View
+      style={styles.tabIconWrapper}
+      onLayout={(e) => {
+        containerWidth.current = e.nativeEvent.layout.width;
+        maybeReport();
+      }}
+    >
       <Image
         source={source}
         style={[styles.tabIcon, { tintColor: tint }]}
         resizeMode="contain"
       />
-      {/* Tamaño fijo e igual para todos los labels (no autoajuste por
-          palabra): con adjustsFontSizeToFit cada etiqueta se achicaba un
-          porcentaje distinto según su largo ("Monitoreo" quedaba más
-          chico que "Perfil"), y esa inconsistencia se veía peor que el
-          corte de palabra. En su lugar, se le da más ancho real al
-          contenedor (ver scanBarItem) y se usa un tamaño de letra fijo
-          ya calculado para entrar en una sola línea con ese ancho. */}
-      <Text style={[styles.tabLabel, { color: tint }]} numberOfLines={1}>
+      <Text
+        style={[
+          styles.tabLabel,
+          { color: tint, fontSize: TAB_LABEL_SIZE * scale, lineHeight: TAB_LABEL_SIZE * scale * 1.1 },
+        ]}
+        numberOfLines={1}
+      >
+        {label}
+      </Text>
+      {/* Copia invisible sin límite de ancho, solo para medir cuánto
+          ocupa este texto "de verdad" a tamaño base. position:absolute
+          para que no afecte el layout real de la columna. */}
+      <Text
+        style={[styles.tabLabel, styles.measureLabel]}
+        numberOfLines={1}
+        onLayout={(e) => {
+          naturalWidth.current = e.nativeEvent.layout.width;
+          maybeReport();
+        }}
+      >
         {label}
       </Text>
     </View>
@@ -78,71 +141,75 @@ export default function MainTabNavigator() {
   const insets = useSafeAreaInsets();
 
   return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: [styles.tabBar, { height: TAB_BAR_HEIGHT + insets.bottom, paddingBottom: insets.bottom + spacing.xs }],
-        tabBarItemStyle: styles.tabBarItem,
-        tabBarShowLabel: false,
-      }}
-    >
-      <Tab.Screen
-        name="Monitoreo"
-        component={MonitoreoScreen}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon source={icons.casa} label="Monitoreo" focused={focused} />
-          ),
+    <TabLabelScaleProvider>
+      <Tab.Navigator
+        screenOptions={{
+          headerShown: false,
+          tabBarStyle: [styles.tabBar, { height: TAB_BAR_HEIGHT + insets.bottom, paddingBottom: insets.bottom + spacing.xs }],
+          tabBarItemStyle: styles.tabBarItem,
+          tabBarShowLabel: false,
         }}
-      />
-      <Tab.Screen
-        name="Historial"
-        component={HistorialScreen}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon
-              source={icons.historia}
-              label="Historial"
-              focused={focused}
-            />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Escanear"
-        component={EscanearScreen}
-        options={{
-          tabBarButton: (props) => <ScanTabButton {...props} />,
-          // El botón central no tiene texto, así que no necesita el
-          // mismo ancho que los otros 4 (que sí tienen label). Achicar
-          // su columna le devuelve ese espacio sobrante a los 4 tabs
-          // con texto, sin depender de ningún cálculo en px fijo.
-          tabBarItemStyle: [styles.tabBarItem, styles.scanBarItem],
-        }}
-      />
-      <Tab.Screen
-        name="MisPlantas"
-        component={MisPlantasScreen}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon
-              source={icons.planta}
-              label="Mis plantas"
-              focused={focused}
-            />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Perfil"
-        component={PerfilScreen}
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon source={icons.avatar} label="Perfil" focused={focused} />
-          ),
-        }}
-      />
-    </Tab.Navigator>
+      >
+        <Tab.Screen
+          name="Monitoreo"
+          component={MonitoreoScreen}
+          options={{
+            tabBarIcon: ({ focused }) => (
+              <TabIcon source={icons.casa} label="Monitoreo" focused={focused} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Historial"
+          component={HistorialScreen}
+          options={{
+            tabBarIcon: ({ focused }) => (
+              <TabIcon
+                source={icons.historia}
+                label="Historial"
+                focused={focused}
+              />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Escanear"
+          component={EscanearScreen}
+          options={{
+            tabBarButton: (props) => <ScanTabButton {...props} />,
+            // El botón central no tiene texto: en vez de compartir el
+            // mismo flex que los otros 4 (que sí tienen label), se le da
+            // un ancho FIJO (justo el que necesita el círculo) y flex:0,
+            // para que quede totalmente afuera del reparto flex. Así los
+            // otros 4 se dividen el ancho restante completo entre ellos
+            // (antes competían también por el espacio del botón).
+            tabBarItemStyle: [styles.tabBarItem, styles.scanBarItem],
+          }}
+        />
+        <Tab.Screen
+          name="MisPlantas"
+          component={MisPlantasScreen}
+          options={{
+            tabBarIcon: ({ focused }) => (
+              <TabIcon
+                source={icons.planta}
+                label="Mis plantas"
+                focused={focused}
+              />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Perfil"
+          component={PerfilScreen}
+          options={{
+            tabBarIcon: ({ focused }) => (
+              <TabIcon source={icons.avatar} label="Perfil" focused={focused} />
+            ),
+          }}
+        />
+      </Tab.Navigator>
+    </TabLabelScaleProvider>
   );
 }
 
@@ -165,7 +232,8 @@ const styles = StyleSheet.create({
   },
   scanBarItem: {
     paddingHorizontal: 0,
-    flex: 0.45,
+    flex: 0,
+    width: SCAN_BUTTON_SIZE + moderateScale(12),
   },
   tabIconWrapper: {
     width: '100%',
@@ -184,6 +252,15 @@ const styles = StyleSheet.create({
     fontSize: TAB_LABEL_SIZE,
     lineHeight: TAB_LABEL_SIZE * 1.1,
     textAlign: 'center',
+  },
+  // Copia invisible usada solo para medir el ancho real del texto sin
+  // límite de ancho. position:'absolute' para que no ocupe espacio ni
+  // afecte el layout real de la columna.
+  measureLabel: {
+    position: 'absolute',
+    opacity: 0,
+    left: -9999,
+    fontSize: TAB_LABEL_SIZE,
   },
   scanButtonWrapper: {
     top: -moderateScale(20),
