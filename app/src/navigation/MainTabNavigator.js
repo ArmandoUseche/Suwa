@@ -170,8 +170,8 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     ...typography.caption,
+    fontFamily: 'Inter_500Medium',
     fontSize: TAB_LABEL_SIZE,
-    fontWeight: '500',
   },
   scanButtonWrapper: {
     top: -moderateScale(20),
