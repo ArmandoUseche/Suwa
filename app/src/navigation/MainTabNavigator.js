@@ -14,16 +14,15 @@ import { moderateScale } from '../utils/responsive';
 
 const Tab = createBottomTabNavigator();
 
-// Antes intentaba calcular un tamaño de letra "a ciegas" que entrara en
-// una sola línea (probé varias fórmulas y siempre terminaba cortando
-// texto en algún celular real, porque no tengo forma de medir el ancho
-// real de la fuente sin un dispositivo). Cambio de enfoque, mucho más
-// robusto: en vez de forzar una sola línea, se permiten 2 líneas
-// (`numberOfLines={2}`) con texto centrado. Así "Mis plantas" pasa a
-// "Mis" / "plantas" en vez de cortarse a la mitad de una palabra -- el
-// texto completo siempre se lee, sin depender de calcular el ancho
-// exacto de cada carácter.
-const TAB_LABEL_SIZE = moderateScale(10, 0.3);
+// Tamaño fijo para todos los labels de la barra de tabs. Se probaron dos
+// enfoques que no funcionaron bien: calcular un tamaño "a ciegas" por
+// fórmula (cortaba texto en celulares reales, no hay forma de medir el
+// ancho real de la fuente sin dispositivo) y adjustsFontSizeToFit (en
+// Android achica cada label un % distinto según su largo, así que las 4
+// etiquetas quedan de tamaños visiblemente distintos). La solución final
+// es un tamaño fijo e igual para todas + más ancho real de contenedor
+// (ver scanBarItem, que le resta espacio al botón central sin texto).
+const TAB_LABEL_SIZE = moderateScale(9, 0.25);
 
 // Ícono + label de un tab normal (Monitoreo, Historial, Mis plantas, Perfil).
 // Tintamos el PNG con la propiedad tintColor en vez de tener dos assets
@@ -37,19 +36,14 @@ function TabIcon({ source, label, focused }) {
         style={[styles.tabIcon, { tintColor: tint }]}
         resizeMode="contain"
       />
-      {/* numberOfLines={1} + adjustsFontSizeToFit: en Android, el
-          autoajuste de letra de RN no funciona de forma confiable en
-          modo multilínea (por eso numberOfLines={2} seguía cortando
-          palabras a la mitad). Forzando una sola línea, el sistema
-          achica la letra lo que haga falta (hasta minimumFontScale)
-          para que la palabra completa quepa siempre, sin adivinar un
-          tamaño fijo por adelantado. */}
-      <Text
-        style={[styles.tabLabel, { color: tint }]}
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.6}
-      >
+      {/* Tamaño fijo e igual para todos los labels (no autoajuste por
+          palabra): con adjustsFontSizeToFit cada etiqueta se achicaba un
+          porcentaje distinto según su largo ("Monitoreo" quedaba más
+          chico que "Perfil"), y esa inconsistencia se veía peor que el
+          corte de palabra. En su lugar, se le da más ancho real al
+          contenedor (ver scanBarItem) y se usa un tamaño de letra fijo
+          ya calculado para entrar en una sola línea con ese ancho. */}
+      <Text style={[styles.tabLabel, { color: tint }]} numberOfLines={1}>
         {label}
       </Text>
     </View>
@@ -171,7 +165,7 @@ const styles = StyleSheet.create({
   },
   scanBarItem: {
     paddingHorizontal: 0,
-    flex: 0.6,
+    flex: 0.45,
   },
   tabIconWrapper: {
     width: '100%',
