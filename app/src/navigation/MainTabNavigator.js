@@ -18,17 +18,17 @@ const Tab = createBottomTabNavigator();
 // que cada uno recibe screen.width / 5. Calculamos el tamaño de letra
 // más grande que deja entrar la etiqueta MÁS LARGA ("Mis plantas", 11
 // caracteres) en una sola línea dentro de ese espacio, y usamos ese
-// mismo tamaño para las 4 etiquetas. Esto es mejor que un valor fijo a
-// mano (que puede quedar corto en un celular angosto y provocar el
-// "Mo..." truncado) y mejor que adjustsFontSizeToFit por etiqueta (que
-// hacía que cada una terminara en un tamaño distinto).
+// mismo tamaño para las 4 etiquetas.
+//
+// El intento anterior (factor 0.56) todavía se cortaba en el celular de
+// Joselin — el ancho real de un caracter en negrita resultó ser mayor a
+// lo estimado. Subimos el factor a 0.78 (bastante más conservador) y
+// bajamos el peso de fuente a '500' (en vez de '600', que es más ancho)
+// para tener margen de sobra en vez de quedar de nuevo justos.
 const TAB_SLOT_WIDTH = screen.width / 5 - 6; // 6 = padding de aire
 const LONGEST_LABEL_CHARS = 'Mis plantas'.length;
-// 0.56 es un estimado conservador de cuánto ancho ocupa cada caracter
-// en un texto en negrita (peor caso que un ancho promedio real), para
-// no quedarnos cortos y terminar truncando en algún celular.
-const rawLabelSize = TAB_SLOT_WIDTH / (LONGEST_LABEL_CHARS * 0.56);
-const TAB_LABEL_SIZE = Math.min(Math.max(rawLabelSize, 9), 12);
+const rawLabelSize = TAB_SLOT_WIDTH / (LONGEST_LABEL_CHARS * 0.78);
+const TAB_LABEL_SIZE = Math.min(Math.max(rawLabelSize, 8), 11);
 
 // Ícono + label de un tab normal (Monitoreo, Historial, Mis plantas, Perfil).
 // Tintamos el PNG con la propiedad tintColor en vez de tener dos assets
@@ -165,13 +165,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
   },
   tabIcon: {
-    width: moderateScale(24),
-    height: moderateScale(24),
+    width: moderateScale(22),
+    height: moderateScale(22),
   },
   tabLabel: {
     ...typography.caption,
     fontSize: TAB_LABEL_SIZE,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   scanButtonWrapper: {
     top: -moderateScale(20),
