@@ -49,30 +49,33 @@ export const colors = {
 };
 
 export const typography = {
-  // Títulos grandes tipo "Bienvenido a SUWA"
+  // Títulos grandes tipo "Bienvenido a SUWA". Rozha One es una fuente
+  // "display" (con serifas) y solo trae un peso (400); no hace falta
+  // fontWeight — poner uno igual no cambia nada porque la fuente
+  // cargada ya es la única variante que existe.
   h1: {
+    fontFamily: 'RozhaOne_400Regular',
     fontSize: moderateScale(30),
-    fontWeight: '700',
     color: colors.primaryDark,
   },
   h2: {
+    fontFamily: 'RozhaOne_400Regular',
     fontSize: moderateScale(20),
-    fontWeight: '700',
     color: colors.textDark,
   },
   body: {
+    fontFamily: 'Inter_400Regular',
     fontSize: moderateScale(16),
-    fontWeight: '400',
     color: colors.textDark,
   },
   caption: {
+    fontFamily: 'Inter_400Regular',
     fontSize: moderateScale(13),
-    fontWeight: '400',
     color: colors.textMuted,
   },
   button: {
+    fontFamily: 'RozhaOne_400Regular',
     fontSize: moderateScale(16),
-    fontWeight: '600',
     color: colors.textOnPrimary,
   },
 };
