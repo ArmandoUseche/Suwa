@@ -4,16 +4,19 @@ import GradientBackground from '../components/GradientBackground';
 import { PrimaryButton, SecondaryButton } from '../components/Buttons';
 import { illustrations } from '../constants/images';
 import { colors, spacing, typography } from '../constants/theme';
-import { contentMaxWidth, screen } from '../utils/responsive';
+import { contentMaxWidth, moderateScale, screen } from '../utils/responsive';
 
-const HERO_SIZE = Math.min(screen.width * 0.68, 300);
+const HERO_SIZE = Math.min(screen.width * 0.8, 340);
 
-// Pantalla "Bienvenido a SUWA" (mockup 5): ilustración del kit,
-// título, y los dos accesos a Registro / Login.
+// Pantalla "Bienvenido a SUWA" (mockup 5): título, ilustración del kit,
+// y los dos accesos a Registro / Login. El orden es título -> imagen
+// (así está en el mockup, no al revés).
 export default function WelcomeScreen({ navigation }) {
   return (
-    <GradientBackground style={styles.container}>
+    <GradientBackground style={styles.container} variant="welcome">
       <View style={styles.content}>
+        <Text style={styles.title}>Bienvenido{'\n'}a SUWA</Text>
+
         <View style={styles.heroCircle}>
           <Image
             source={illustrations.welcomeHero}
@@ -21,8 +24,6 @@ export default function WelcomeScreen({ navigation }) {
             resizeMode="cover"
           />
         </View>
-
-        <Text style={[typography.h1, styles.title]}>Bienvenido{'\n'}a SUWA</Text>
       </View>
 
       <View style={styles.actions}>
@@ -66,13 +67,15 @@ const styles = StyleSheet.create({
     borderRadius: HERO_SIZE / 2,
     overflow: 'hidden',
     backgroundColor: colors.surface,
-    marginBottom: spacing.lg,
+    marginTop: spacing.lg,
   },
   hero: {
     width: '100%',
     height: '100%',
   },
   title: {
+    ...typography.h1,
+    fontSize: moderateScale(34),
     textAlign: 'center',
   },
   actions: {
