@@ -18,11 +18,12 @@ const Tab = createBottomTabNavigator();
 // Tintamos el PNG con la propiedad tintColor en vez de tener dos assets
 // (activo/inactivo) por ícono.
 //
-// numberOfLines + adjustsFontSizeToFit: con 5 items en la barra (4 tabs +
-// el botón de Escanear), cada uno tiene poco ancho disponible y una
-// etiqueta como "Monitoreo" no entraba en una sola línea — se partía a
-// la mitad ("Monit" / "oreo"). Con esto, en vez de partirse, el texto
-// achica su tamaño lo necesario para entrar en una sola línea.
+// Importante: el fontSize es un valor FIJO (no adjustsFontSizeToFit).
+// Antes cada etiqueta se autoachicaba de forma independiente según su
+// propio largo de texto ("Monitoreo" se achicaba más que "Perfil"), y
+// terminaban con tamaños distintos entre sí. Ahora todas usan el mismo
+// tamaño; ese tamaño ya está elegido para que quepa incluso la etiqueta
+// más larga ("Mis plantas") en una sola línea.
 function TabIcon({ source, label, focused }) {
   const tint = focused ? colors.primary : colors.textMuted;
   return (
@@ -32,12 +33,7 @@ function TabIcon({ source, label, focused }) {
         style={[styles.tabIcon, { tintColor: tint }]}
         resizeMode="contain"
       />
-      <Text
-        style={[styles.tabLabel, { color: tint }]}
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.75}
-      >
+      <Text style={[styles.tabLabel, { color: tint }]} numberOfLines={1} ellipsizeMode="tail">
         {label}
       </Text>
     </View>
@@ -138,7 +134,7 @@ export default function MainTabNavigator() {
 // se suma aparte según el dispositivo). Se escalan con moderateScale para
 // que la barra no se vea diminuta en un tablet ni exagerada en un celular
 // chico.
-const TAB_BAR_HEIGHT = moderateScale(64, 0.3);
+const TAB_BAR_HEIGHT = moderateScale(68, 0.3);
 const SCAN_BUTTON_SIZE = moderateScale(56);
 
 const styles = StyleSheet.create({
@@ -152,16 +148,19 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 2,
-    paddingHorizontal: 2,
+    gap: 3,
+    paddingHorizontal: 1,
   },
   tabIcon: {
-    width: moderateScale(22),
-    height: moderateScale(22),
+    width: moderateScale(24),
+    height: moderateScale(24),
   },
   tabLabel: {
     ...typography.caption,
-    fontSize: moderateScale(11),
+    // Tamaño fijo (factor de escalado bajo, 0.3, igual que spacing) para
+    // que en pantallas grandes no crezca tanto como para no caber.
+    fontSize: moderateScale(10.5, 0.3),
+    fontWeight: '600',
   },
   scanButtonWrapper: {
     top: -moderateScale(20),
