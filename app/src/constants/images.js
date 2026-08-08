@@ -6,7 +6,7 @@ export const illustrations = {
   onboardingMonitoreo: require('../assets/illustrations/onboarding-monitoreo.jpg'),
   onboardingRiego: require('../assets/illustrations/onboarding-riego.jpg'),
   onboardingAlertas: require('../assets/illustrations/onboarding-alertas.jpg'),
-  welcomeHero: require('../assets/illustrations/welcome-hero.jpg'),
+  welcomeHero: require('../assets/illustrations/welcome-hero-cutout.png'),
   // Foto de fondo del banner de saludo en Monitoreo (mockup: "Hola, [nombre]").
   monitoreoSaludoBg: require('../assets/illustrations/monitoreo-saludo-bg.jpg'),
   // Foto real de la planta para el círculo de Monitoreo (reemplaza el
