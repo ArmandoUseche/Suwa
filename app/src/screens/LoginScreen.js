@@ -13,7 +13,7 @@ import GradientBackground from '../components/GradientBackground';
 import FormTextInput from '../components/FormTextInput';
 import { PrimaryButton } from '../components/Buttons';
 import { colors, spacing, typography } from '../constants/theme';
-import { contentMaxWidth } from '../utils/responsive';
+import { contentMaxWidth, moderateScale } from '../utils/responsive';
 
 function getFormErrors(form) {
   const errors = {};
@@ -104,21 +104,23 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
     alignSelf: 'center',
     width: '100%',
     maxWidth: contentMaxWidth,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl * 1.5,
-    paddingBottom: spacing.xl,
+    paddingVertical: spacing.xl,
   },
   title: {
     ...typography.h1,
-    fontSize: 22,
+    fontSize: moderateScale(22),
     textAlign: 'center',
     marginBottom: spacing.sm,
   },
   subtitle: {
     ...typography.body,
+    textAlign: 'center',
     marginBottom: spacing.lg,
   },
   forgotPasswordRow: {
@@ -131,7 +133,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: colors.danger,
-    fontSize: 13,
+    fontSize: moderateScale(13),
     marginBottom: spacing.md,
   },
   submitButton: {
