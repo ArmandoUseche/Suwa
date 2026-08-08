@@ -1,4 +1,5 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import PlantGreetingBanner from '../components/PlantGreetingBanner';
 import PlantPhoto from '../components/PlantPhoto';
@@ -19,7 +20,7 @@ import { moderateScale } from '../utils/responsive';
 // estados; la cantidad que se superpone sobre el banner (en el estado
 // sin vincular) se calcula a partir de este mismo valor, así siempre
 // quedan proporcionados entre sí aunque cambie el tamaño.
-const PLANT_PHOTO_SIZE = moderateScale(120);
+const PLANT_PHOTO_SIZE = moderateScale(150);
 
 // Pantalla de Monitoreo (Paso 5).
 //
@@ -41,13 +42,20 @@ export default function MonitoreoScreen() {
 }
 
 function SinDispositivo() {
+  // El banner no debe pegarse contra el notch/status bar -- en el
+  // mockup flota con margen arriba. insets.top es el alto real del
+  // notch/status bar de este dispositivo puntual.
+  const insets = useSafeAreaInsets();
+
   return (
     <View style={styles.plainContainer}>
       <ScrollView
         contentContainerStyle={styles.emptyStateScroll}
         showsVerticalScrollIndicator={false}
       >
-        <PlantGreetingBanner nombre={mockUsuario.nombre} />
+        <View style={[styles.bannerSection, { paddingTop: insets.top + spacing.md }]}>
+          <PlantGreetingBanner nombre={mockUsuario.nombre} />
+        </View>
 
         {/* Superpuesta sobre el borde inferior del banner (no debajo,
             con un espacio) para que banner + foto se lean como una sola
@@ -74,6 +82,7 @@ function SinDispositivo() {
 }
 
 function ConDispositivo() {
+  const insets = useSafeAreaInsets();
   const lectura = mockUltimaLectura;
 
   return (
@@ -82,7 +91,9 @@ function ConDispositivo() {
         contentContainerStyle={styles.dashboardScroll}
         showsVerticalScrollIndicator={false}
       >
-        <PlantGreetingBanner nombre={mockUsuario.nombre} kitConectado />
+        <View style={[styles.bannerSection, { paddingTop: insets.top + spacing.md }]}>
+          <PlantGreetingBanner nombre={mockUsuario.nombre} kitConectado />
+        </View>
 
         <View style={styles.plantCard}>
           <Text style={styles.plantCardTitle}>Planta</Text>
@@ -134,13 +145,19 @@ const styles = StyleSheet.create({
   emptyStateScroll: {
     paddingBottom: spacing.xl,
   },
+  // El banner "flota": no empieza pegado al notch (insets.top + margen
+  // arriba, agregado dinámicamente) ni pegado a los bordes laterales
+  // (paddingHorizontal acá).
+  bannerSection: {
+    paddingHorizontal: spacing.lg,
+  },
   plantPhotoWrapper: {
     alignItems: 'center',
     // La mitad de la foto queda "adentro" del banner (superpuesta) y la
     // otra mitad afuera -- por eso el margen negativo es la mitad del
     // tamaño de la foto.
     marginTop: -PLANT_PHOTO_SIZE / 2,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
   },
   emptyTitle: {
     fontSize: moderateScale(24),
@@ -155,7 +172,7 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
     paddingHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
   },
   linkButton: {
     marginHorizontal: spacing.lg,
