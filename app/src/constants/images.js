@@ -9,6 +9,9 @@ export const illustrations = {
   welcomeHero: require('../assets/illustrations/welcome-hero.jpg'),
   // Foto de fondo del banner de saludo en Monitoreo (mockup: "Hola, [nombre]").
   monitoreoSaludoBg: require('../assets/illustrations/monitoreo-saludo-bg.jpg'),
+  // Foto real de la planta para el círculo de Monitoreo (reemplaza el
+  // ícono placeholder que se usaba antes).
+  monitoreoPlantaFoto: require('../assets/illustrations/monitoreo-planta-foto.jpg'),
 };
 
 export const logo = {
