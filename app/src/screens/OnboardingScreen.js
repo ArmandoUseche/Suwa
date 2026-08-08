@@ -72,7 +72,7 @@ export default function OnboardingScreen({ navigation }) {
   };
 
   return (
-    <GradientBackground>
+    <GradientBackground variant="blob">
       <AnimatedFlatList
         ref={listRef}
         style={styles.list}
@@ -217,20 +217,18 @@ const styles = StyleSheet.create({
   textBlock: {
     width: '100%',
     maxWidth: contentMaxWidth,
-    // A diferencia del círculo de la ilustración (que sí va centrado),
-    // en el mockup el bloque de texto va alineado a la izquierda.
-    alignSelf: 'flex-start',
+    alignItems: 'center',
   },
   title: {
     ...typography.h1,
-    textAlign: 'left',
+    textAlign: 'center',
     marginBottom: spacing.md,
   },
   description: {
     ...typography.body,
-    textAlign: 'left',
+    textAlign: 'center',
     color: colors.textMuted,
-    lineHeight: moderateScale(22),
+    lineHeight: moderateScale(24),
   },
   footer: {
     flexDirection: 'row',
