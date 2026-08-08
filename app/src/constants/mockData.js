@@ -17,3 +17,16 @@ export const mockUltimaLectura = {
 // GET /api/alertas/:dispositivoId, este valor sale de ahí en vez de estar
 // fijo acá.
 export const mockAlertasNoLeidas = 2;
+
+// Nombre del usuario logueado, para el saludo "Hola, {nombre}" y
+// "¡Comencemos, {nombre}!" en Monitoreo. Placeholder hasta que haya un
+// estado de sesión real (login conectado al backend) del que sacarlo.
+export const mockUsuario = {
+  nombre: 'Jose',
+};
+
+// Si el usuario ya vinculó un dispositivo o no. Con esto en `false`,
+// Monitoreo muestra la pantalla de "Vincular dispositivo" (mockup);
+// en `true` mostraría el dashboard de sensores. Cuando haya backend real,
+// esto sale de si el usuario tiene o no una Planta/dispositivo asociado.
+export const mockTieneDispositivoVinculado = false;
