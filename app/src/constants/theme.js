@@ -14,9 +14,20 @@ export const colors = {
   primaryDark: '#0E7A40',
   primaryLight: '#4CAF7D',
 
-  // Fondos degradados (splash, onboarding, bienvenida)
+  // Fondos degradados (splash, login, registro, monitoreo)
   gradientStart: '#EAF7EC',
   gradientEnd: '#A9DBAB',
+
+  // Blob orgánico del Onboarding (fondo blanco + mancha mint arriba,
+  // color sacado directo del mockup de Figma).
+  blobLight: '#E2F3E9',
+
+  // Degradado de 3 tonos de la pantalla de Bienvenida (colores sacados
+  // del mockup: claro arriba, medio en el cuerpo, un poco más claro de
+  // nuevo hacia abajo).
+  welcomeGradientTop: '#E7F5E9',
+  welcomeGradientMid: '#A8D6AC',
+  welcomeGradientBottom: '#C7E4C9',
 
   // Header sólido (Escanear, Historial, Configuración)
   headerGreen: '#1B7A43',
@@ -40,7 +51,7 @@ export const colors = {
 export const typography = {
   // Títulos grandes tipo "Bienvenido a SUWA"
   h1: {
-    fontSize: moderateScale(28),
+    fontSize: moderateScale(30),
     fontWeight: '700',
     color: colors.primaryDark,
   },
@@ -50,7 +61,7 @@ export const typography = {
     color: colors.textDark,
   },
   body: {
-    fontSize: moderateScale(15),
+    fontSize: moderateScale(16),
     fontWeight: '400',
     color: colors.textDark,
   },
