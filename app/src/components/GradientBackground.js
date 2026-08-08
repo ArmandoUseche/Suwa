@@ -1,24 +1,108 @@
+import { useEffect, useRef } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { StyleSheet } from 'react-native';
+import { Animated, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors } from '../constants/theme';
+import { screen } from '../utils/responsive';
 
-// Fondo degradado verde que se repite en splash, onboarding, bienvenida,
-// login, registro, etc. Lo sacamos a un componente propio para no repetir
-// el LinearGradient con los mismos colores en cada pantalla.
+// Un círculo grande, mucho más ancho que la pantalla, posicionado a
+// medias fuera del borde superior. Es el truco más simple para lograr
+// una mancha "orgánica" (como las de Figma) sin necesitar una librería
+// de SVG: solo se ve el arco inferior del círculo, y como el círculo es
+// enorme comparado con la pantalla, ese arco se lee como una curva
+// suave en vez de un círculo perfecto.
 //
-// El degradado se pinta de borde a borde (incluso detrás del notch/status
-// bar) para que se vea "a pantalla completa", pero el contenido va dentro
-// de un SafeAreaView para no quedar tapado por el notch, la cámara
-// perforada o la barra de gestos. `edges` permite ajustar esto pantalla
-// por pantalla si alguna no lo necesita (ej. un modal que ya vive dentro
-// de otro contenedor seguro).
+// Respira lentamente (escala 1 -> 1.04 -> 1, ~4.5s por tramo) para que
+// el fondo tenga algo de vida sin ser una animación llamativa.
+const BLOB_SIZE = screen.width * 1.6;
+
+function Blob({ color, offsetTop, offsetLeft, opacity = 1 }) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(scale, {
+          toValue: 1.04,
+          duration: 4500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scale, {
+          toValue: 1,
+          duration: 4500,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [scale]);
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        styles.blob,
+        {
+          top: offsetTop,
+          left: offsetLeft,
+          backgroundColor: color,
+          opacity,
+          transform: [{ scale }],
+        },
+      ]}
+    />
+  );
+}
+
+// Fondo compartido por casi toda la app. `variant` controla el look:
+//  - 'gradient' (default): degradado diagonal claro -> medio, para
+//    Splash, Login, Registro y Monitoreo.
+//  - 'blob': fondo blanco con una mancha mint arriba (Onboarding).
+//  - 'welcome': degradado de 3 tonos verdes + una mancha blanca sutil
+//    encima, para la pantalla de Bienvenida.
 export default function GradientBackground({
   children,
   style,
   edges = ['top', 'bottom'],
+  variant = 'gradient',
 }) {
+  if (variant === 'blob') {
+    return (
+      <View style={styles.container}>
+        <Blob
+          color={colors.blobLight}
+          offsetTop={-BLOB_SIZE * 0.58}
+          offsetLeft={-BLOB_SIZE * 0.18}
+        />
+        <SafeAreaView style={[styles.safeArea, style]} edges={edges}>
+          {children}
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  if (variant === 'welcome') {
+    return (
+      <LinearGradient
+        colors={[colors.welcomeGradientTop, colors.welcomeGradientMid, colors.welcomeGradientBottom]}
+        locations={[0, 0.55, 1]}
+        style={styles.container}
+      >
+        <Blob
+          color="#FFFFFF"
+          opacity={0.16}
+          offsetTop={-BLOB_SIZE * 0.62}
+          offsetLeft={-BLOB_SIZE * 0.22}
+        />
+        <SafeAreaView style={[styles.safeArea, style]} edges={edges}>
+          {children}
+        </SafeAreaView>
+      </LinearGradient>
+    );
+  }
+
   return (
     <LinearGradient
       colors={[colors.gradientStart, colors.gradientEnd]}
@@ -36,8 +120,16 @@ export default function GradientBackground({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: colors.background,
+    overflow: 'hidden',
   },
   safeArea: {
     flex: 1,
+  },
+  blob: {
+    position: 'absolute',
+    width: BLOB_SIZE,
+    height: BLOB_SIZE,
+    borderRadius: BLOB_SIZE / 2,
   },
 });
