@@ -37,7 +37,18 @@ function TabIcon({ source, label, focused }) {
         style={[styles.tabIcon, { tintColor: tint }]}
         resizeMode="contain"
       />
-      <Text style={[styles.tabLabel, { color: tint }]} numberOfLines={2}>
+      {/* adjustsFontSizeToFit + minimumFontScale: si el label no entra
+          en el ancho disponible en 2 líneas, el propio sistema achica
+          la letra lo justo para que quepa completo, sin cortar palabras
+          a la mitad. Evita repetir el error anterior de calcular un
+          tamaño de fuente fijo "a ciegas" sin poder medir el ancho real
+          en un dispositivo. */}
+      <Text
+        style={[styles.tabLabel, { color: tint }]}
+        numberOfLines={2}
+        adjustsFontSizeToFit
+        minimumFontScale={0.75}
+      >
         {label}
       </Text>
     </View>
@@ -107,6 +118,11 @@ export default function MainTabNavigator() {
         component={EscanearScreen}
         options={{
           tabBarButton: (props) => <ScanTabButton {...props} />,
+          // El botón central no tiene texto, así que no necesita el
+          // mismo ancho que los otros 4 (que sí tienen label). Achicar
+          // su columna le devuelve ese espacio sobrante a los 4 tabs
+          // con texto, sin depender de ningún cálculo en px fijo.
+          tabBarItemStyle: [styles.tabBarItem, styles.scanBarItem],
         }}
       />
       <Tab.Screen
@@ -151,6 +167,10 @@ const styles = StyleSheet.create({
   },
   tabBarItem: {
     paddingHorizontal: 0,
+  },
+  scanBarItem: {
+    paddingHorizontal: 0,
+    flex: 0.7,
   },
   tabIconWrapper: {
     width: '100%',
