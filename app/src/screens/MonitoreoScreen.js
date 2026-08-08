@@ -50,32 +50,45 @@ function SinDispositivo() {
   return (
     <View style={styles.plainContainer}>
       <ScrollView
-        contentContainerStyle={styles.emptyStateScroll}
+        contentContainerStyle={[
+          styles.emptyStateScroll,
+          { paddingTop: insets.top + spacing.md },
+        ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.bannerSection, { paddingTop: insets.top + spacing.md }]}>
-          <PlantGreetingBanner nombre={mockUsuario.nombre} />
+        {/* Antes este bloque quedaba pegado justo debajo del status bar,
+            dejando todo el espacio libre acumulado abajo (se veía
+            "vacío" en la mitad inferior de la pantalla). Envolver banner
+            + foto + texto + botón en un solo grupo con flex:1 +
+            justifyContent 'center' reparte ese espacio libre arriba y
+            abajo del grupo por igual, sin tocar el overlap interno
+            banner/foto (que sigue siendo el mismo margen negativo de
+            siempre, así que la forma de cápsula no cambia). */}
+        <View style={styles.centeredGroup}>
+          <View style={styles.bannerSection}>
+            <PlantGreetingBanner nombre={mockUsuario.nombre} />
+          </View>
+
+          {/* Superpuesta sobre el borde inferior del banner (no debajo,
+              con un espacio) para que banner + foto se lean como una sola
+              forma tipo cápsula, igual que en el mockup. */}
+          <View style={styles.plantPhotoWrapper}>
+            <PlantPhoto size={PLANT_PHOTO_SIZE} />
+          </View>
+
+          <Text style={styles.emptyTitle}>¡Comencemos, {mockUsuario.nombre}!</Text>
+          <Text style={styles.emptyDescription}>
+            Vincula tu kit automatizado SUWA para empezar a monitorear tus
+            sensores en tiempo real y programar tus riegos.
+          </Text>
+
+          <PrimaryButton
+            label="Vincular dispositivo"
+            icon="add"
+            onPress={() => {}}
+            style={styles.linkButton}
+          />
         </View>
-
-        {/* Superpuesta sobre el borde inferior del banner (no debajo,
-            con un espacio) para que banner + foto se lean como una sola
-            forma tipo cápsula, igual que en el mockup. */}
-        <View style={styles.plantPhotoWrapper}>
-          <PlantPhoto size={PLANT_PHOTO_SIZE} />
-        </View>
-
-        <Text style={styles.emptyTitle}>¡Comencemos, {mockUsuario.nombre}!</Text>
-        <Text style={styles.emptyDescription}>
-          Vincula tu kit automatizado SUWA para empezar a monitorear tus
-          sensores en tiempo real y programar tus riegos.
-        </Text>
-
-        <PrimaryButton
-          label="Vincular dispositivo"
-          icon="add"
-          onPress={() => {}}
-          style={styles.linkButton}
-        />
       </ScrollView>
     </View>
   );
@@ -143,11 +156,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   emptyStateScroll: {
+    flexGrow: 1,
     paddingBottom: spacing.xl,
   },
-  // El banner "flota": no empieza pegado al notch (insets.top + margen
-  // arriba, agregado dinámicamente) ni pegado a los bordes laterales
-  // (paddingHorizontal acá).
+  // flex:1 + justifyContent 'center' es lo que reparte el espacio libre
+  // arriba y abajo del grupo completo (banner+foto+texto+botón) en vez
+  // de dejarlo todo pegado arriba. Funciona en cualquier tamaño de
+  // pantalla porque no depende de ningún cálculo fijo en px.
+  centeredGroup: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  // El banner "flota": no queda pegado a los bordes laterales
+  // (paddingHorizontal acá). El margen superior respecto al notch ahora
+  // lo pone el paddingTop del scroll, no este bloque.
   bannerSection: {
     paddingHorizontal: spacing.lg,
   },
