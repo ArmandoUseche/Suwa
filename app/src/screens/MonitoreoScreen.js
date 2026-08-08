@@ -1,29 +1,82 @@
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import GradientBackground from '../components/GradientBackground';
+import PlantGreetingBanner from '../components/PlantGreetingBanner';
+import { PrimaryButton } from '../components/Buttons';
 import SensorCard from '../components/SensorCard';
 import { icons } from '../constants/images';
-import { mockAlertasNoLeidas, mockUltimaLectura } from '../constants/mockData';
+import {
+  mockAlertasNoLeidas,
+  mockTieneDispositivoVinculado,
+  mockUltimaLectura,
+  mockUsuario,
+} from '../constants/mockData';
 import { colors, spacing, typography } from '../constants/theme';
 import { formatearTiempoRelativo } from '../utils/formatters';
-import { contentMaxWidth, moderateScale } from '../utils/responsive';
+import { moderateScale } from '../utils/responsive';
 
-// Pantalla de Monitoreo (Paso 5): dashboard con la última lectura de
-// sensores. Por ahora usa datos mock (mockUltimaLectura); conectar con
-// GET /api/sensores/:dispositivoId/ultima y el evento de socket
-// `nueva_lectura` queda para cuando el backend esté listo, sin tener que
-// tocar el layout de acá.
+// Pantalla de Monitoreo (Paso 5).
 //
-// El centro de alertas va como ícono de notificación en este header (así
-// se decidió, ya que el mockup de Figma no traía una pantalla para eso).
+// Tiene DOS estados, según si el usuario ya vinculó un dispositivo:
+//  - Sin vincular (mockTieneDispositivoVinculado = false, mockup real):
+//    banner de saludo + "¡Comencemos, {nombre}!" + botón para vincular.
+//    Este es el estado inicial real para un usuario nuevo, así que es
+//    el que se ve por defecto ahora mismo.
+//  - Vinculado: dashboard con las 3 tarjetas de sensores (lo que ya
+//    estaba construido). Se deja el código listo para cuando exista el
+//    flujo real de vincular dispositivo (Paso 7, Mis Plantas) — en ese
+//    punto `mockTieneDispositivoVinculado` deja de ser mock y pasa a
+//    salir de si el usuario tiene o no una Planta asociada.
 export default function MonitoreoScreen() {
+  if (!mockTieneDispositivoVinculado) {
+    return <SinDispositivo />;
+  }
+  return <ConDispositivo />;
+}
+
+function SinDispositivo() {
+  return (
+    <View style={styles.plainContainer}>
+      <ScrollView
+        contentContainerStyle={styles.emptyStateScroll}
+        showsVerticalScrollIndicator={false}
+      >
+        <PlantGreetingBanner nombre={mockUsuario.nombre} />
+
+        {/* TODO: reemplazar por una foto real de la planta del usuario
+            cuando exista ese asset / esa data; por ahora es un ícono
+            de hoja como placeholder dentro del círculo mint. */}
+        <View style={styles.plantCircle}>
+          <Image
+            source={icons.planta}
+            style={styles.plantIcon}
+            resizeMode="contain"
+          />
+        </View>
+
+        <Text style={styles.emptyTitle}>¡Comencemos, {mockUsuario.nombre}!</Text>
+        <Text style={styles.emptyDescription}>
+          Vincula tu kit automatizado SUWA para empezar a monitorear tus
+          sensores en tiempo real y programar tus riegos.
+        </Text>
+
+        <PrimaryButton
+          label="Vincular dispositivo"
+          icon="add"
+          onPress={() => {}}
+          style={styles.linkButton}
+        />
+      </ScrollView>
+    </View>
+  );
+}
+
+function ConDispositivo() {
   const lectura = mockUltimaLectura;
 
   return (
-    <GradientBackground style={styles.container} edges={['top']}>
+    <View style={styles.plainContainer}>
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={styles.dashboardScroll}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
@@ -34,13 +87,7 @@ export default function MonitoreoScreen() {
             </Text>
           </View>
 
-          <Pressable
-            style={styles.bellButton}
-            hitSlop={10}
-            // TODO(paso 8): navegar al centro de alertas cuando exista
-            // la pantalla; por ahora el ícono ya refleja no leídas.
-            onPress={() => {}}
-          >
+          <Pressable style={styles.bellButton} hitSlop={10} onPress={() => {}}>
             <Image source={icons.notificacion} style={styles.bellIcon} resizeMode="contain" />
             {mockAlertasNoLeidas > 0 && (
               <View style={styles.badge}>
@@ -74,21 +121,56 @@ export default function MonitoreoScreen() {
           />
         </View>
       </ScrollView>
-    </GradientBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
+  // El mockup de Monitoreo (a diferencia de Splash/Onboarding/Bienvenida)
+  // es sobre fondo blanco liso, no el degradado verde — por eso acá no
+  // se usa GradientBackground.
+  plainContainer: {
+    flex: 1,
+    backgroundColor: colors.background,
   },
-  scroll: {
-    width: '100%',
+  emptyStateScroll: {
+    paddingBottom: spacing.xl,
   },
-  scrollContent: {
+  plantCircle: {
+    width: moderateScale(140),
+    height: moderateScale(140),
+    borderRadius: moderateScale(70),
+    backgroundColor: colors.surface,
     alignSelf: 'center',
-    width: '100%',
-    maxWidth: contentMaxWidth,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -moderateScale(45),
+    marginBottom: spacing.lg,
+  },
+  plantIcon: {
+    width: moderateScale(56),
+    height: moderateScale(56),
+    tintColor: colors.primary,
+  },
+  emptyTitle: {
+    fontSize: moderateScale(24),
+    fontWeight: '700',
+    color: colors.textDark,
+    textAlign: 'center',
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  emptyDescription: {
+    ...typography.body,
+    color: colors.textMuted,
+    textAlign: 'center',
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  linkButton: {
+    marginHorizontal: spacing.lg,
+  },
+  dashboardScroll: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
     paddingBottom: spacing.xl,
@@ -111,7 +193,7 @@ const styles = StyleSheet.create({
     width: moderateScale(40),
     height: moderateScale(40),
     borderRadius: moderateScale(20),
-    backgroundColor: colors.background,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
