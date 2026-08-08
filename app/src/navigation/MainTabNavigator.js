@@ -10,25 +10,20 @@ import PerfilScreen from '../screens/PerfilScreen';
 import PressableScale from '../components/PressableScale';
 import { icons } from '../constants/images';
 import { colors, spacing, typography } from '../constants/theme';
-import { moderateScale, screen } from '../utils/responsive';
+import { moderateScale } from '../utils/responsive';
 
 const Tab = createBottomTabNavigator();
 
-// La barra tiene 5 espacios iguales (4 tabs + el botón de Escanear), así
-// que cada uno recibe screen.width / 5. Calculamos el tamaño de letra
-// más grande que deja entrar la etiqueta MÁS LARGA ("Mis plantas", 11
-// caracteres) en una sola línea dentro de ese espacio, y usamos ese
-// mismo tamaño para las 4 etiquetas.
-//
-// El intento anterior (factor 0.56) todavía se cortaba en el celular de
-// Joselin — el ancho real de un caracter en negrita resultó ser mayor a
-// lo estimado. Subimos el factor a 0.78 (bastante más conservador) y
-// bajamos el peso de fuente a '500' (en vez de '600', que es más ancho)
-// para tener margen de sobra en vez de quedar de nuevo justos.
-const TAB_SLOT_WIDTH = screen.width / 5 - 6; // 6 = padding de aire
-const LONGEST_LABEL_CHARS = 'Mis plantas'.length;
-const rawLabelSize = TAB_SLOT_WIDTH / (LONGEST_LABEL_CHARS * 0.78);
-const TAB_LABEL_SIZE = Math.min(Math.max(rawLabelSize, 8), 11);
+// Antes intentaba calcular un tamaño de letra "a ciegas" que entrara en
+// una sola línea (probé varias fórmulas y siempre terminaba cortando
+// texto en algún celular real, porque no tengo forma de medir el ancho
+// real de la fuente sin un dispositivo). Cambio de enfoque, mucho más
+// robusto: en vez de forzar una sola línea, se permiten 2 líneas
+// (`numberOfLines={2}`) con texto centrado. Así "Mis plantas" pasa a
+// "Mis" / "plantas" en vez de cortarse a la mitad de una palabra -- el
+// texto completo siempre se lee, sin depender de calcular el ancho
+// exacto de cada carácter.
+const TAB_LABEL_SIZE = moderateScale(10, 0.3);
 
 // Ícono + label de un tab normal (Monitoreo, Historial, Mis plantas, Perfil).
 // Tintamos el PNG con la propiedad tintColor en vez de tener dos assets
@@ -42,7 +37,7 @@ function TabIcon({ source, label, focused }) {
         style={[styles.tabIcon, { tintColor: tint }]}
         resizeMode="contain"
       />
-      <Text style={[styles.tabLabel, { color: tint }]} numberOfLines={1}>
+      <Text style={[styles.tabLabel, { color: tint }]} numberOfLines={2}>
         {label}
       </Text>
     </View>
@@ -144,7 +139,7 @@ export default function MainTabNavigator() {
 // se suma aparte según el dispositivo). Se escalan con moderateScale para
 // que la barra no se vea diminuta en un tablet ni exagerada en un celular
 // chico.
-const TAB_BAR_HEIGHT = moderateScale(68, 0.3);
+const TAB_BAR_HEIGHT = moderateScale(76, 0.3);
 const SCAN_BUTTON_SIZE = moderateScale(56);
 
 const styles = StyleSheet.create({
@@ -172,6 +167,8 @@ const styles = StyleSheet.create({
     ...typography.caption,
     fontFamily: 'Inter_500Medium',
     fontSize: TAB_LABEL_SIZE,
+    lineHeight: TAB_LABEL_SIZE * 1.1,
+    textAlign: 'center',
   },
   scanButtonWrapper: {
     top: -moderateScale(20),
