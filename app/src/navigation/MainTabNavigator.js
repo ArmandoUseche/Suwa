@@ -10,20 +10,29 @@ import PerfilScreen from '../screens/PerfilScreen';
 import PressableScale from '../components/PressableScale';
 import { icons } from '../constants/images';
 import { colors, spacing, typography } from '../constants/theme';
-import { moderateScale } from '../utils/responsive';
+import { moderateScale, screen } from '../utils/responsive';
 
 const Tab = createBottomTabNavigator();
+
+// La barra tiene 5 espacios iguales (4 tabs + el botón de Escanear), así
+// que cada uno recibe screen.width / 5. Calculamos el tamaño de letra
+// más grande que deja entrar la etiqueta MÁS LARGA ("Mis plantas", 11
+// caracteres) en una sola línea dentro de ese espacio, y usamos ese
+// mismo tamaño para las 4 etiquetas. Esto es mejor que un valor fijo a
+// mano (que puede quedar corto en un celular angosto y provocar el
+// "Mo..." truncado) y mejor que adjustsFontSizeToFit por etiqueta (que
+// hacía que cada una terminara en un tamaño distinto).
+const TAB_SLOT_WIDTH = screen.width / 5 - 6; // 6 = padding de aire
+const LONGEST_LABEL_CHARS = 'Mis plantas'.length;
+// 0.56 es un estimado conservador de cuánto ancho ocupa cada caracter
+// en un texto en negrita (peor caso que un ancho promedio real), para
+// no quedarnos cortos y terminar truncando en algún celular.
+const rawLabelSize = TAB_SLOT_WIDTH / (LONGEST_LABEL_CHARS * 0.56);
+const TAB_LABEL_SIZE = Math.min(Math.max(rawLabelSize, 9), 12);
 
 // Ícono + label de un tab normal (Monitoreo, Historial, Mis plantas, Perfil).
 // Tintamos el PNG con la propiedad tintColor en vez de tener dos assets
 // (activo/inactivo) por ícono.
-//
-// Importante: el fontSize es un valor FIJO (no adjustsFontSizeToFit).
-// Antes cada etiqueta se autoachicaba de forma independiente según su
-// propio largo de texto ("Monitoreo" se achicaba más que "Perfil"), y
-// terminaban con tamaños distintos entre sí. Ahora todas usan el mismo
-// tamaño; ese tamaño ya está elegido para que quepa incluso la etiqueta
-// más larga ("Mis plantas") en una sola línea.
 function TabIcon({ source, label, focused }) {
   const tint = focused ? colors.primary : colors.textMuted;
   return (
@@ -33,7 +42,7 @@ function TabIcon({ source, label, focused }) {
         style={[styles.tabIcon, { tintColor: tint }]}
         resizeMode="contain"
       />
-      <Text style={[styles.tabLabel, { color: tint }]} numberOfLines={1} ellipsizeMode="tail">
+      <Text style={[styles.tabLabel, { color: tint }]} numberOfLines={1}>
         {label}
       </Text>
     </View>
@@ -72,6 +81,7 @@ export default function MainTabNavigator() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: [styles.tabBar, { height: TAB_BAR_HEIGHT + insets.bottom, paddingBottom: insets.bottom + spacing.xs }],
+        tabBarItemStyle: styles.tabBarItem,
         tabBarShowLabel: false,
       }}
     >
@@ -144,12 +154,15 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
     paddingTop: spacing.xs,
   },
+  tabBarItem: {
+    paddingHorizontal: 0,
+  },
   tabIconWrapper: {
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 3,
-    paddingHorizontal: 1,
+    paddingHorizontal: 0,
   },
   tabIcon: {
     width: moderateScale(24),
@@ -157,9 +170,7 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     ...typography.caption,
-    // Tamaño fijo (factor de escalado bajo, 0.3, igual que spacing) para
-    // que en pantallas grandes no crezca tanto como para no caber.
-    fontSize: moderateScale(10.5, 0.3),
+    fontSize: TAB_LABEL_SIZE,
     fontWeight: '600',
   },
   scanButtonWrapper: {
