@@ -75,6 +75,7 @@ export default function OnboardingScreen({ navigation }) {
     <GradientBackground>
       <AnimatedFlatList
         ref={listRef}
+        style={styles.list}
         data={SLIDES}
         horizontal
         pagingEnabled
@@ -99,7 +100,7 @@ export default function OnboardingScreen({ navigation }) {
         </View>
 
         <PrimaryButton
-          label={isLastSlide ? 'Comenzar' : 'siguiente'}
+          label={isLastSlide ? 'Comenzar' : 'Siguiente'}
           onPress={goToNextSlide}
           style={styles.button}
         />
@@ -188,11 +189,18 @@ function Dot({ index, scrollX }) {
 const CIRCLE_SIZE = Math.min(SCREEN_WIDTH * 0.72, 320);
 
 const styles = StyleSheet.create({
+  // La lista ocupa todo el espacio vertical disponible entre el borde
+  // superior y el footer, para que cada slide pueda centrar su
+  // contenido dentro de esa altura (en vez de quedar pegado arriba).
+  list: {
+    flex: 1,
+  },
   slide: {
     width: SCREEN_WIDTH,
+    height: '100%',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   imageCircle: {
     width: CIRCLE_SIZE,
