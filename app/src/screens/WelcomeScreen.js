@@ -3,8 +3,10 @@ import { Image, StyleSheet, Text, View } from 'react-native';
 import GradientBackground from '../components/GradientBackground';
 import { PrimaryButton, SecondaryButton } from '../components/Buttons';
 import { illustrations } from '../constants/images';
-import { spacing, typography } from '../constants/theme';
-import { contentMaxWidth, moderateVerticalScale } from '../utils/responsive';
+import { colors, spacing, typography } from '../constants/theme';
+import { contentMaxWidth, screen } from '../utils/responsive';
+
+const HERO_SIZE = Math.min(screen.width * 0.68, 300);
 
 // Pantalla "Bienvenido a SUWA" (mockup 5): ilustración del kit,
 // título, y los dos accesos a Registro / Login.
@@ -12,11 +14,13 @@ export default function WelcomeScreen({ navigation }) {
   return (
     <GradientBackground style={styles.container}>
       <View style={styles.content}>
-        <Image
-          source={illustrations.welcomeHero}
-          style={styles.hero}
-          resizeMode="contain"
-        />
+        <View style={styles.heroCircle}>
+          <Image
+            source={illustrations.welcomeHero}
+            style={styles.hero}
+            resizeMode="cover"
+          />
+        </View>
 
         <Text style={[typography.h1, styles.title]}>Bienvenido{'\n'}a SUWA</Text>
       </View>
@@ -48,10 +52,21 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xl * 1.5,
     paddingHorizontal: spacing.lg,
   },
-  hero: {
-    width: '80%',
-    height: moderateVerticalScale(260),
+  // La foto del kit viene con fondo gris de estudio (no transparente).
+  // La recortamos en un círculo, igual que las ilustraciones del
+  // onboarding, para que ese fondo gris no se vea como un rectángulo
+  // suelto flotando sobre el degradado verde.
+  heroCircle: {
+    width: HERO_SIZE,
+    height: HERO_SIZE,
+    borderRadius: HERO_SIZE / 2,
+    overflow: 'hidden',
+    backgroundColor: colors.surface,
     marginBottom: spacing.lg,
+  },
+  hero: {
+    width: '100%',
+    height: '100%',
   },
   title: {
     textAlign: 'center',
@@ -67,3 +82,4 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
 });
+
