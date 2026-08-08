@@ -22,6 +22,15 @@ import { moderateScale } from '../utils/responsive';
 // quedan proporcionados entre sí aunque cambie el tamaño.
 const PLANT_PHOTO_SIZE = moderateScale(150);
 
+// Margen fijo extra (además del inset de seguridad) para bajar todo el
+// bloque de "sin dispositivo" y que no quede pegado justo debajo del
+// status bar con todo el espacio libre amontonado al final. No es
+// centrado a toda pantalla (eso se probó y dejaba un hueco raro arriba
+// en mockups con banner pegado al top) — es simplemente más margen
+// superior fijo. Si en el celular real sigue quedando mucho hueco
+// abajo, subir este número; si el banner queda muy abajo, bajarlo.
+const EMPTY_STATE_TOP_PUSH = moderateScale(90, 0.3);
+
 // Pantalla de Monitoreo (Paso 5).
 //
 // Tiene DOS estados, según si el usuario ya vinculó un dispositivo:
@@ -53,7 +62,7 @@ function SinDispositivo() {
         contentContainerStyle={styles.emptyStateScroll}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.bannerSection, { paddingTop: insets.top + spacing.md }]}>
+        <View style={[styles.bannerSection, { paddingTop: insets.top + EMPTY_STATE_TOP_PUSH }]}>
           <PlantGreetingBanner nombre={mockUsuario.nombre} />
         </View>
 
