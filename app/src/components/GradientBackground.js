@@ -90,11 +90,16 @@ export default function GradientBackground({
         locations={[0, 0.55, 1]}
         style={styles.container}
       >
+        {/* Antes el blob quedaba casi todo fuera de pantalla (arriba),
+            se notaba muy poco y quedaba escondido detrás del título.
+            Bajamos su posición para que su curva quede visible más o
+            menos a la altura de la imagen del kit, y subimos la
+            opacidad para que se note como un halo real. */}
         <Blob
           color="#FFFFFF"
-          opacity={0.16}
-          offsetTop={-BLOB_SIZE * 0.62}
-          offsetLeft={-BLOB_SIZE * 0.22}
+          opacity={0.28}
+          offsetTop={-BLOB_SIZE * 0.35}
+          offsetLeft={-BLOB_SIZE * 0.2}
         />
         <SafeAreaView style={[styles.safeArea, style]} edges={edges}>
           {children}
