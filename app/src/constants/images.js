@@ -7,6 +7,8 @@ export const illustrations = {
   onboardingRiego: require('../assets/illustrations/onboarding-riego.jpg'),
   onboardingAlertas: require('../assets/illustrations/onboarding-alertas.jpg'),
   welcomeHero: require('../assets/illustrations/welcome-hero.jpg'),
+  // Foto de fondo del banner de saludo en Monitoreo (mockup: "Hola, [nombre]").
+  monitoreoSaludoBg: require('../assets/illustrations/monitoreo-saludo-bg.jpg'),
 };
 
 export const logo = {
