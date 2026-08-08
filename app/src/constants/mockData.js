@@ -6,10 +6,28 @@
 // dónde sale el dato, no cómo se muestra.
 export const mockUltimaLectura = {
   dispositivoId: 'suwa-esp32-01',
-  humedadSuelo: 42,
-  temperatura: 24.5,
-  humedadAmbiente: 58,
+  humedadSuelo: 25,
+  temperatura: 22,
+  humedadAmbiente: 55,
   timestamp: new Date().toISOString(),
+};
+
+// Etiquetas de estado por lectura (ej. "Óptimo", "Ideal"), tal como se
+// ven en el mockup del dashboard conectado. Son solo texto mock por
+// ahora — cuando haya umbrales reales configurados por planta
+// (`umbralHumedadMinimo` del modelo Planta), esto se calcularía a
+// partir de esos umbrales en vez de estar fijo acá.
+export const mockEstadosLectura = {
+  humedadSuelo: 'Óptimo',
+  temperatura: 'Ideal',
+  humedadAmbiente: 'Muy buena',
+};
+
+// Estado general de la planta y próximo riego automático programado,
+// para la tarjeta "Planta" del dashboard conectado.
+export const mockEstadoPlanta = {
+  estado: 'saludable',
+  proximoRiegoTexto: 'Automatización: próximo riego hoy a las 6:00pm',
 };
 
 // Cantidad de alertas sin leer, para el badge del ícono de notificaciones.
