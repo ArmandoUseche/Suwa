@@ -146,7 +146,10 @@ const styles = StyleSheet.create({
   },
   registerLink: {
     ...typography.caption,
+    // fontWeight no sirve sobre una fuente cargada como archivo
+    // (Inter_400Regular es un solo peso); para que se vea en semi-negrita
+    // hay que apuntar directo al archivo de ese peso.
+    fontFamily: 'Inter_600SemiBold',
     color: colors.primaryDark,
-    fontWeight: '700',
   },
 });
