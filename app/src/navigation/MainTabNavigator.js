@@ -37,17 +37,18 @@ function TabIcon({ source, label, focused }) {
         style={[styles.tabIcon, { tintColor: tint }]}
         resizeMode="contain"
       />
-      {/* adjustsFontSizeToFit + minimumFontScale: si el label no entra
-          en el ancho disponible en 2 líneas, el propio sistema achica
-          la letra lo justo para que quepa completo, sin cortar palabras
-          a la mitad. Evita repetir el error anterior de calcular un
-          tamaño de fuente fijo "a ciegas" sin poder medir el ancho real
-          en un dispositivo. */}
+      {/* numberOfLines={1} + adjustsFontSizeToFit: en Android, el
+          autoajuste de letra de RN no funciona de forma confiable en
+          modo multilínea (por eso numberOfLines={2} seguía cortando
+          palabras a la mitad). Forzando una sola línea, el sistema
+          achica la letra lo que haga falta (hasta minimumFontScale)
+          para que la palabra completa quepa siempre, sin adivinar un
+          tamaño fijo por adelantado. */}
       <Text
         style={[styles.tabLabel, { color: tint }]}
-        numberOfLines={2}
+        numberOfLines={1}
         adjustsFontSizeToFit
-        minimumFontScale={0.75}
+        minimumFontScale={0.6}
       >
         {label}
       </Text>
@@ -170,7 +171,7 @@ const styles = StyleSheet.create({
   },
   scanBarItem: {
     paddingHorizontal: 0,
-    flex: 0.7,
+    flex: 0.6,
   },
   tabIconWrapper: {
     width: '100%',
