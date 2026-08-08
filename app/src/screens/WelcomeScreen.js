@@ -26,6 +26,15 @@ export default function WelcomeScreen({ navigation }) {
         </View>
       </View>
 
+      {/* Antes el bloque de arriba se centraba en TODO el alto
+          disponible, lo que dejaba un hueco enorme y parejo arriba y
+          abajo -- el título terminaba muy arriba y los botones muy
+          abajo. Ahora el contenido se queda cerca del top (como en el
+          mockup) y este spacer flexible absorbe el resto del espacio,
+          empujando los botones hacia abajo pero sin tanto padding de
+          más como antes -- quedan más arriba que antes. */}
+      <View style={styles.spacer} />
+
       <View style={styles.actions}>
         <PrimaryButton
           label="Iniciar sesión"
@@ -43,19 +52,18 @@ export default function WelcomeScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: {
-    // El bloque de contenido ocupa todo el espacio disponible y centra
-    // su contenido ahí adentro; los botones quedan pegados abajo porque
-    // no tienen flex (les toca lo que sobra, no compiten por espacio).
     flex: 1,
   },
   content: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
     width: '100%',
     maxWidth: contentMaxWidth,
     paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl,
+  },
+  spacer: {
+    flex: 1,
   },
   // La foto del kit viene con fondo gris de estudio (no transparente).
   // La recortamos en un círculo, igual que las ilustraciones del
@@ -83,7 +91,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: contentMaxWidth,
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xl,
+    paddingBottom: spacing.lg,
   },
   secondaryButton: {
     marginTop: spacing.sm,
