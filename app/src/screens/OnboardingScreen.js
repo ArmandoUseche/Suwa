@@ -2,13 +2,13 @@ import { useRef, useState } from 'react';
 import {
   Animated,
   Image,
-  Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 
 import GradientBackground from '../components/GradientBackground';
+import { PrimaryButton } from '../components/Buttons';
 import { illustrations } from '../constants/images';
 import { colors, radius, spacing, typography } from '../constants/theme';
 import { contentMaxWidth, moderateScale, screen } from '../utils/responsive';
@@ -98,11 +98,11 @@ export default function OnboardingScreen({ navigation }) {
           ))}
         </View>
 
-        <Pressable style={styles.button} onPress={goToNextSlide}>
-          <Text style={typography.button}>
-            {isLastSlide ? 'Comenzar' : 'siguiente'}
-          </Text>
-        </Pressable>
+        <PrimaryButton
+          label={isLastSlide ? 'Comenzar' : 'siguiente'}
+          onPress={goToNextSlide}
+          style={styles.button}
+        />
       </View>
     </GradientBackground>
   );
@@ -209,15 +209,18 @@ const styles = StyleSheet.create({
   textBlock: {
     width: '100%',
     maxWidth: contentMaxWidth,
+    // A diferencia del círculo de la ilustración (que sí va centrado),
+    // en el mockup el bloque de texto va alineado a la izquierda.
+    alignSelf: 'flex-start',
   },
   title: {
     ...typography.h1,
-    textAlign: 'center',
+    textAlign: 'left',
     marginBottom: spacing.md,
   },
   description: {
     ...typography.body,
-    textAlign: 'center',
+    textAlign: 'left',
     color: colors.textMuted,
     lineHeight: moderateScale(22),
   },
@@ -244,9 +247,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   button: {
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.sm + 4,
     paddingHorizontal: spacing.lg,
-    borderRadius: radius.pill,
   },
 });
