@@ -1,18 +1,30 @@
-import { Text } from 'react-native';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import PressableScale from './PressableScale';
 import { colors, radius, spacing, typography } from '../constants/theme';
+import { moderateScale } from '../utils/responsive';
 
-// Botón verde sólido: "Iniciar sesión", "Registrarse", "siguiente", etc.
-export function PrimaryButton({ label, onPress, style, disabled = false }) {
+// Botón verde sólido: "Iniciar sesión", "Registrarse", "Siguiente", etc.
+// `icon` es opcional (ej. "add" para "+ Vincular dispositivo" en Monitoreo).
+export function PrimaryButton({ label, onPress, style, disabled = false, icon }) {
   return (
     <PressableScale
       onPress={onPress}
       disabled={disabled}
       style={[styles.primary, disabled && styles.disabled, style]}
     >
-      <Text style={typography.button}>{label}</Text>
+      <View style={styles.contentRow}>
+        {icon && (
+          <Ionicons
+            name={icon}
+            size={moderateScale(18)}
+            color={colors.textOnPrimary}
+            style={styles.icon}
+          />
+        )}
+        <Text style={typography.button}>{label}</Text>
+      </View>
     </PressableScale>
   );
 }
@@ -35,6 +47,13 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.5,
+  },
+  contentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  icon: {
+    marginRight: spacing.xs,
   },
   secondary: {
     borderWidth: 1.5,
