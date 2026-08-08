@@ -1,26 +1,28 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Text } from 'react-native';
+import { StyleSheet } from 'react-native';
 
+import PressableScale from './PressableScale';
 import { colors, radius, spacing, typography } from '../constants/theme';
 
 // Botón verde sólido: "Iniciar sesión", "Registrarse", "siguiente", etc.
 export function PrimaryButton({ label, onPress, style, disabled = false }) {
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
       disabled={disabled}
       style={[styles.primary, disabled && styles.disabled, style]}
     >
       <Text style={typography.button}>{label}</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 
 // Botón outline verde: "Registrarse" en la pantalla de Bienvenida.
 export function SecondaryButton({ label, onPress, style }) {
   return (
-    <Pressable onPress={onPress} style={[styles.secondary, style]}>
+    <PressableScale onPress={onPress} style={[styles.secondary, style]}>
       <Text style={styles.secondaryLabel}>{label}</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 
