@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.h1,
-    fontSize: moderateScale(22),
+    fontSize: moderateScale(26),
     textAlign: 'center',
     marginBottom: spacing.sm,
   },
