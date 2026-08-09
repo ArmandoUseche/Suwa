@@ -1,18 +1,21 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, radius, spacing } from '../constants/theme';
+import { EMPTY_STATE_HEADER_HEIGHT } from '../constants/emptyState';
+import { colors, radius } from '../constants/theme';
 import { moderateVerticalScale } from '../utils/responsive';
 
 // Caja de título con borde verde redondeado, usada como header de
 // pantallas que no tienen un header sólido (Historial, y más adelante
 // Escanear/Mis plantas "primera vez" -- se ve el mismo patrón en los 3
-// mockups del flujo). Separado en su propio componente para no repetir
-// estos mismos estilos 3 veces.
+// mockups del flujo). Mismo alto que PlantGreetingBanner
+// (EMPTY_STATE_HEADER_HEIGHT, un solo valor compartido entre las dos)
+// para que el contenedor de arriba se vea del mismo tamaño en todas las
+// pantallas, tengan o no foto de fondo.
 //
-// El texto usa la misma fuente y tamaño que el saludo "Hola, {nombre}"
-// del banner de Monitoreo (RozhaOne, moderateVerticalScale(28)) -- acá
-// no hay foto de fondo detrás, así que en vez de blanco va en verde,
-// sobre la caja con borde.
+// El texto usa la misma fuente que el saludo "Hola, {nombre}" del
+// banner de Monitoreo (RozhaOne). Acá no hay foto de fondo, así que en
+// vez de blanco va en verde, centrado en la caja (el banner lo pone
+// abajo por el degradado sobre la foto; acá no hace falta ese truco).
 export default function ScreenHeaderPill({ title }) {
   return (
     <View style={styles.pill}>
@@ -23,12 +26,13 @@ export default function ScreenHeaderPill({ title }) {
 
 const styles = StyleSheet.create({
   pill: {
+    height: EMPTY_STATE_HEADER_HEIGHT,
+    justifyContent: 'center',
     borderWidth: 1.5,
     borderColor: colors.primary,
     borderRadius: radius.lg,
     backgroundColor: colors.background,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: moderateVerticalScale(20),
   },
   title: {
     fontFamily: 'RozhaOne_400Regular',
