@@ -8,6 +8,12 @@ import SensorTypeTabs, { SENSOR_TYPES } from '../components/SensorTypeTabs';
 import HistorialChart from '../components/HistorialChart';
 import HistorialRecordItem from '../components/HistorialRecordItem';
 import { PrimaryButton } from '../components/Buttons';
+import {
+  EMPTY_STATE_GAP_AFTER_HEADER,
+  EMPTY_STATE_GAP_AFTER_IMAGE,
+  EMPTY_STATE_IMAGE_SIZE,
+  emptyStateStyles,
+} from '../constants/emptyState';
 import { illustrations } from '../constants/images';
 import {
   mockLecturasSemana,
@@ -42,7 +48,7 @@ function SinDatos() {
         contentContainerStyle={styles.emptyScroll}
         showsVerticalScrollIndicator={false}
       >
-        <View style={{ paddingTop: insets.top + spacing.md }}>
+        <View style={[styles.headerSection, { paddingTop: insets.top + spacing.md }]}>
           <ScreenHeaderPill title="Historial" />
         </View>
 
@@ -132,41 +138,40 @@ const styles = StyleSheet.create({
   },
 
   // --- Estado sin datos ---
+  // Sin paddingHorizontal acá: el padding lateral va en headerSection y
+  // en los estilos de emptyStateStyles (título/descripción/botón), para
+  // que coincida exactamente con cómo lo arma Monitoreo (bannerSection
+  // con su propio padding, no el ScrollView entero).
   emptyScroll: {
-    paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xl,
+  },
+  headerSection: {
+    paddingHorizontal: spacing.lg,
   },
   emptyIllustrationWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: spacing.xl * 2,
-    marginBottom: spacing.xl,
+    marginTop: EMPTY_STATE_GAP_AFTER_HEADER,
+    marginBottom: EMPTY_STATE_GAP_AFTER_IMAGE,
   },
-  // Mancha circular mint detrás de la tarjeta, como el círculo detrás de
-  // la foto de la planta en Monitoreo -- mismo lenguaje visual.
+  // Mancha circular mint detrás de la ilustración, como el círculo
+  // detrás de la foto de la planta en Monitoreo -- mismo lenguaje
+  // visual. Mismo tamaño que la imagen central (EMPTY_STATE_IMAGE_SIZE)
+  // para que ocupe la misma "caja" que PlantPhoto en Monitoreo.
   emptyIllustrationBlob: {
     position: 'absolute',
-    width: moderateScale(150),
-    height: moderateScale(150),
-    borderRadius: moderateScale(75),
+    width: EMPTY_STATE_IMAGE_SIZE,
+    height: EMPTY_STATE_IMAGE_SIZE,
+    borderRadius: EMPTY_STATE_IMAGE_SIZE / 2,
     backgroundColor: colors.surface,
   },
   emptyIllustrationImage: {
-    width: moderateScale(140),
-    height: moderateScale(140),
+    width: EMPTY_STATE_IMAGE_SIZE * 0.9,
+    height: EMPTY_STATE_IMAGE_SIZE * 0.9,
   },
-  emptyTitle: {
-    ...typography.h2,
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  emptyDescription: {
-    ...typography.body,
-    color: colors.textMuted,
-    textAlign: 'center',
-    marginBottom: spacing.xl,
-  },
-  linkButton: {},
+  emptyTitle: emptyStateStyles.title,
+  emptyDescription: emptyStateStyles.description,
+  linkButton: emptyStateStyles.button,
 
   // --- Estado con datos ---
   dataScroll: {
