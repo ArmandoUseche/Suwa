@@ -5,15 +5,30 @@ import { icons } from '../constants/images';
 import { colors, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
 
-// Los 3 sensores que sí existen en el modelo real LecturaSensor del
-// backend (humedadSuelo, temperatura, humedadAmbiente). El mockup de
-// Figma tenía una 3ra pestaña "Luz", pero ese campo no está en el
-// contrato de API -- se reemplaza acá por "Ambiente" (humedadAmbiente),
-// que sí es un dato real que el backend manda.
+// Los 2 sensores que sí existen como pestañas separadas en el mockup
+// corregido: Humedad (humedadSuelo) y Temperatura. La pestaña
+// "Temperatura" en realidad muestra 2 líneas juntas (temperatura +
+// humedadAmbiente) porque son "la temperatura relativa" -- humedad y
+// temperatura del aire se leen como una sola métrica combinada, no como
+// sensores separados. Por eso `sensors` es un array: 1 elemento para
+// Humedad, 2 para Temperatura (ver HistorialChart, que ya soporta
+// varias series).
 export const SENSOR_TYPES = [
-  { key: 'humedadSuelo', label: 'Humedad', icon: icons.gotaAgua, unit: '%', color: colors.primary },
-  { key: 'temperatura', label: 'Temp.', icon: icons.temperaturaAlta, unit: '°C', color: colors.warning },
-  { key: 'humedadAmbiente', label: 'Ambiente', icon: icons.soleado, unit: '%', color: '#3B82C4' },
+  {
+    key: 'humedadSuelo',
+    label: 'Humedad',
+    icon: icons.gotaAgua,
+    sensors: [{ field: 'humedadSuelo', label: 'Humedad suelo', unit: '%', color: colors.primary }],
+  },
+  {
+    key: 'temperatura',
+    label: 'Temperatura',
+    icon: icons.temperaturaAlta,
+    sensors: [
+      { field: 'temperatura', label: 'Temperatura', unit: '°C', color: colors.warning },
+      { field: 'humedadAmbiente', label: 'Humedad ambiente', unit: '%', color: '#3B82C4' },
+    ],
+  },
 ];
 
 // Fila de 3 chips (ícono + label) para elegir qué sensor mostrar en la
@@ -24,6 +39,7 @@ export default function SensorTypeTabs({ value, onChange }) {
     <View style={styles.row}>
       {SENSOR_TYPES.map((sensor) => {
         const active = sensor.key === value;
+        const tabColor = sensor.sensors[0].color;
         return (
           <PressableScale
             key={sensor.key}
@@ -32,10 +48,10 @@ export default function SensorTypeTabs({ value, onChange }) {
           >
             <Image
               source={sensor.icon}
-              style={[styles.icon, { tintColor: active ? sensor.color : colors.textMuted }]}
+              style={[styles.icon, { tintColor: active ? tabColor : colors.textMuted }]}
               resizeMode="contain"
             />
-            <Text style={[styles.label, active && { color: sensor.color, fontFamily: 'Inter_600SemiBold' }]}>
+            <Text style={[styles.label, active && { color: tabColor, fontFamily: 'Inter_600SemiBold' }]}>
               {sensor.label}
             </Text>
           </PressableScale>
