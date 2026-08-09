@@ -21,12 +21,24 @@ export default function StatChip({ icon, value, unit, status }) {
 }
 
 const styles = StyleSheet.create({
+  // Antes el fondo del chip era el mismo blanco que el fondo de la
+  // pantalla, así que no se veía ningún "cuadrito" -- solo el ícono y
+  // el texto flotando sueltos. El borde + sombra chica es lo que arma
+  // el efecto "un poco 3D" del mockup (una tarjeta que se despega un
+  // poco del fondo, no plana).
   chip: {
     flex: 1,
     backgroundColor: colors.background,
     borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
     paddingVertical: spacing.md,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   icon: {
     width: moderateScale(24),
