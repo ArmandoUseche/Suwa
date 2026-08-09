@@ -5,6 +5,12 @@ import PlantGreetingBanner from '../components/PlantGreetingBanner';
 import PlantPhoto from '../components/PlantPhoto';
 import StatChip from '../components/StatChip';
 import { PrimaryButton } from '../components/Buttons';
+import {
+  EMPTY_STATE_GAP_AFTER_HEADER,
+  EMPTY_STATE_GAP_AFTER_IMAGE,
+  EMPTY_STATE_IMAGE_SIZE,
+  emptyStateStyles,
+} from '../constants/emptyState';
 import { icons } from '../constants/images';
 import {
   mockEstadoPlanta,
@@ -16,17 +22,12 @@ import {
 import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
 
-// Tamaño de la foto circular de la planta. Se comparte entre los dos
-// estados; la cantidad que se superpone sobre el banner (en el estado
-// sin vincular) se calcula a partir de este mismo valor, así siempre
-// quedan proporcionados entre sí aunque cambie el tamaño.
-const PLANT_PHOTO_SIZE = moderateScale(200);
-
-// Espacio extra (aparte del margen normal) que se agrega DESPUÉS de la
-// foto, antes del título -- así el banner se queda arriba, pegado al
-// notch como en el mockup, y lo que se corre hacia abajo para llenar el
-// hueco que sobraba es justo a partir de la foto, como se pidió.
-const EMPTY_STATE_EXTRA_GAP = moderateScale(30, 0.3);
+// Tamaño de la foto circular de la planta. Viene de constants/emptyState
+// (EMPTY_STATE_IMAGE_SIZE) para que Monitoreo, Historial y las que
+// falten (Escanear/Mis plantas "primera vez") usen exactamente el mismo
+// tamaño de imagen central -- antes cada pantalla tenía su propio
+// número "parecido pero no igual".
+const PLANT_PHOTO_SIZE = EMPTY_STATE_IMAGE_SIZE;
 
 // Pantalla de Monitoreo (Paso 5).
 //
@@ -162,34 +163,12 @@ const styles = StyleSheet.create({
   },
   plantPhotoWrapper: {
     alignItems: 'center',
-    // Antes se metía casi un tercio de la foto dentro del banner. Se
-    // reduce el overlap para que la foto baje más (quede más separada
-    // del banner), sin llegar a perder del todo el efecto cápsula.
-    marginTop: spacing.xl * 3,
-    // El espacio extra va acá (después de la foto), no en el banner: el
-    // banner se queda pegado arriba como en el mockup, y lo que se
-    // corre hacia abajo para llenar el hueco vacío es el título+
-    // descripción+botón, a partir de la foto.
-    marginBottom: spacing.xl + EMPTY_STATE_EXTRA_GAP,
+    marginTop: EMPTY_STATE_GAP_AFTER_HEADER,
+    marginBottom: EMPTY_STATE_GAP_AFTER_IMAGE,
   },
-  emptyTitle: {
-    fontSize: moderateScale(24),
-    fontWeight: '700',
-    color: colors.textDark,
-    textAlign: 'center',
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-  },
-  emptyDescription: {
-    ...typography.body,
-    color: colors.textMuted,
-    textAlign: 'center',
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.xl,
-  },
-  linkButton: {
-    marginHorizontal: spacing.lg,
-  },
+  emptyTitle: emptyStateStyles.title,
+  emptyDescription: emptyStateStyles.description,
+  linkButton: emptyStateStyles.button,
   dashboardScroll: {
     paddingBottom: spacing.xl,
   },
