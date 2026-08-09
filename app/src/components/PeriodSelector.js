@@ -20,6 +20,7 @@ export default function PeriodSelector({ value, onChange }) {
           <PressableScale
             key={option}
             onPress={() => onChange(option)}
+            outerStyle={styles.pillOuter}
             style={[styles.pill, active && styles.pillActive]}
           >
             <Text style={[styles.label, active && styles.labelActive]}>{option}</Text>
@@ -35,8 +36,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
   },
-  pill: {
+  pillOuter: {
     flex: 1,
+  },
+  pill: {
     borderWidth: 1.5,
     borderColor: colors.border,
     borderRadius: radius.pill,
