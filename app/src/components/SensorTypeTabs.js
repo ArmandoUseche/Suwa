@@ -49,6 +49,7 @@ export default function SensorTypeTabs({ value, onChange }) {
           <PressableScale
             key={sensor.key}
             onPress={() => onChange(sensor.key)}
+            outerStyle={styles.tabOuter}
             style={[styles.tab, active && { backgroundColor: `${tabColor}1A`, borderColor: tabColor }]}
           >
             <Image
@@ -71,8 +72,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
   },
-  tab: {
+  tabOuter: {
     flex: 1,
+  },
+  tab: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
