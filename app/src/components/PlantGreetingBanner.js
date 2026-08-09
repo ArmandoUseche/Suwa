@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     borderRadius: radius.lg,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
     padding: spacing.md,
   },
   greeting: {
