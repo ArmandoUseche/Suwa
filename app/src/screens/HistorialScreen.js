@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import ScreenHeaderPill from '../components/ScreenHeaderPill';
@@ -9,12 +8,13 @@ import SensorTypeTabs, { SENSOR_TYPES } from '../components/SensorTypeTabs';
 import HistorialChart from '../components/HistorialChart';
 import HistorialRecordItem from '../components/HistorialRecordItem';
 import { PrimaryButton } from '../components/Buttons';
+import { illustrations } from '../constants/images';
 import {
   mockLecturasSemana,
   mockRegistrosRecientes,
   mockTieneDatosHistorial,
 } from '../constants/mockData';
-import { colors, radius, spacing, typography } from '../constants/theme';
+import { colors, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
 
 // Pantalla de Historial (Paso 6).
@@ -48,9 +48,11 @@ function SinDatos() {
 
         <View style={styles.emptyIllustrationWrapper}>
           <View style={styles.emptyIllustrationBlob} />
-          <View style={styles.emptyIllustrationCard}>
-            <Ionicons name="bar-chart" size={moderateScale(48)} color={colors.primary} />
-          </View>
+          <Image
+            source={illustrations.historialVacio}
+            style={styles.emptyIllustrationImage}
+            resizeMode="contain"
+          />
         </View>
 
         <Text style={styles.emptyTitle}>Sin registros aún</Text>
@@ -149,18 +151,9 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(75),
     backgroundColor: colors.surface,
   },
-  emptyIllustrationCard: {
-    width: moderateScale(96),
-    height: moderateScale(96),
-    borderRadius: radius.md,
-    backgroundColor: colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    elevation: 4,
+  emptyIllustrationImage: {
+    width: moderateScale(140),
+    height: moderateScale(140),
   },
   emptyTitle: {
     ...typography.h2,
