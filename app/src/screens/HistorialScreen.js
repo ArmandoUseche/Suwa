@@ -76,9 +76,17 @@ function ConDatos() {
   const [periodo, setPeriodo] = useState('Semana');
   const [sensorKey, setSensorKey] = useState('humedadSuelo');
 
-  const sensor = SENSOR_TYPES.find((s) => s.key === sensorKey);
+  const sensorType = SENSOR_TYPES.find((s) => s.key === sensorKey);
   const labels = mockLecturasSemana.map((l) => l.dia);
-  const values = mockLecturasSemana.map((l) => l[sensorKey]);
+  // Cada sensor de la pestaña activa se convierte en una serie de la
+  // gráfica -- 1 para Humedad, 2 (temperatura + humedad ambiente) para
+  // Temperatura.
+  const series = sensorType.sensors.map((s) => ({
+    label: s.label,
+    unit: s.unit,
+    color: s.color,
+    values: mockLecturasSemana.map((l) => l[s.field]),
+  }));
 
   return (
     <View style={styles.container}>
@@ -99,7 +107,7 @@ function ConDatos() {
         </View>
 
         <View style={styles.chartSection}>
-          <HistorialChart labels={labels} values={values} lineColor={sensor.color} />
+          <HistorialChart labels={labels} series={series} />
         </View>
 
         <Text style={styles.recentTitle}>Registros recientes</Text>
