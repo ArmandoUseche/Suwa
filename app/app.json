@@ -7,7 +7,11 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "SUWA usa la cámara para identificar tu planta al escanearla.",
+        "NSPhotoLibraryUsageDescription": "SUWA necesita acceso a tus fotos para que puedas elegir una imagen ya tomada al escanear una planta."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -19,6 +23,20 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "SUWA usa la cámara para identificar tu planta al escanearla."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "SUWA necesita acceso a tus fotos para que puedas elegir una imagen ya tomada al escanear una planta."
+        }
+      ]
+    ]
   }
 }
