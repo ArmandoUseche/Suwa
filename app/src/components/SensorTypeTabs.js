@@ -2,7 +2,7 @@ import { Image, StyleSheet, Text, View } from 'react-native';
 
 import PressableScale from './PressableScale';
 import { icons } from '../constants/images';
-import { colors, spacing, typography } from '../constants/theme';
+import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
 
 // Los 2 sensores que sí existen como pestañas separadas en el mockup
@@ -31,9 +31,14 @@ export const SENSOR_TYPES = [
   },
 ];
 
-// Fila de 3 chips (ícono + label) para elegir qué sensor mostrar en la
-// gráfica de abajo. El seleccionado se resalta en negrita + color del
-// sensor; los otros quedan en gris, igual que el mockup.
+// Fila de chips (ícono + label) para elegir qué sensor mostrar en la
+// gráfica de abajo. Cada chip tiene `flex: 1` (mismo ancho entre sí,
+// sin importar lo larga que sea la palabra) y el activo se resalta con
+// fondo de color -- mismo lenguaje visual que PeriodSelector (Día/
+// Semana/Año), en vez del ícono+texto suelto de antes. Como es
+// SENSOR_TYPES el que decide cuántos chips hay, si mañana se agrega un
+// 3er sensor real, este componente ya reparte el ancho solo, sin tocar
+// nada acá.
 export default function SensorTypeTabs({ value, onChange }) {
   return (
     <View style={styles.row}>
@@ -44,7 +49,7 @@ export default function SensorTypeTabs({ value, onChange }) {
           <PressableScale
             key={sensor.key}
             onPress={() => onChange(sensor.key)}
-            style={styles.tab}
+            style={[styles.tab, active && { backgroundColor: `${tabColor}1A`, borderColor: tabColor }]}
           >
             <Image
               source={sensor.icon}
@@ -64,12 +69,18 @@ export default function SensorTypeTabs({ value, onChange }) {
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    gap: spacing.lg,
+    gap: spacing.sm,
   },
   tab: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: spacing.xs,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+    borderRadius: radius.pill,
+    paddingVertical: spacing.sm,
   },
   icon: {
     width: moderateScale(16),
