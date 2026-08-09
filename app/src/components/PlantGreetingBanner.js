@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
   greeting: {
     ...typography.h1,
     color: '#FFFFFF',
-    fontSize: moderateVerticalScale(24),
+    fontSize: moderateVerticalScale(28),
   },
   statusRow: {
     flexDirection: 'row',
