@@ -162,12 +162,10 @@ const styles = StyleSheet.create({
   },
   plantPhotoWrapper: {
     alignItems: 'center',
-    // Antes se metía la mitad exacta de la foto dentro del banner
-    // (-tamaño/2), y sin sombra propia se leía como un solo bloque
-    // fundido con el banner. Un overlap más chico (~28%) + sombra propia
-    // (ver PlantPhoto.js) deja la foto claramente flotando sobre fondo
-    // blanco, como en el mockup, tocando el banner solo un poco.
-    marginTop: -PLANT_PHOTO_SIZE * 0.28,
+    // Antes se metía casi un tercio de la foto dentro del banner. Se
+    // reduce el overlap para que la foto baje más (quede más separada
+    // del banner), sin llegar a perder del todo el efecto cápsula.
+    marginTop: -PLANT_PHOTO_SIZE * 0.1,
     // El espacio extra va acá (después de la foto), no en el banner: el
     // banner se queda pegado arriba como en el mockup, y lo que se
     // corre hacia abajo para llenar el hueco vacío es el título+
