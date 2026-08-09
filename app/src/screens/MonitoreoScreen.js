@@ -20,13 +20,13 @@ import { moderateScale } from '../utils/responsive';
 // estados; la cantidad que se superpone sobre el banner (en el estado
 // sin vincular) se calcula a partir de este mismo valor, así siempre
 // quedan proporcionados entre sí aunque cambie el tamaño.
-const PLANT_PHOTO_SIZE = moderateScale(150);
+const PLANT_PHOTO_SIZE = moderateScale(200);
 
 // Espacio extra (aparte del margen normal) que se agrega DESPUÉS de la
 // foto, antes del título -- así el banner se queda arriba, pegado al
 // notch como en el mockup, y lo que se corre hacia abajo para llenar el
 // hueco que sobraba es justo a partir de la foto, como se pidió.
-const EMPTY_STATE_EXTRA_GAP = moderateScale(70, 0.3);
+const EMPTY_STATE_EXTRA_GAP = moderateScale(30, 0.3);
 
 // Pantalla de Monitoreo (Paso 5).
 //
@@ -100,7 +100,7 @@ function ConDispositivo() {
         contentContainerStyle={styles.dashboardScroll}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.bannerSection, { paddingTop: insets.top + spacing.md }]}>
+        <View style={[styles.bannerSection, { paddingTop: insets.top + spacing.md * 3 }]}>
           <PlantGreetingBanner nombre={mockUsuario.nombre} kitConectado />
         </View>
 
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     // Antes se metía casi un tercio de la foto dentro del banner. Se
     // reduce el overlap para que la foto baje más (quede más separada
     // del banner), sin llegar a perder del todo el efecto cápsula.
-    marginTop: -PLANT_PHOTO_SIZE * 0.1,
+    marginTop: spacing.xl * 3,
     // El espacio extra va acá (después de la foto), no en el banner: el
     // banner se queda pegado arriba como en el mockup, y lo que se
     // corre hacia abajo para llenar el hueco vacío es el título+

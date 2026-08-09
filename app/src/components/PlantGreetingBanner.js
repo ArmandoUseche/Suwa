@@ -38,7 +38,7 @@ export default function PlantGreetingBanner({ nombre, kitConectado = false }) {
 const styles = StyleSheet.create({
   banner: {
     width: '100%',
-    height: moderateVerticalScale(150),
+    height: moderateVerticalScale(110),
   },
   bannerImage: {
     borderRadius: radius.lg,

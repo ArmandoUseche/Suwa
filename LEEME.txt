@@ -1,0 +1,41 @@
+Paso 5 (Monitoreo) + subir tamaño de letra en 3 pantallas. 5 archivos.
+No agrega dependencias. No hace falta npm install.
+
+git add app/src/screens/MonitoreoScreen.js
+git commit -m "fix: bajar más la foto de la planta en Monitoreo sin dispositivo"
+
+git add app/src/navigation/MainTabNavigator.js
+git commit -m "fix: permitir que el tamaño de letra de los tabs baje más antes de truncar"
+
+git add app/src/screens/LoginScreen.js
+git commit -m "style: subir tamaño de letra del título en Login"
+
+git add app/src/screens/RegisterScreen.js
+git commit -m "style: subir tamaño de letra del título en Registro"
+
+git add app/src/components/PlantGreetingBanner.js
+git commit -m "style: subir tamaño de letra del saludo en el banner de Monitoreo"
+
+Qué cambia:
+
+1. MonitoreoScreen.js: el overlap de la foto sobre el banner bajó de
+   ~28% a ~10% (línea marginTop: -PLANT_PHOTO_SIZE * 0.1), así que la
+   foto -- y todo lo que sigue en el flujo normal (título, descripción,
+   botón) -- baja más, sin tocar el banner (que se queda arriba, como
+   pediste). Si querés más o menos bajada, esa es la única línea a
+   tocar (probá 0.05 para bajar más, 0.15 para subir un poco).
+
+2. MainTabNavigator.js: la medición en el dispositivo (de la entrega
+   anterior) ya calculaba bien el factor de reducción necesario, pero un
+   "piso" de seguridad (0.65) le impedía bajar lo suficiente en tu
+   celular, y terminaba truncando con "…" en vez de encimarse. Se bajó
+   ese piso a 0.5 y se agregó adjustsFontSizeToFit como respaldo final
+   (por si en algún dispositivo aún así no alcanza) -- entre los dos,
+   el texto ya no debería truncarse nunca, aunque quede chico.
+
+3. LoginScreen.js / RegisterScreen.js: el título ("¡Hola de nuevo!" /
+   "¡Bienvenido!") subió de 22 a 26.
+
+4. PlantGreetingBanner.js: el saludo ("Hola, Jose.") subió de 24 a 28.
+
+Probar en tu celular real y avisar cómo queda.
