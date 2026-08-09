@@ -18,7 +18,7 @@ const Tab = createBottomTabNavigator();
 // Tamaño de letra "ideal" (el que se usaría si hubiera espacio de
 // sobra). El tamaño real que se ve en pantalla casi siempre es más
 // chico que esto -- ver TabLabelScaleContext más abajo.
-const TAB_LABEL_SIZE = moderateScale(11, 0.3);
+const TAB_LABEL_SIZE = moderateScale(10, 0.3);
 
 // Ya se probaron dos enfoques que no funcionaron:
 //  1. Calcular un tamaño de letra fijo "a ciegas" por fórmula -- cortaba
@@ -36,19 +36,23 @@ const TAB_LABEL_SIZE = moderateScale(11, 0.3);
 // contexto compartido, y se usa el factor MÁS CHICO de las 4 para las 4
 // por igual -- así ninguna se corta y todas quedan del mismo tamaño,
 // sin depender de ningún número adivinado.
-const TabLabelScaleContext = createContext({ scale: 0.82, report: () => {} });
+//
+// El "piso" (0.5) es solo para no llegar a un tamaño ilegible en un
+// celular extremadamente angosto; si el ancho real pide bajar más que
+// eso, se prefiere texto chico pero completo (con el respaldo de
+// adjustsFontSizeToFit de abajo) antes que "…" cortado, que no dice
+// nada.
+const TabLabelScaleContext = createContext({ scale: 0.75, report: () => {} });
 
 function TabLabelScaleProvider({ children }) {
   const measurements = useRef({});
-  const [scale, setScale] = useState(0.82);
+  const [scale, setScale] = useState(0.75);
 
   const report = useCallback((key, requiredScale) => {
     measurements.current[key] = requiredScale;
     const values = Object.values(measurements.current);
     const min = Math.min(1, ...values);
-    // No dejar que baje de un mínimo legible; si ni así entra, que
-    // trunque con "…" antes que ser ilegible.
-    const clamped = Math.max(0.65, min);
+    const clamped = Math.max(0.5, min);
     setScale((prev) => (Math.abs(prev - clamped) > 0.01 ? clamped : prev));
   }, []);
 
@@ -93,6 +97,13 @@ function TabIcon({ source, label, focused }) {
           { color: tint, fontSize: TAB_LABEL_SIZE * scale, lineHeight: TAB_LABEL_SIZE * scale * 1.1 },
         ]}
         numberOfLines={1}
+        // Respaldo final: si por lo que sea (celular más angosto que el
+        // piso de 0.5, o el primer frame antes de que termine de medir)
+        // igual no entra, que la letra se achique sola en vez de
+        // cortarse con "…". No debería notarse en el uso normal, porque
+        // el tamaño ya viene calculado arriba para que entre.
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
       >
         {label}
       </Text>
