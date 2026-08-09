@@ -182,12 +182,12 @@ const styles = StyleSheet.create({
   },
   plantCardTitle: {
     ...typography.h2,
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
   },
   estadoPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
     marginTop: spacing.xs,
     marginBottom: spacing.md,
   },
