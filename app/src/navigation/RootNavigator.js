@@ -6,6 +6,7 @@ import WelcomeScreen from '../screens/WelcomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import RegisterSuccessScreen from '../screens/RegisterSuccessScreen';
+import EscanearCameraScreen from '../screens/EscanearCameraScreen';
 import MainTabNavigator from './MainTabNavigator';
 
 const Stack = createNativeStackNavigator();
@@ -27,6 +28,15 @@ export default function RootNavigator() {
       <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="RegisterSuccess" component={RegisterSuccessScreen} />
       <Stack.Screen name="Main" component={MainTabNavigator} />
+      {/* Fuera del tab navigator a propósito: la cámara ocupa toda la
+          pantalla, sin la barra de tabs abajo. presentation "fullScreenModal"
+          hace que en iOS entre deslizando de abajo hacia arriba, como una
+          cámara real. */}
+      <Stack.Screen
+        name="EscanearCamara"
+        component={EscanearCameraScreen}
+        options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
+      />
     </Stack.Navigator>
   );
 }
