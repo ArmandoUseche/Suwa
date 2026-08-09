@@ -1,6 +1,7 @@
 import { ImageBackground, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
+import { EMPTY_STATE_HEADER_HEIGHT } from '../constants/emptyState';
 import { illustrations } from '../constants/images';
 import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale, moderateVerticalScale } from '../utils/responsive';
@@ -38,7 +39,7 @@ export default function PlantGreetingBanner({ nombre, kitConectado = false }) {
 const styles = StyleSheet.create({
   banner: {
     width: '100%',
-    height: moderateVerticalScale(110),
+    height: EMPTY_STATE_HEADER_HEIGHT,
   },
   bannerImage: {
     borderRadius: radius.lg,
