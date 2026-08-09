@@ -12,6 +12,10 @@ export const illustrations = {
   // Foto real de la planta para el círculo de Monitoreo (reemplaza el
   // ícono placeholder que se usaba antes).
   monitoreoPlantaFoto: require('../assets/illustrations/monitoreo-planta-foto.jpg'),
+  // Ilustración del estado vacío de Historial (gráfica de barras 3D).
+  // Fondo original quitado con PIL para que flote sobre cualquier color
+  // de fondo, igual que welcome-hero-cutout.
+  historialVacio: require('../assets/illustrations/historial-vacio-ilustracion.png'),
 };
 
 export const logo = {
