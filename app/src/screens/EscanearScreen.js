@@ -1,17 +1,106 @@
-import { StyleSheet, Text } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import GradientBackground from '../components/GradientBackground';
-import { typography } from '../constants/theme';
+import ScreenHeaderPill from '../components/ScreenHeaderPill';
+import ViewfinderFrame from '../components/ViewfinderFrame';
+import { PrimaryButton } from '../components/Buttons';
+import {
+  EMPTY_STATE_GAP_AFTER_HEADER,
+  EMPTY_STATE_GAP_AFTER_IMAGE,
+  EMPTY_STATE_IMAGE_SIZE,
+  emptyStateStyles,
+} from '../constants/emptyState';
+import { illustrations } from '../constants/images';
+import { mockTieneDispositivoVinculado } from '../constants/mockData';
+import { colors, radius, spacing } from '../constants/theme';
 
-// TODO(paso 7): reemplazar por la pantalla real de Escanear.
-export default function EscanearScreen() {
+// Intro de Escanear (Paso 7). Mismo esqueleto que Monitoreo/Historial
+// (header + imagen central + título + descripción + botón, con las
+// constantes compartidas de emptyState.js) para que las 3 pantallas se
+// vean del mismo tamaño y proporciones.
+//
+// Reusa mockTieneDispositivoVinculado (la misma bandera de Monitoreo):
+// sin kit vinculado no tiene sentido escanear todavía (no hay dónde
+// guardar el resultado), así que el CTA cambia a "Vincular dispositivo"
+// en vez de "Escanear ahora".
+export default function EscanearScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
+
   return (
-    <GradientBackground style={styles.container}>
-      <Text style={typography.h2}>Escanear (en construcción)</Text>
-    </GradientBackground>
+    <View style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.headerSection, { paddingTop: insets.top + spacing.md }]}>
+          <ScreenHeaderPill title="Escanear" />
+        </View>
+
+        <View style={styles.imageWrapper}>
+          <Image
+            source={illustrations.escanearEjemplo}
+            style={styles.image}
+            resizeMode="cover"
+          />
+          <ViewfinderFrame size={EMPTY_STATE_IMAGE_SIZE + 30} color={colors.primary} />
+        </View>
+
+        <Text style={styles.title}>Identifica tu planta en segundos</Text>
+
+        {mockTieneDispositivoVinculado ? (
+          <>
+            <Text style={styles.description}>
+              Toma una foto para detectar su especie y conocer los
+              parámetros óptimos de sol y agua que necesita.
+            </Text>
+            <PrimaryButton
+              label="Escanear ahora"
+              onPress={() => navigation.navigate('EscanearCamara')}
+              style={styles.button}
+            />
+          </>
+        ) : (
+          <>
+            <Text style={styles.description}>
+              Primero necesitás vincular tu kit SUWA para poder guardar
+              los resultados del escaneo en tu planta.
+            </Text>
+            <PrimaryButton
+              label="Vincular dispositivo"
+              icon="add"
+              onPress={() => {}}
+              style={styles.button}
+            />
+          </>
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { alignItems: 'center', justifyContent: 'center' },
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  scroll: {
+    paddingBottom: spacing.xl,
+  },
+  headerSection: {
+    paddingHorizontal: spacing.lg,
+  },
+  imageWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: EMPTY_STATE_GAP_AFTER_HEADER,
+    marginBottom: EMPTY_STATE_GAP_AFTER_IMAGE,
+  },
+  image: {
+    width: EMPTY_STATE_IMAGE_SIZE,
+    height: EMPTY_STATE_IMAGE_SIZE,
+    borderRadius: radius.lg,
+  },
+  title: emptyStateStyles.title,
+  description: emptyStateStyles.description,
+  button: emptyStateStyles.button,
 });
