@@ -16,6 +16,16 @@ export const illustrations = {
   // Fondo original quitado con PIL para que flote sobre cualquier color
   // de fondo, igual que welcome-hero-cutout.
   historialVacio: require('../assets/illustrations/historial-vacio-ilustracion.png'),
+  // Escanear: foto de ejemplo en el intro (mismo tipo de planta que
+  // detecta el kit) + fotos de ejemplo del modal de Consejos. Las de
+  // Consejos vienen ya con su propio fondo (no son cutouts), se recortan
+  // a cuadrado con resizeMode="cover" al mostrarse, no hace falta
+  // preprocesarlas más.
+  escanearEjemplo: require('../assets/illustrations/escanear-planta-ejemplo.jpg'),
+  consejoVioleta: require('../assets/illustrations/consejo-violeta.jpg'),
+  consejoSuculenta: require('../assets/illustrations/consejo-suculenta.jpg'),
+  consejoManzanillaCorrecta: require('../assets/illustrations/consejo-manzanilla-correcta.jpg'),
+  consejoDosPlantasIncorrecta: require('../assets/illustrations/consejo-dos-plantas-incorrecta.jpg'),
 };
 
 export const logo = {
