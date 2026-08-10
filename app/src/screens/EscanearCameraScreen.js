@@ -61,7 +61,7 @@ export default function EscanearCameraScreen({ navigation }) {
     if (!permiso.granted) return;
 
     const resultado = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       quality: 0.8,
     });
     if (resultado.canceled) return;
@@ -78,7 +78,7 @@ export default function EscanearCameraScreen({ navigation }) {
 
   if (!permission.granted) {
     return (
-      <View style={[styles.container, styles.permissionContainer]}>
+      <View style={styles.permissionContainer}>
         <View style={styles.permissionIconWrapper}>
           <Ionicons name="camera-outline" size={moderateScale(48)} color={colors.primary} />
         </View>
@@ -176,6 +176,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
   permissionContainer: {
+    flex: 1,
+    backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.xl,
