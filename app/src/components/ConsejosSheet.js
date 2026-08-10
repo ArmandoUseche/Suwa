@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Image, StyleSheet, Text, View } from 'react-native';
+import { Animated, Dimensions, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import PressableScale from './PressableScale';
 import { PrimaryButton, SecondaryButton } from './Buttons';
@@ -9,7 +10,14 @@ import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-const SHEET_HEIGHT = SCREEN_HEIGHT * 0.72;
+// Antes 0.72: con las miniaturas apiladas a todo el ancho (más altas
+// que antes, cuando iban lado a lado) el contenido ya no entraba y los
+// botones de abajo quedaban colgando fuera del panel. Subirlo a 0.9 le
+// da mucho más aire, PERO lo que realmente evita que vuelva a pasar
+// (con cualquier tamaño de pantalla o texto) es que el contenido de
+// arriba ahora scrollea y el footer con los botones queda AFUERA de
+// ese scroll, fijo abajo siempre visible -- ver el JSX.
+const SHEET_HEIGHT = SCREEN_HEIGHT * 0.9;
 
 // Los 3 tips del mockup. `wrong`/`right` son las 2 fotos de ejemplo de
 // cada tip -- para "Centra tu planta" y "Busca una foto clara" solo
@@ -72,6 +80,7 @@ function ThumbBox({ correct, image, wrongEffect }) {
 // navegación aparte). 3 pasos con Volver/Siguiente, y "Listo" en el
 // último que cierra el modal.
 export default function ConsejosSheet({ visible, onClose }) {
+  const insets = useSafeAreaInsets();
   const [step, setStep] = useState(0);
   const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
 
@@ -108,29 +117,38 @@ export default function ConsejosSheet({ visible, onClose }) {
           <View style={{ width: moderateScale(24) }} />
         </View>
 
-        <View style={styles.thumbsColumn}>
-          {tip.wrongImage ? (
-            <ThumbBox correct={false} image={tip.wrongImage} />
-          ) : (
-            <ThumbBox correct={false} image={tip.image} wrongEffect={tip.wrongEffect} />
-          )}
-          {tip.rightImage ? (
-            <ThumbBox correct image={tip.rightImage} />
-          ) : (
-            <ThumbBox correct image={tip.image} wrongEffect={tip.wrongEffect} />
-          )}
-        </View>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.thumbsColumn}>
+            {tip.wrongImage ? (
+              <ThumbBox correct={false} image={tip.wrongImage} />
+            ) : (
+              <ThumbBox correct={false} image={tip.image} wrongEffect={tip.wrongEffect} />
+            )}
+            {tip.rightImage ? (
+              <ThumbBox correct image={tip.rightImage} />
+            ) : (
+              <ThumbBox correct image={tip.image} wrongEffect={tip.wrongEffect} />
+            )}
+          </View>
 
-        <Text style={styles.tipTitle}>{tip.titulo}</Text>
-        <Text style={styles.tipDescription}>{tip.descripcion}</Text>
+          <Text style={styles.tipTitle}>{tip.titulo}</Text>
+          <Text style={styles.tipDescription}>{tip.descripcion}</Text>
 
-        <View style={styles.dots}>
-          {TIPS.map((_, i) => (
-            <View key={i} style={[styles.dot, i === step && styles.dotActive]} />
-          ))}
-        </View>
+          <View style={styles.dots}>
+            {TIPS.map((_, i) => (
+              <View key={i} style={[styles.dot, i === step && styles.dotActive]} />
+            ))}
+          </View>
+        </ScrollView>
 
-        <View style={styles.footer}>
+        {/* Fuera del ScrollView a propósito: sea cual sea el largo del
+            contenido de arriba, esto siempre queda visible pegado abajo
+            del panel, nunca se puede "salir" del cuadro blanco. */}
+        <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.md }]}>
           {step > 0 ? (
             <SecondaryButton
               label="Volver"
@@ -164,17 +182,25 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
-    padding: spacing.lg,
+    paddingTop: spacing.lg,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
     marginBottom: spacing.lg,
   },
   headerTitle: {
     ...typography.h2,
     fontSize: moderateScale(18),
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
   },
   thumbsColumn: {
     gap: spacing.md,
@@ -257,7 +283,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 'auto',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
   },
   navButton: {
     paddingHorizontal: spacing.xl,
