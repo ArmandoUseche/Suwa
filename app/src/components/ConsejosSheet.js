@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import PressableScale from './PressableScale';
@@ -41,9 +42,10 @@ const TIPS = [
     titulo: 'Busca una foto clara',
     descripcion: 'Evita tomar fotos borrosas, oscuras o con demasiada sombra para no alterar el resultado.',
     image: illustrations.consejoSuculenta,
-    // 'dim': la miniatura "incorrecta" oscurece la misma foto (no hay
-    // una 2da foto "mala" para este caso).
-    wrongEffect: 'dim',
+    // 'blur': la miniatura "incorrecta" desenfoca la misma foto (no hay
+    // una 2da foto "mala" para este caso) -- así se ve realmente
+    // borrosa, no solo oscurecida.
+    wrongEffect: 'blur',
   },
   {
     titulo: 'Una planta a la vez',
@@ -65,7 +67,9 @@ function ThumbBox({ correct, image, wrongEffect }) {
             !correct && wrongEffect === 'shift' && styles.thumbShift,
           ]}
         />
-        {!correct && wrongEffect === 'dim' && <View style={styles.thumbDimOverlay} />}
+        {!correct && wrongEffect === 'blur' && (
+          <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFillObject} />
+        )}
       </View>
       <View style={[styles.badge, correct ? styles.badgeCorrect : styles.badgeWrong]}>
         <Ionicons
@@ -233,10 +237,6 @@ const styles = StyleSheet.create({
   // del recorte para que se vea descentrada, sin necesitar una 2da foto.
   thumbShift: {
     transform: [{ scale: 1.6 }, { translateX: THUMB_SIZE * 0.22 }, { translateY: -THUMB_SIZE * 0.18 }],
-  },
-  thumbDimOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.45)',
   },
   badge: {
     position: 'absolute',
