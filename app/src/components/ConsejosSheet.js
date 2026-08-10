@@ -108,7 +108,7 @@ export default function ConsejosSheet({ visible, onClose }) {
           <View style={{ width: moderateScale(24) }} />
         </View>
 
-        <View style={styles.thumbsRow}>
+        <View style={styles.thumbsColumn}>
           {tip.wrongImage ? (
             <ThumbBox correct={false} image={tip.wrongImage} />
           ) : (
@@ -135,15 +135,15 @@ export default function ConsejosSheet({ visible, onClose }) {
             <SecondaryButton
               label="Volver"
               onPress={() => setStep((s) => s - 1)}
-              style={styles.footerButton}
+              style={styles.navButton}
             />
           ) : (
-            <View style={styles.footerButton} />
+            <View />
           )}
           <PrimaryButton
             label={isLast ? 'Listo' : 'Siguiente'}
             onPress={() => (isLast ? onClose() : setStep((s) => s + 1))}
-            style={styles.footerButton}
+            style={styles.navButton}
           />
         </View>
       </Animated.View>
@@ -176,14 +176,13 @@ const styles = StyleSheet.create({
     ...typography.h2,
     fontSize: moderateScale(18),
   },
-  thumbsRow: {
-    flexDirection: 'row',
+  thumbsColumn: {
     gap: spacing.md,
     marginBottom: spacing.lg,
   },
   thumbBox: {
-    flex: 1,
-    aspectRatio: 1,
+    width: '100%',
+    aspectRatio: 16 / 9,
   },
   thumbImageClip: {
     flex: 1,
@@ -208,9 +207,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -moderateScale(6),
     right: -moderateScale(6),
-    width: moderateScale(24),
-    height: moderateScale(24),
-    borderRadius: moderateScale(12),
+    width: moderateScale(26),
+    height: moderateScale(26),
+    borderRadius: moderateScale(13),
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -224,11 +223,13 @@ const styles = StyleSheet.create({
   },
   tipTitle: {
     ...typography.h2,
-    fontSize: moderateScale(18),
+    fontSize: moderateScale(21),
     marginBottom: spacing.xs,
   },
   tipDescription: {
     ...typography.body,
+    fontSize: moderateScale(17),
+    lineHeight: moderateScale(23),
     color: colors.textMuted,
   },
   dots: {
@@ -247,12 +248,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     width: moderateScale(16),
   },
+  // space-between (no flex:1 en los botones): cada botón queda del
+  // tamaño de su propio contenido, uno en cada esquina -- igual que el
+  // mockup, en vez de estirado a la mitad de la fila cada uno. El
+  // <View /> vacío del paso 1 (sin "Volver") es lo que empuja
+  // "Siguiente" hacia la derecha con space-between.
   footer: {
     flexDirection: 'row',
-    gap: spacing.sm,
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginTop: 'auto',
   },
-  footerButton: {
-    flex: 1,
+  navButton: {
+    paddingHorizontal: spacing.xl,
   },
 });
