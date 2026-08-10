@@ -42,7 +42,15 @@ export default function EscanearScreen({ navigation }) {
             style={styles.image}
             resizeMode="cover"
           />
-          <ViewfinderFrame size={EMPTY_STATE_IMAGE_SIZE + 30} color={colors.primary} />
+          {/* Superpuesto con margen negativo (mismo tamaño que la
+              imagen, tirado hacia arriba esa misma altura) en vez de
+              position:absolute -- ver ViewfinderFrame.js para el
+              porqué. */}
+          <ViewfinderFrame
+            size={EMPTY_STATE_IMAGE_SIZE}
+            color={colors.primary}
+            style={styles.frameOverlap}
+          />
         </View>
 
         <Text style={styles.title}>Identifica tu planta en segundos</Text>
@@ -99,6 +107,9 @@ const styles = StyleSheet.create({
     width: EMPTY_STATE_IMAGE_SIZE,
     height: EMPTY_STATE_IMAGE_SIZE,
     borderRadius: radius.lg,
+  },
+  frameOverlap: {
+    marginTop: -EMPTY_STATE_IMAGE_SIZE,
   },
   title: emptyStateStyles.title,
   description: emptyStateStyles.description,
