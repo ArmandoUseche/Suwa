@@ -108,14 +108,16 @@ export default function EscanearCameraScreen({ navigation }) {
         flash={flash}
       />
 
-      {/* A diferencia de la versión anterior (3 bloques sueltos con
-          position:absolute cada uno), esto es UN solo overlay en
-          columna: barra de arriba (alto natural), guía central
-          (flex:1, así se centra de verdad en lo que sobra entre las 2
-          barras) y barra de abajo (alto natural). Es lo que arregla el
-          recuadro que quedaba pegado arriba -- con position:absolute
-          suelto, sin top/left, no había garantía de que se centrara
-          respecto al padre. */}
+      {/* IMPORTANTE: este overlay NO es position:absolute. CameraView sí
+          lo es (absoluteFill), así que queda afuera del flujo normal --
+          eso deja a `overlay` como el ÚNICO hijo de flujo normal de
+          `container` (que es flex:1), así que `overlay` recibe TODO el
+          alto de la pantalla con un flex:1 directo, sin depender de que
+          un position:absolute sin top/left se centre "solo" (esa
+          combinación es la que venía fallando: colapsaba arriba en vez
+          de estirarse). CameraView, al ser absolute, no ocupa espacio
+          de flujo, pero se sigue viendo detrás de `overlay` porque se
+          dibuja primero (el orden en el JSX es el orden de apilado). */}
       <View style={styles.overlay}>
         <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
           <PressableScale onPress={() => navigation.goBack()} hitSlop={12}>
@@ -215,11 +217,11 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(15),
     color: colors.textMuted,
   },
-  // Overlay único en columna sobre la cámara -- ver comentario en el
-  // JSX de más arriba sobre por qué (esto es lo que arregla el
-  // centrado real del recuadro guía).
+  // Overlay en columna sobre la cámara -- flex:1 normal, SIN
+  // position:absolute (ver comentario en el JSX de más arriba sobre por
+  // qué: con position:absolute colapsaba arriba en vez de estirarse).
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    flex: 1,
     flexDirection: 'column',
   },
   topBar: {
