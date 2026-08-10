@@ -10,14 +10,17 @@ import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-// Antes 0.72: con las miniaturas apiladas a todo el ancho (más altas
-// que antes, cuando iban lado a lado) el contenido ya no entraba y los
-// botones de abajo quedaban colgando fuera del panel. Subirlo a 0.9 le
-// da mucho más aire, PERO lo que realmente evita que vuelva a pasar
-// (con cualquier tamaño de pantalla o texto) es que el contenido de
-// arriba ahora scrollea y el footer con los botones queda AFUERA de
-// ese scroll, fijo abajo siempre visible -- ver el JSX.
-const SHEET_HEIGHT = SCREEN_HEIGHT * 0.9;
+// OJO: esto ya NO define el alto real del panel (eso ahora es
+// `maxHeight: '90%'` en el estilo `sheet`, un porcentaje real medido
+// por RN en el momento, no un número calculado a mano que podía no
+// coincidir con el alto real de pantalla en esta presentación -- eso
+// era lo que hacía que a veces el panel terminara mucho más alto o más
+// bajo de lo esperado, "sin responsividad"). Esto solo se usa como
+// punto de partida de la animación de "entra desde abajo": no hace
+// falta que sea exacto, solo que sea un número más grande que
+// cualquier pantalla real, para que arranque bien afuera de la
+// pantalla antes de deslizarse hacia arriba.
+const OFFSCREEN_Y = SCREEN_HEIGHT;
 
 // Los 3 tips del mockup. `wrong`/`right` son las 2 fotos de ejemplo de
 // cada tip -- para "Centra tu planta" y "Busca una foto clara" solo
@@ -82,7 +85,7 @@ function ThumbBox({ correct, image, wrongEffect }) {
 export default function ConsejosSheet({ visible, onClose }) {
   const insets = useSafeAreaInsets();
   const [step, setStep] = useState(0);
-  const translateY = useRef(new Animated.Value(SHEET_HEIGHT)).current;
+  const translateY = useRef(new Animated.Value(OFFSCREEN_Y)).current;
 
   useEffect(() => {
     if (visible) {
@@ -94,7 +97,7 @@ export default function ConsejosSheet({ visible, onClose }) {
       }).start();
     } else {
       Animated.timing(translateY, {
-        toValue: SHEET_HEIGHT,
+        toValue: OFFSCREEN_Y,
         duration: 220,
         useNativeDriver: true,
       }).start();
@@ -178,7 +181,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    height: SHEET_HEIGHT,
+    // '90%' de `backdrop` (que sí tiene alto definido: llena toda la
+    // pantalla). Con esto el ScrollView de adentro (que usa flex:1)
+    // tiene un padre de alto REAL para repartir, no ambiguo -- si acá
+    // hubiera ido maxHeight en vez de height, el panel pasaría a
+    // "alto según contenido" y el flex:1 de adentro volvería a quedar
+    // sin nada de dónde crecer (mismo problema que el de la cámara).
+    height: '90%',
     backgroundColor: colors.background,
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
