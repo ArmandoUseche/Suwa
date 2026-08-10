@@ -150,9 +150,19 @@ export default function EscanearCameraScreen({ navigation }) {
         </View>
 
         <View style={[styles.bottomBar, { paddingBottom: insets.bottom + spacing.lg }]}>
-          <PressableScale onPress={handleAbrirGaleria} hitSlop={12}>
-            <Ionicons name="images-outline" size={moderateScale(26)} color="#FFFFFF" />
-          </PressableScale>
+          {/* Antes galería y "Consejos" iban sueltos con
+              justifyContent:'space-between' -- pero "Consejos" (ícono +
+              texto) pesa más que el ícono solo de galería, así que el
+              botón de capturar quedaba centrado respecto al espacio
+              que sobraba entre los dos, no respecto al centro real de
+              la pantalla. Envolviendo los 2 costados en cajas de ancho
+              IGUAL (flex:1 cada una) el del medio siempre cae en el
+              centro real, sea cual sea el ancho de pantalla. */}
+          <View style={styles.bottomBarSide}>
+            <PressableScale onPress={handleAbrirGaleria} hitSlop={12}>
+              <Ionicons name="images-outline" size={moderateScale(26)} color="#FFFFFF" />
+            </PressableScale>
+          </View>
 
           <PressableScale onPress={handleCapturar} scaleTo={0.9}>
             <View style={styles.captureOuter}>
@@ -160,10 +170,12 @@ export default function EscanearCameraScreen({ navigation }) {
             </View>
           </PressableScale>
 
-          <PressableScale onPress={() => setShowConsejos(true)} hitSlop={12} style={styles.consejosButton}>
-            <Ionicons name="help-circle-outline" size={moderateScale(22)} color="#FFFFFF" />
-            <Text style={styles.consejosLabel}>Consejos</Text>
-          </PressableScale>
+          <View style={[styles.bottomBarSide, styles.bottomBarSideRight]}>
+            <PressableScale onPress={() => setShowConsejos(true)} hitSlop={12} style={styles.consejosButton}>
+              <Ionicons name="help-circle-outline" size={moderateScale(22)} color="#FFFFFF" />
+              <Text style={styles.consejosLabel}>Consejos</Text>
+            </PressableScale>
+          </View>
         </View>
       </View>
 
@@ -252,9 +264,18 @@ const styles = StyleSheet.create({
   bottomBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.lg,
+  },
+  // flex:1 en los 2 costados: mismo ancho entre sí siempre, así el
+  // botón de capturar (que no tiene flex, tamaño fijo) queda
+  // matemáticamente en el centro real de la fila, no en el centro de
+  // "lo que sobra" entre 2 elementos de tamaños distintos.
+  bottomBarSide: {
+    flex: 1,
+  },
+  bottomBarSideRight: {
+    alignItems: 'flex-end',
   },
   captureOuter: {
     width: moderateScale(72),
