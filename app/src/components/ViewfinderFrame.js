@@ -1,15 +1,35 @@
 import { StyleSheet, View } from 'react-native';
 
-// Las 4 esquinas tipo "viewfinder" de cámara (mockup de Escanear). Se
-// usa tanto de forma decorativa (sobre la foto de ejemplo del intro de
-// Escanear) como funcional (sobre la cámara real, para indicar dónde
-// centrar la planta) -- por eso vive como componente propio en vez de
-// repetir los 4 bloques de esquina en los 2 lugares.
-export default function ViewfinderFrame({ size = 220, color = '#FFFFFF', thickness = 3, cornerLength = 28 }) {
+// Las 4 esquinas tipo "viewfinder" de cámara (mockup de Escanear).
+//
+// `absolute` (default true): en React Native, un elemento
+// position:'absolute' SIN top/left explícitos no se centra de forma
+// confiable solo por el alignItems/justifyContent del padre -- termina
+// anclado arriba a la izquierda. Por eso este componente NO intenta
+// autocentrarse mágicamente: quien lo usa decide cómo ubicarlo.
+//  - En el intro de Escanear se superpone sobre la foto de ejemplo con
+//    el mismo truco de margin negativo que ya se usa en Monitoreo (ver
+//    EscanearScreen.js) -- ahí `absolute={false}`.
+//  - En la cámara real, va como un hijo normal más dentro de un
+//    contenedor flex ya centrado -- también `absolute={false}`.
+// La opción `absolute={true}` se deja disponible por si en algún caso
+// futuro sí hace falta superponer sin ocupar espacio en el flujo normal
+// (con top/left propios pasados via `style`).
+export default function ViewfinderFrame({
+  size = 220,
+  color = '#FFFFFF',
+  thickness = 3,
+  cornerLength = 28,
+  absolute = false,
+  style,
+}) {
   const corner = { width: cornerLength, height: cornerLength, borderColor: color };
 
   return (
-    <View style={[styles.wrapper, { width: size, height: size }]} pointerEvents="none">
+    <View
+      style={[absolute && styles.absolute, { width: size, height: size }, style]}
+      pointerEvents="none"
+    >
       <View style={[styles.corner, corner, styles.topLeft, { borderTopWidth: thickness, borderLeftWidth: thickness }]} />
       <View style={[styles.corner, corner, styles.topRight, { borderTopWidth: thickness, borderRightWidth: thickness }]} />
       <View style={[styles.corner, corner, styles.bottomLeft, { borderBottomWidth: thickness, borderLeftWidth: thickness }]} />
@@ -19,7 +39,7 @@ export default function ViewfinderFrame({ size = 220, color = '#FFFFFF', thickne
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
+  absolute: {
     position: 'absolute',
   },
   corner: {
