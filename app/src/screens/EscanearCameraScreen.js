@@ -1,13 +1,13 @@
 import { useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import PressableScale from '../components/PressableScale';
 import ViewfinderFrame from '../components/ViewfinderFrame';
 import ConsejosSheet from '../components/ConsejosSheet';
-import GaleriaOverlay from '../components/GaleriaOverlay';
 import { PrimaryButton } from '../components/Buttons';
 import { colors, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
@@ -22,15 +22,23 @@ const FRAME_SIZE = moderateScale(260);
 //  2. Cámara con overlay: X (cerrar), flash + voltear cámara arriba;
 //     recuadro guía + texto en el medio; galería, capturar y consejos
 //     abajo.
-//  3. "Consejos" y "Galería" son overlays que suben/aparecen ENCIMA de
-//     esta misma pantalla (no navegan a otra ruta) -- ver ConsejosSheet
-//     y GaleriaOverlay.
+//  3. "Consejos" es un overlay que sube ENCIMA de esta misma pantalla
+//     (no navega a otra ruta) -- ver ConsejosSheet. "Galería" abre el
+//     selector nativo del sistema (expo-image-picker), no un overlay
+//     propio -- ver el comentario más abajo sobre por qué.
 //
 // Lo que pasa DESPUÉS de tener una foto (mandarla a PlantNet y mostrar
 // el resultado con % de coincidencia) todavía no está construido -- por
 // ahora, al capturar o elegir una foto, se guarda en `fotoUri` como
 // paso intermedio visible, listo para conectar el resultado en el
 // siguiente paso.
+//
+// La galería usa expo-image-picker (abre el selector nativo del
+// sistema) en vez de una grilla propia -- expo-media-library (que sí
+// hubiera permitido armar la grilla igual al mockup) no viene incluido
+// en Expo Go, así que no se podía probar. Si más adelante pasás a un
+// development build para la sustentación final, se puede cambiar a la
+// grilla propia.
 export default function EscanearCameraScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const cameraRef = useRef(null);
@@ -38,7 +46,6 @@ export default function EscanearCameraScreen({ navigation }) {
   const [facing, setFacing] = useState('back');
   const [flash, setFlash] = useState('off');
   const [showConsejos, setShowConsejos] = useState(false);
-  const [showGaleria, setShowGaleria] = useState(false);
   const [fotoUri, setFotoUri] = useState(null);
 
   const handleCapturar = async () => {
@@ -49,9 +56,17 @@ export default function EscanearCameraScreen({ navigation }) {
     // navegar al resultado con el % de coincidencia.
   };
 
-  const handleElegirDeGaleria = (uri) => {
-    setShowGaleria(false);
-    setFotoUri(uri);
+  const handleAbrirGaleria = async () => {
+    const permiso = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permiso.granted) return;
+
+    const resultado = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+    });
+    if (resultado.canceled) return;
+
+    setFotoUri(resultado.assets[0].uri);
     // TODO(paso 7, siguiente entrega): mismo destino que handleCapturar.
   };
 
@@ -64,7 +79,9 @@ export default function EscanearCameraScreen({ navigation }) {
   if (!permission.granted) {
     return (
       <View style={[styles.container, styles.permissionContainer]}>
-        <Ionicons name="camera-outline" size={moderateScale(56)} color={colors.primary} />
+        <View style={styles.permissionIconWrapper}>
+          <Ionicons name="camera-outline" size={moderateScale(48)} color={colors.primary} />
+        </View>
         <Text style={styles.permissionTitle}>Necesitamos acceder a tu cámara</Text>
         <Text style={styles.permissionDescription}>
           SUWA usa la cámara para identificar tu planta. Solo se usa
@@ -75,7 +92,7 @@ export default function EscanearCameraScreen({ navigation }) {
           onPress={requestPermission}
           style={styles.permissionButton}
         />
-        <PressableScale onPress={() => navigation.goBack()} style={{ marginTop: spacing.md }}>
+        <PressableScale onPress={() => navigation.goBack()} style={{ marginTop: spacing.lg }}>
           <Text style={styles.permissionCancel}>Cancelar</Text>
         </PressableScale>
       </View>
@@ -91,62 +108,64 @@ export default function EscanearCameraScreen({ navigation }) {
         flash={flash}
       />
 
-      {/* Barra superior: X para volver, flash + voltear cámara. */}
-      <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
-        <PressableScale onPress={() => navigation.goBack()} hitSlop={12}>
-          <Ionicons name="close" size={moderateScale(28)} color="#FFFFFF" />
-        </PressableScale>
-        <View style={styles.topBarRight}>
-          <PressableScale
-            onPress={() => setFlash((f) => (f === 'off' ? 'on' : 'off'))}
-            hitSlop={12}
-            style={styles.topBarIconSpacing}
-          >
-            <Ionicons
-              name={flash === 'on' ? 'flash' : 'flash-off'}
-              size={moderateScale(24)}
-              color="#FFFFFF"
-            />
+      {/* A diferencia de la versión anterior (3 bloques sueltos con
+          position:absolute cada uno), esto es UN solo overlay en
+          columna: barra de arriba (alto natural), guía central
+          (flex:1, así se centra de verdad en lo que sobra entre las 2
+          barras) y barra de abajo (alto natural). Es lo que arregla el
+          recuadro que quedaba pegado arriba -- con position:absolute
+          suelto, sin top/left, no había garantía de que se centrara
+          respecto al padre. */}
+      <View style={styles.overlay}>
+        <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
+          <PressableScale onPress={() => navigation.goBack()} hitSlop={12}>
+            <Ionicons name="close" size={moderateScale(28)} color="#FFFFFF" />
           </PressableScale>
-          <PressableScale
-            onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
-            hitSlop={12}
-          >
-            <Ionicons name="camera-reverse" size={moderateScale(26)} color="#FFFFFF" />
+          <View style={styles.topBarRight}>
+            <PressableScale
+              onPress={() => setFlash((f) => (f === 'off' ? 'on' : 'off'))}
+              hitSlop={12}
+              style={styles.topBarIconSpacing}
+            >
+              <Ionicons
+                name={flash === 'on' ? 'flash' : 'flash-off'}
+                size={moderateScale(24)}
+                color="#FFFFFF"
+              />
+            </PressableScale>
+            <PressableScale
+              onPress={() => setFacing((f) => (f === 'back' ? 'front' : 'back'))}
+              hitSlop={12}
+            >
+              <Ionicons name="camera-reverse" size={moderateScale(26)} color="#FFFFFF" />
+            </PressableScale>
+          </View>
+        </View>
+
+        <View style={styles.centerGuide} pointerEvents="none">
+          <ViewfinderFrame size={FRAME_SIZE} />
+          <Text style={styles.guideText}>Coloca la planta dentro del recuadro</Text>
+        </View>
+
+        <View style={[styles.bottomBar, { paddingBottom: insets.bottom + spacing.lg }]}>
+          <PressableScale onPress={handleAbrirGaleria} hitSlop={12}>
+            <Ionicons name="images-outline" size={moderateScale(26)} color="#FFFFFF" />
+          </PressableScale>
+
+          <PressableScale onPress={handleCapturar} scaleTo={0.9}>
+            <View style={styles.captureOuter}>
+              <View style={styles.captureInner} />
+            </View>
+          </PressableScale>
+
+          <PressableScale onPress={() => setShowConsejos(true)} hitSlop={12} style={styles.consejosButton}>
+            <Ionicons name="help-circle-outline" size={moderateScale(22)} color="#FFFFFF" />
+            <Text style={styles.consejosLabel}>Consejos</Text>
           </PressableScale>
         </View>
       </View>
 
-      {/* Guía central: recuadro + instrucción. */}
-      <View style={styles.centerGuide} pointerEvents="none">
-        <ViewfinderFrame size={FRAME_SIZE} />
-        <Text style={styles.guideText}>Coloca la planta dentro del recuadro</Text>
-      </View>
-
-      {/* Barra inferior: galería, capturar, consejos. */}
-      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + spacing.lg }]}>
-        <PressableScale onPress={() => setShowGaleria(true)} hitSlop={12}>
-          <Ionicons name="images-outline" size={moderateScale(26)} color="#FFFFFF" />
-        </PressableScale>
-
-        <PressableScale onPress={handleCapturar} scaleTo={0.9}>
-          <View style={styles.captureOuter}>
-            <View style={styles.captureInner} />
-          </View>
-        </PressableScale>
-
-        <PressableScale onPress={() => setShowConsejos(true)} hitSlop={12} style={styles.consejosButton}>
-          <Ionicons name="help-circle-outline" size={moderateScale(22)} color="#FFFFFF" />
-          <Text style={styles.consejosLabel}>Consejos</Text>
-        </PressableScale>
-      </View>
-
       <ConsejosSheet visible={showConsejos} onClose={() => setShowConsejos(false)} />
-      <GaleriaOverlay
-        visible={showGaleria}
-        onClose={() => setShowGaleria(false)}
-        onSelect={handleElegirDeGaleria}
-      />
     </View>
   );
 }
@@ -161,31 +180,47 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: spacing.xl,
   },
+  permissionIconWrapper: {
+    width: moderateScale(96),
+    height: moderateScale(96),
+    borderRadius: moderateScale(48),
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
   permissionTitle: {
     ...typography.h2,
+    fontSize: moderateScale(22),
     color: colors.textDark,
     textAlign: 'center',
-    marginTop: spacing.lg,
     marginBottom: spacing.sm,
   },
   permissionDescription: {
     ...typography.body,
+    fontSize: moderateScale(16),
+    lineHeight: moderateScale(23),
     color: colors.textMuted,
     textAlign: 'center',
     marginBottom: spacing.xl,
   },
   permissionButton: {
     alignSelf: 'stretch',
+    paddingVertical: spacing.md + 2,
   },
   permissionCancel: {
     ...typography.body,
+    fontSize: moderateScale(15),
     color: colors.textMuted,
   },
+  // Overlay único en columna sobre la cámara -- ver comentario en el
+  // JSX de más arriba sobre por qué (esto es lo que arregla el
+  // centrado real del recuadro guía).
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    flexDirection: 'column',
+  },
   topBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -199,22 +234,18 @@ const styles = StyleSheet.create({
     marginRight: spacing.lg,
   },
   centerGuide: {
-    ...StyleSheet.absoluteFillObject,
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   guideText: {
     ...typography.body,
     color: '#FFFFFF',
-    marginTop: FRAME_SIZE / 2 + spacing.lg,
+    marginTop: spacing.lg,
     textAlign: 'center',
     paddingHorizontal: spacing.xl,
   },
   bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
