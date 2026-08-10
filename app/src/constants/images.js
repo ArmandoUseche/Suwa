@@ -24,6 +24,12 @@ export const illustrations = {
   escanearEjemplo: require('../assets/illustrations/escanear-planta-ejemplo.jpg'),
   consejoVioleta: require('../assets/illustrations/consejo-violeta.jpg'),
   consejoSuculenta: require('../assets/illustrations/consejo-suculenta.jpg'),
+  // Versión ya desenfocada (con PIL, GaussianBlur) de la misma foto de
+  // arriba -- para el ejemplo "incorrecto" del consejo 2. Antes se
+  // intentaba desenfocar en vivo con BlurView (expo-blur), pero en
+  // Android ese blur muchas veces no se renderiza de verdad. Con la
+  // imagen ya borrosa de antemano, se ve igual en cualquier dispositivo.
+  consejoSuculentaBorrosa: require('../assets/illustrations/consejo-suculenta-borrosa.jpg'),
   consejoManzanillaCorrecta: require('../assets/illustrations/consejo-manzanilla-correcta.jpg'),
   consejoDosPlantasIncorrecta: require('../assets/illustrations/consejo-dos-plantas-incorrecta.jpg'),
 };
