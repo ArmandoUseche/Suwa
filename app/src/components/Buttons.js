@@ -7,11 +7,18 @@ import { moderateScale } from '../utils/responsive';
 
 // Botón verde sólido: "Iniciar sesión", "Registrarse", "Siguiente", etc.
 // `icon` es opcional (ej. "add" para "+ Vincular dispositivo" en Monitoreo).
+//
+// `style` va tanto a `outerStyle` como a `style` de PressableScale: si
+// no fuera así, cosas como `flex: 1` (para que 2 botones se repartan el
+// ancho de una fila) no harían nada, porque `outerStyle` es lo que
+// realmente participa del layout del padre -- el mismo bug que ya
+// habíamos encontrado en las pestañas de Historial. Ver PressableScale.js.
 export function PrimaryButton({ label, onPress, style, disabled = false, icon }) {
   return (
     <PressableScale
       onPress={onPress}
       disabled={disabled}
+      outerStyle={style}
       style={[styles.primary, disabled && styles.disabled, style]}
     >
       <View style={styles.contentRow}>
@@ -32,7 +39,7 @@ export function PrimaryButton({ label, onPress, style, disabled = false, icon })
 // Botón outline verde: "Registrarse" en la pantalla de Bienvenida.
 export function SecondaryButton({ label, onPress, style }) {
   return (
-    <PressableScale onPress={onPress} style={[styles.secondary, style]}>
+    <PressableScale onPress={onPress} outerStyle={style} style={[styles.secondary, style]}>
       <Text style={styles.secondaryLabel}>{label}</Text>
     </PressableScale>
   );
