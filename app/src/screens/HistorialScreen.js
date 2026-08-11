@@ -54,9 +54,14 @@ function SinDatos() {
 
         <View style={styles.emptyIllustrationWrapper}>
           <View style={styles.emptyIllustrationBlob} />
+          {/* Superpuesta con margen negativo (mismo truco que
+              PlantPhoto en Monitoreo y el marco de Escanear) en vez de
+              position:absolute -- ya encontramos 2 veces que un
+              position:absolute sin top/left no se centra solo de forma
+              confiable. */}
           <Image
             source={illustrations.historialVacio}
-            style={styles.emptyIllustrationImage}
+            style={[styles.emptyIllustrationImage, styles.emptyIllustrationImageOverlap]}
             resizeMode="contain"
           />
         </View>
@@ -157,9 +162,9 @@ const styles = StyleSheet.create({
   // Mancha circular mint detrás de la ilustración, como el círculo
   // detrás de la foto de la planta en Monitoreo -- mismo lenguaje
   // visual. Mismo tamaño que la imagen central (EMPTY_STATE_IMAGE_SIZE)
-  // para que ocupe la misma "caja" que PlantPhoto en Monitoreo.
+  // para que ocupe la misma "caja" que PlantPhoto en Monitoreo. Ya NO
+  // es position:absolute -- ver el comentario en el JSX.
   emptyIllustrationBlob: {
-    position: 'absolute',
     width: EMPTY_STATE_IMAGE_SIZE,
     height: EMPTY_STATE_IMAGE_SIZE,
     borderRadius: EMPTY_STATE_IMAGE_SIZE / 2,
@@ -168,6 +173,12 @@ const styles = StyleSheet.create({
   emptyIllustrationImage: {
     width: EMPTY_STATE_IMAGE_SIZE * 0.9,
     height: EMPTY_STATE_IMAGE_SIZE * 0.9,
+  },
+  // Centra la imagen (más chica) verticalmente dentro del blob (más
+  // grande): la sube la mitad de la suma de los 2 altos, así queda a
+  // medio camino entre "pegada arriba del blob" y "pegada abajo".
+  emptyIllustrationImageOverlap: {
+    marginTop: -(EMPTY_STATE_IMAGE_SIZE + EMPTY_STATE_IMAGE_SIZE * 0.9) / 2,
   },
   emptyTitle: emptyStateStyles.title,
   emptyDescription: emptyStateStyles.description,
