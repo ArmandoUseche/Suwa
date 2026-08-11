@@ -104,3 +104,26 @@ export const mockRegistrosRecientes = [
     horaTexto: 'hoy, 6:00 PM',
   },
 ];
+
+// Resultado del escaneo: 2 IAs, 2 fuentes de datos distintas, mock
+// hasta tener las API keys reales.
+//  1. PlantNet identifica la especie -- en la versión real se la llama
+//     2 veces seguidas para confirmar que la identificación no fue
+//     casualidad (si las 2 llamadas no coinciden, ahí se le pediría
+//     otra foto a la persona en vez de mostrar un resultado dudoso).
+//  2. Con la especie ya CONFIRMADA por PlantNet, se la manda a Gemini
+//     (una IA aparte, prompteada para calcular parámetros de riego).
+//     PlantNet no sabe nada de humedad/temperatura/luz -- eso es
+//     trabajo exclusivo de Gemini, por diseño son 2 fuentes separadas,
+//     no un solo resultado plano.
+export const mockIdentificacionPlantNet = {
+  nombreComun: 'Lengua de suegra',
+  nombreCientifico: 'Sansevieria trifasciata',
+  coincidencia: 98,
+};
+
+export const mockParametrosGemini = {
+  humedadIdeal: 25,
+  temperaturaIdeal: 22,
+  luzIdeal: 'Media',
+};
