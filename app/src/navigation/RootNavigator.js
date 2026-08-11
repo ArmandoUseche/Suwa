@@ -7,6 +7,7 @@ import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import RegisterSuccessScreen from '../screens/RegisterSuccessScreen';
 import EscanearCameraScreen from '../screens/EscanearCameraScreen';
+import ResultadoEscaneoScreen from '../screens/ResultadoEscaneoScreen';
 import MainTabNavigator from './MainTabNavigator';
 
 const Stack = createNativeStackNavigator();
@@ -37,6 +38,7 @@ export default function RootNavigator() {
         component={EscanearCameraScreen}
         options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
       />
+      <Stack.Screen name="ResultadoEscaneo" component={ResultadoEscaneoScreen} />
     </Stack.Navigator>
   );
 }
