@@ -1,41 +1,51 @@
-Paso 5 (Monitoreo) + subir tamaño de letra en 3 pantallas. 5 archivos.
-No agrega dependencias. No hace falta npm install.
+Resultado del escaneo, con el flujo real de las 2 IAs (PlantNet +
+Gemini). 4 archivos. No agrega dependencias, no hace falta npm install.
 
-git add app/src/screens/MonitoreoScreen.js
-git commit -m "fix: bajar más la foto de la planta en Monitoreo sin dispositivo"
+⚠️ Esto REEMPLAZA por completo la entrega anterior ("resultado del
+escaneo mock") que nunca llegaste a aplicar -- no hace falta que
+apliques esa, solo esta. Los 4 archivos de acá son la versión completa
+y definitiva.
 
-git add app/src/navigation/MainTabNavigator.js
-git commit -m "fix: permitir que el tamaño de letra de los tabs baje más antes de truncar"
+git add app/src/constants/mockData.js
+git commit -m "feat: separar el mock en 2 fuentes -- PlantNet (identificacion) y Gemini (parametros)"
 
-git add app/src/screens/LoginScreen.js
-git commit -m "style: subir tamaño de letra del título en Login"
+git add app/src/screens/ResultadoEscaneoScreen.js
+git commit -m "feat: pantalla de resultado con las 2 etapas de carga (identificando / calculando)"
 
-git add app/src/screens/RegisterScreen.js
-git commit -m "style: subir tamaño de letra del título en Registro"
+git add app/src/navigation/RootNavigator.js
+git commit -m "feat: registrar ResultadoEscaneo en el stack raiz"
 
-git add app/src/components/PlantGreetingBanner.js
-git commit -m "style: subir tamaño de letra del saludo en el banner de Monitoreo"
+git add app/src/screens/EscanearCameraScreen.js
+git commit -m "feat: capturar/elegir foto navega al resultado en vez de quedarse en la camara"
 
-Qué cambia:
+Qué cambia respecto a la entrega anterior (la que no llegaste a
+aplicar): esa tenía todo el resultado mezclado en un solo mock plano,
+como si fuera una sola respuesta -- no reflejaba que en realidad son 2
+IAs con 2 responsabilidades separadas:
 
-1. MonitoreoScreen.js: el overlap de la foto sobre el banner bajó de
-   ~28% a ~10% (línea marginTop: -PLANT_PHOTO_SIZE * 0.1), así que la
-   foto -- y todo lo que sigue en el flujo normal (título, descripción,
-   botón) -- baja más, sin tocar el banner (que se queda arriba, como
-   pediste). Si querés más o menos bajada, esa es la única línea a
-   tocar (probá 0.05 para bajar más, 0.15 para subir un poco).
+1. mockData.js -- ahora son 2 objetos separados en vez de 1:
+   - mockIdentificacionPlantNet (nombreComun, nombreCientifico,
+     coincidencia) -- lo que PlantNet devuelve. En la versión real se la
+     llama 2 VECES seguidas para confirmar que la identificación no fue
+     casualidad.
+   - mockParametrosGemini (humedadIdeal, temperaturaIdeal, luzIdeal) --
+     lo que Gemini calcula DESPUÉS, ya con la especie confirmada por
+     PlantNet. PlantNet no sabe nada de esto, por diseño.
 
-2. MainTabNavigator.js: la medición en el dispositivo (de la entrega
-   anterior) ya calculaba bien el factor de reducción necesario, pero un
-   "piso" de seguridad (0.65) le impedía bajar lo suficiente en tu
-   celular, y terminaba truncando con "…" en vez de encimarse. Se bajó
-   ese piso a 0.5 y se agregó adjustsFontSizeToFit como respaldo final
-   (por si en algún dispositivo aún así no alcanza) -- entre los dos,
-   el texto ya no debería truncarse nunca, aunque quede chico.
+2. ResultadoEscaneoScreen.js -- ahora tiene 2 etapas de carga antes de
+   mostrar el resultado, simuladas con 2 timers (identificando →
+   calculando → listo) en vez de mostrar todo de golpe. Es una
+   simulación a propósito: como todavía no hay API keys, esto deja la
+   pantalla YA con la forma real que va a tener (2 llamadas, 2 tiempos
+   de espera), y cuando tengas las keys, cada timer se reemplaza por su
+   llamada real en el mismo lugar -- están marcados con TODO en el
+   código, en la función donde arrancan los timers.
 
-3. LoginScreen.js / RegisterScreen.js: el título ("¡Hola de nuevo!" /
-   "¡Bienvenido!") subió de 22 a 26.
+3. RootNavigator.js / EscanearCameraScreen.js -- igual que la entrega
+   anterior (la ruta + que capturar/elegir foto navegue para acá), no
+   cambió nada de esto.
 
-4. PlantGreetingBanner.js: el saludo ("Hola, Jose.") subió de 24 a 28.
-
-Probar en tu celular real y avisar cómo queda.
+Probar el flujo completo: Escanear → cámara → sacar/elegir foto →
+debería verse primero "Identificando tu planta..." con el spinner,
+después "Calculando los parámetros de riego...", y recién ahí el
+resultado con tu foto real.

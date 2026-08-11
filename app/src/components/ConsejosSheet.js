@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import PressableScale from './PressableScale';
@@ -41,11 +40,11 @@ const TIPS = [
   {
     titulo: 'Busca una foto clara',
     descripcion: 'Evita tomar fotos borrosas, oscuras o con demasiada sombra para no alterar el resultado.',
-    image: illustrations.consejoSuculenta,
-    // 'blur': la miniatura "incorrecta" desenfoca la misma foto (no hay
-    // una 2da foto "mala" para este caso) -- así se ve realmente
-    // borrosa, no solo oscurecida.
-    wrongEffect: 'blur',
+    // Ahora son 2 fotos reales (la borrosa se generó de antemano con
+    // PIL a partir de la misma foto) en vez de desenfocar en vivo con
+    // BlurView -- en Android ese blur muchas veces no se renderizaba.
+    wrongImage: illustrations.consejoSuculentaBorrosa,
+    rightImage: illustrations.consejoSuculenta,
   },
   {
     titulo: 'Una planta a la vez',
@@ -67,9 +66,6 @@ function ThumbBox({ correct, image, wrongEffect }) {
             !correct && wrongEffect === 'shift' && styles.thumbShift,
           ]}
         />
-        {!correct && wrongEffect === 'blur' && (
-          <BlurView intensity={30} tint="light" style={StyleSheet.absoluteFillObject} />
-        )}
       </View>
       <View style={[styles.badge, correct ? styles.badgeCorrect : styles.badgeWrong]}>
         <Ionicons
