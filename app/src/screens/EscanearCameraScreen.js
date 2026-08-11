@@ -27,11 +27,10 @@ const FRAME_SIZE = moderateScale(260);
 //     selector nativo del sistema (expo-image-picker), no un overlay
 //     propio -- ver el comentario más abajo sobre por qué.
 //
-// Lo que pasa DESPUÉS de tener una foto (mandarla a PlantNet y mostrar
-// el resultado con % de coincidencia) todavía no está construido -- por
-// ahora, al capturar o elegir una foto, se guarda en `fotoUri` como
-// paso intermedio visible, listo para conectar el resultado en el
-// siguiente paso.
+// Lo que pasa DESPUÉS de tener una foto: se navega a ResultadoEscaneo
+// con la foto como parámetro. La identificación de PlantNet ahí es mock
+// por ahora (no hay API key todavía) -- cuando se conecte la real, esta
+// pantalla y el flujo no cambian, solo de dónde sale el resultado.
 //
 // La galería usa expo-image-picker (abre el selector nativo del
 // sistema) en vez de una grilla propia -- expo-media-library (que sí
@@ -46,14 +45,11 @@ export default function EscanearCameraScreen({ navigation }) {
   const [facing, setFacing] = useState('back');
   const [flash, setFlash] = useState('off');
   const [showConsejos, setShowConsejos] = useState(false);
-  const [fotoUri, setFotoUri] = useState(null);
 
   const handleCapturar = async () => {
     if (!cameraRef.current) return;
     const photo = await cameraRef.current.takePictureAsync({ quality: 0.8 });
-    setFotoUri(photo.uri);
-    // TODO(paso 7, siguiente entrega): mandar photo.uri a PlantNet y
-    // navegar al resultado con el % de coincidencia.
+    navigation.navigate('ResultadoEscaneo', { fotoUri: photo.uri });
   };
 
   const handleAbrirGaleria = async () => {
@@ -66,8 +62,7 @@ export default function EscanearCameraScreen({ navigation }) {
     });
     if (resultado.canceled) return;
 
-    setFotoUri(resultado.assets[0].uri);
-    // TODO(paso 7, siguiente entrega): mismo destino que handleCapturar.
+    navigation.navigate('ResultadoEscaneo', { fotoUri: resultado.assets[0].uri });
   };
 
   // Sin permiso todavía: pantalla propia (no el diálogo pelado del
