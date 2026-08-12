@@ -1,3 +1,5 @@
+import { illustrations } from './images';
+
 // Datos de ejemplo para construir la pantalla de Monitoreo sin depender
 // todavía del backend. La forma de este objeto sigue el modelo real
 // LecturaSensor del contrato de API (mismos nombres de campo, en español
@@ -127,3 +129,48 @@ export const mockParametrosGemini = {
   temperaturaIdeal: 22,
   luzIdeal: 'Media',
 };
+
+// Mis Plantas tiene 3 estados, no 2 -- distinto de Historial/Escanear
+// porque acá el estado "sin kit" y el estado "sin plantas" son cosas
+// separadas (podés tener el kit conectado y aun así no haber agregado
+// ninguna planta todavía):
+//  1. mockTieneDispositivoVinculado en false -> "vincular dispositivo"
+//     (misma bandera que ya usan Monitoreo/Historial/Escanear, no se
+//     repite acá).
+//  2. Con el kit vinculado, mockTienePlantas en false -> "Sin registros
+//     aún" con foto+cruz verde (mockup real).
+//  3. Con plantas -> la lista de acá abajo.
+export const mockTienePlantas = false;
+
+// Cada planta puede o no estar "en monitoreo" (conectada al kit físico
+// AHORA MISMO). Solo puede haber una planta en monitoreo a la vez (un
+// kit físico), las demás son plantas ya escaneadas pero sin datos en
+// vivo -- mismo diseño de tarjeta, sin el punto verde ni el gráfico.
+export const mockPlantas = [
+  {
+    id: 'pl1',
+    nombreComun: 'Lengua de suegra',
+    nombreCientifico: 'Sansevieria trifasciata',
+    // La foto real es la que se toma al momento de escanear (fotoUri
+    // de la cámara) -- acá se reusa un asset existente como foto mock,
+    // ya que no hay persistencia real todavía entre plantas escaneadas
+    // y esta lista (ver LEEME de esta entrega).
+    foto: illustrations.monitoreoPlantaFoto,
+    enMonitoreo: true,
+    humedadActual: 25,
+    humedadEstado: 'Óptimo, estable',
+    luzIdeal: 'Indirecta brillante',
+    kitConexion: 'estable', // 'estable' | 'inestable'
+  },
+  {
+    id: 'pl2',
+    nombreComun: 'Potus',
+    nombreCientifico: 'Epipremnum aureum',
+    foto: illustrations.consejoSuculenta,
+    enMonitoreo: false,
+    humedadActual: null,
+    humedadEstado: null,
+    luzIdeal: 'Media',
+    kitConexion: null,
+  },
+];
