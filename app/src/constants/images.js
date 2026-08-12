@@ -32,6 +32,8 @@ export const illustrations = {
   consejoSuculentaBorrosa: require('../assets/illustrations/consejo-suculenta-borrosa.jpg'),
   consejoManzanillaCorrecta: require('../assets/illustrations/consejo-manzanilla-correcta.jpg'),
   consejoDosPlantasIncorrecta: require('../assets/illustrations/consejo-dos-plantas-incorrecta.jpg'),
+  // Ilustración del estado vacío de Mis Plantas (maceta + cruz verde).
+  misPlantasVacio: require('../assets/illustrations/mis-plantas-vacio.jpg'),
 };
 
 export const logo = {
