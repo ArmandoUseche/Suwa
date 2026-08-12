@@ -8,6 +8,7 @@ import RegisterScreen from '../screens/RegisterScreen';
 import RegisterSuccessScreen from '../screens/RegisterSuccessScreen';
 import EscanearCameraScreen from '../screens/EscanearCameraScreen';
 import ResultadoEscaneoScreen from '../screens/ResultadoEscaneoScreen';
+import PlantaDetalleScreen from '../screens/PlantaDetalleScreen';
 import MainTabNavigator from './MainTabNavigator';
 
 const Stack = createNativeStackNavigator();
@@ -39,6 +40,7 @@ export default function RootNavigator() {
         options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }}
       />
       <Stack.Screen name="ResultadoEscaneo" component={ResultadoEscaneoScreen} />
+      <Stack.Screen name="PlantaDetalle" component={PlantaDetalleScreen} />
     </Stack.Navigator>
   );
 }
