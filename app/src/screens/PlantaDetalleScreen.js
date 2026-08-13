@@ -8,7 +8,7 @@ import ProgramarRiegoSheet from '../components/ProgramarRiegoSheet';
 import PressableScale from '../components/PressableScale';
 import { PrimaryButton, SecondaryButton } from '../components/Buttons';
 import { icons } from '../constants/images';
-import { mockPlantas } from '../constants/mockData';
+import { useAppState } from '../context/AppStateContext';
 import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
 
@@ -22,13 +22,14 @@ const mockHumedad24h = {
 
 // Detalle de una planta (Paso 7, se llega desde "Ver monitoreo"/"Ver
 // detalle" en la lista de Mis Plantas). Recibe `plantaId` por parámetro
-// de navegación y busca la planta en el mock -- cuando se conecte la
-// API real, este mismo patrón cambia a un GET por id en vez de un
-// .find() sobre un array fijo.
+// de navegación y busca la planta en `plantas` del AppStateContext
+// compartido (ya no el mock directo) -- así, si desde acá se editan los
+// umbrales, la lista de Mis Plantas ve el cambio también, sin recargar.
 export default function PlantaDetalleScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
   const { plantaId } = route.params ?? {};
-  const planta = mockPlantas.find((p) => p.id === plantaId) ?? mockPlantas[0];
+  const { plantas } = useAppState();
+  const planta = plantas.find((p) => p.id === plantaId) ?? plantas[0];
   const [showProgramarRiego, setShowProgramarRiego] = useState(false);
 
   const handleRegarAhora = () => {
@@ -123,7 +124,9 @@ export default function PlantaDetalleScreen({ route, navigation }) {
             <Ionicons name="chevron-forward" size={moderateScale(18)} color={colors.textMuted} />
           </PressableScale>
           <PressableScale
-            onPress={() => Alert.alert('Configurar umbrales', 'Se conecta más adelante.')}
+            onPress={() =>
+              navigation.navigate('ConfigurarUmbrales', { plantaId: planta.id })
+            }
             style={styles.configRow}
           >
             <Ionicons name="options-outline" size={moderateScale(20)} color={colors.textDark} />
