@@ -11,7 +11,7 @@ import {
   emptyStateStyles,
 } from '../constants/emptyState';
 import { illustrations } from '../constants/images';
-import { mockTieneDispositivoVinculado } from '../constants/mockData';
+import { useAppState } from '../context/AppStateContext';
 import { colors, radius, spacing } from '../constants/theme';
 
 // Intro de Escanear (Paso 7). Mismo esqueleto que Monitoreo/Historial
@@ -19,12 +19,14 @@ import { colors, radius, spacing } from '../constants/theme';
 // constantes compartidas de emptyState.js) para que las 3 pantallas se
 // vean del mismo tamaño y proporciones.
 //
-// Reusa mockTieneDispositivoVinculado (la misma bandera de Monitoreo):
-// sin kit vinculado no tiene sentido escanear todavía (no hay dónde
-// guardar el resultado), así que el CTA cambia a "Vincular dispositivo"
-// en vez de "Escanear ahora".
+// Reusa tieneDispositivoVinculado del AppStateContext compartido (misma
+// bandera de Monitoreo, ya no es un mock fijo -- se actualiza en vivo
+// al vincular un kit real): sin kit vinculado no tiene sentido escanear
+// todavía (no hay dónde guardar el resultado), así que el CTA cambia a
+// "Vincular dispositivo" en vez de "Escanear ahora".
 export default function EscanearScreen({ navigation }) {
   const insets = useSafeAreaInsets();
+  const { tieneDispositivoVinculado } = useAppState();
 
   return (
     <View style={styles.container}>
@@ -55,7 +57,7 @@ export default function EscanearScreen({ navigation }) {
 
         <Text style={styles.title}>Identifica tu planta en segundos</Text>
 
-        {mockTieneDispositivoVinculado ? (
+        {tieneDispositivoVinculado ? (
           <>
             <Text style={styles.description}>
               Toma una foto para detectar su especie y conocer los
@@ -76,7 +78,7 @@ export default function EscanearScreen({ navigation }) {
             <PrimaryButton
               label="Vincular dispositivo"
               icon="add"
-              onPress={() => {}}
+              onPress={() => navigation.navigate('VincularDispositivo')}
               style={styles.button}
             />
           </>
