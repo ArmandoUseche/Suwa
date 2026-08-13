@@ -11,6 +11,7 @@ import {
 import { RozhaOne_400Regular } from '@expo-google-fonts/rozha-one';
 
 import RootNavigator from './src/navigation/RootNavigator';
+import { AppStateProvider } from './src/context/AppStateContext';
 
 export default function App() {
   // Las tipografías del mockup (Rozha One para títulos, Inter para el
@@ -34,10 +35,12 @@ export default function App() {
     // de React Navigation (swipe back, etc.) funcionen en Android.
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <NavigationContainer>
-          <StatusBar style="dark" />
-          <RootNavigator />
-        </NavigationContainer>
+        <AppStateProvider>
+          <NavigationContainer>
+            <StatusBar style="dark" />
+            <RootNavigator />
+          </NavigationContainer>
+        </AppStateProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
