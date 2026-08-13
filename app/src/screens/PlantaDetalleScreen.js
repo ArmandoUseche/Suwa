@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   },
   foto: {
     width: '100%',
-    aspectRatio: 1.4,
+    height: moderateScale(280),
   },
   historySection: {
     paddingHorizontal: spacing.lg,
