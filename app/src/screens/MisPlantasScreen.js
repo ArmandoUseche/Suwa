@@ -11,7 +11,8 @@ import {
   emptyStateStyles,
 } from '../constants/emptyState';
 import { illustrations } from '../constants/images';
-import { mockPlantas, mockTieneDispositivoVinculado, mockTienePlantas } from '../constants/mockData';
+import { mockTienePlantas } from '../constants/mockData';
+import { useAppState } from '../context/AppStateContext';
 import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
 
@@ -19,14 +20,21 @@ import { moderateScale } from '../utils/responsive';
 // tiene 3 estados (no 2): el kit conectado y el haber agregado plantas
 // son 2 cosas independientes entre sí -- podés tener el kit vinculado
 // hace rato y aun así no haber escaneado ninguna planta todavía.
-//  1. Sin kit vinculado -> CTA "Vincular dispositivo" (mismo criterio
-//     que Monitoreo/Historial/Escanear).
-//  2. Con kit, sin plantas -> "Sin registros aún" (mockup real).
-//  3. Con plantas -> lista de tarjetas (PlantaCard).
+//  1. Sin kit vinculado -> CTA "Vincular dispositivo" (tieneDispositivo
+//     Vinculado del AppStateContext compartido, mismo criterio que
+//     Monitoreo/Historial/Escanear -- ya no es mock fijo).
+//  2. Con kit, sin plantas -> "Sin registros aún" (mockup real,
+//     mockTienePlantas sigue siendo un mock fijo por ahora -- no hay
+//     acción real todavía que "agregue" una planta a la lista, eso
+//     depende de que Escanear guarde el resultado, que sigue pendiente).
+//  3. Con plantas -> lista de tarjetas (PlantaCard), leídas de
+//     `plantas` en el contexto (no del mock directo) para que
+//     configurar umbrales desde el detalle se refleje acá también.
 export default function MisPlantasScreen({ navigation }) {
   const insets = useSafeAreaInsets();
+  const { tieneDispositivoVinculado, plantas } = useAppState();
 
-  if (!mockTieneDispositivoVinculado) {
+  if (!tieneDispositivoVinculado) {
     return (
       <EstadoVacio
         insets={insets}
@@ -34,7 +42,7 @@ export default function MisPlantasScreen({ navigation }) {
         descripcion="Necesitás tu kit SUWA conectado para poder escanear y monitorear tus plantas."
         botonLabel="Vincular dispositivo"
         botonIcon="add"
-        onBotonPress={() => {}}
+        onBotonPress={() => navigation.navigate('VincularDispositivo')}
       />
     );
   }
@@ -52,8 +60,8 @@ export default function MisPlantasScreen({ navigation }) {
     );
   }
 
-  const enMonitoreo = mockPlantas.find((p) => p.enMonitoreo);
-  const resto = mockPlantas.filter((p) => !p.enMonitoreo);
+  const enMonitoreo = plantas.find((p) => p.enMonitoreo);
+  const resto = plantas.filter((p) => !p.enMonitoreo);
 
   return (
     <View style={styles.container}>
