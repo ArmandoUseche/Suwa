@@ -15,10 +15,10 @@ import { icons } from '../constants/images';
 import {
   mockEstadoPlanta,
   mockEstadosLectura,
-  mockTieneDispositivoVinculado,
   mockUltimaLectura,
   mockUsuario,
 } from '../constants/mockData';
+import { useAppState } from '../context/AppStateContext';
 import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
 
@@ -31,24 +31,24 @@ const PLANT_PHOTO_SIZE = EMPTY_STATE_IMAGE_SIZE;
 
 // Pantalla de Monitoreo (Paso 5).
 //
-// Tiene DOS estados, según si el usuario ya vinculó un dispositivo:
-//  - Sin vincular (mockTieneDispositivoVinculado = false, mockup real):
-//    banner de saludo + "¡Comencemos, {nombre}!" + botón para vincular.
-//    Este es el estado inicial real para un usuario nuevo, así que es
-//    el que se ve por defecto ahora mismo.
+// Tiene DOS estados, según si el usuario ya vinculó un dispositivo
+// (tieneDispositivoVinculado, del AppStateContext compartido -- ya no
+// es un mock fijo, se actualiza en vivo al vincular un kit real desde
+// VincularDispositivoScreen, Paso 7):
+//  - Sin vincular: banner de saludo + "¡Comencemos, {nombre}!" + botón
+//    para vincular. Este es el estado inicial real para un usuario
+//    nuevo.
 //  - Vinculado: tarjeta "Planta" con foto + estado, 3 chips de lecturas,
 //    botón "Regar ahora" y aviso de próximo riego automático.
-// Cuando exista el flujo real de vincular dispositivo (Paso 7, Mis
-// Plantas), `mockTieneDispositivoVinculado` deja de ser mock y pasa a
-// salir de si el usuario tiene o no una Planta asociada.
-export default function MonitoreoScreen() {
-  if (!mockTieneDispositivoVinculado) {
-    return <SinDispositivo />;
+export default function MonitoreoScreen({ navigation }) {
+  const { tieneDispositivoVinculado } = useAppState();
+  if (!tieneDispositivoVinculado) {
+    return <SinDispositivo navigation={navigation} />;
   }
   return <ConDispositivo />;
 }
 
-function SinDispositivo() {
+function SinDispositivo({ navigation }) {
   // El banner no debe pegarse contra el notch/status bar -- en el
   // mockup flota con margen arriba. insets.top es el alto real del
   // notch/status bar de este dispositivo puntual.
@@ -83,7 +83,7 @@ function SinDispositivo() {
         <PrimaryButton
           label="Vincular dispositivo"
           icon="add"
-          onPress={() => {}}
+          onPress={() => navigation.navigate('VincularDispositivo')}
           style={styles.linkButton}
         />
       </ScrollView>
