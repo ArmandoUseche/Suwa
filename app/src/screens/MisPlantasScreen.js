@@ -11,7 +11,6 @@ import {
   emptyStateStyles,
 } from '../constants/emptyState';
 import { illustrations } from '../constants/images';
-import { mockTienePlantas } from '../constants/mockData';
 import { useAppState } from '../context/AppStateContext';
 import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
@@ -23,13 +22,15 @@ import { moderateScale } from '../utils/responsive';
 //  1. Sin kit vinculado -> CTA "Vincular dispositivo" (tieneDispositivo
 //     Vinculado del AppStateContext compartido, mismo criterio que
 //     Monitoreo/Historial/Escanear -- ya no es mock fijo).
-//  2. Con kit, sin plantas -> "Sin registros aún" (mockup real,
-//     mockTienePlantas sigue siendo un mock fijo por ahora -- no hay
-//     acción real todavía que "agregue" una planta a la lista, eso
-//     depende de que Escanear guarde el resultado, que sigue pendiente).
+//  2. Con kit, sin plantas (plantas.length === 0) -> "Sin registros
+//     aún" (mockup real). Ya no hay una bandera separada para esto --
+//     se calcula directo del array `plantas` del contexto, para no
+//     tener 2 fuentes de verdad que se puedan desincronizar (ver
+//     comentario en mockData.js sobre mockTienePlantas, que se sacó).
 //  3. Con plantas -> lista de tarjetas (PlantaCard), leídas de
 //     `plantas` en el contexto (no del mock directo) para que
-//     configurar umbrales desde el detalle se refleje acá también.
+//     configurar umbrales / agregar una planta escaneada se reflejen
+//     acá también, sin recargar.
 export default function MisPlantasScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const { tieneDispositivoVinculado, plantas } = useAppState();
@@ -47,7 +48,7 @@ export default function MisPlantasScreen({ navigation }) {
     );
   }
 
-  if (!mockTienePlantas) {
+  if (plantas.length === 0) {
     return (
       <EstadoVacio
         insets={insets}
