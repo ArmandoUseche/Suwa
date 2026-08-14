@@ -1,18 +1,34 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import GradientBackground from '../components/GradientBackground';
 import { PrimaryButton } from '../components/Buttons';
+import { logo } from '../constants/images';
 import { colors, spacing, typography } from '../constants/theme';
 import { contentMaxWidth, moderateScale } from '../utils/responsive';
 
+// Cuánto dura la pantalla de carga entre "Iniciar sesión" y llegar de
+// verdad al Login -- mismo criterio que SPLASH_DURATION_MS en
+// SplashScreen.js, pero un poco más corta (esto es una transición
+// intermedia, no la primera impresión de la app).
+const CARGA_DURATION_MS = 1100;
+
 // Pantalla "¡Cuenta creada con éxito!" (mockup 7). Las dos chispitas
 // verdes hacen un pop-in con rebote en vez de aparecer estáticas.
+//
+// Al tocar "Iniciar sesión" no se navega directo -- primero se muestra
+// una pantalla de carga (mismo logo + fade que SplashScreen, la
+// primera pantalla que se ve al abrir la app) y recién después se
+// entra a Login. Es la secuencia que se pidió: confirmación → carga →
+// login.
 export default function RegisterSuccessScreen({ navigation }) {
+  const [etapa, setEtapa] = useState('confirmacion'); // confirmacion | cargando
   const bigSparkScale = useRef(new Animated.Value(0)).current;
   const smallSparkScale = useRef(new Animated.Value(0)).current;
   const contentOpacity = useRef(new Animated.Value(0)).current;
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const logoScale = useRef(new Animated.Value(0.85)).current;
 
   useEffect(() => {
     Animated.sequence([
@@ -35,6 +51,41 @@ export default function RegisterSuccessScreen({ navigation }) {
       useNativeDriver: true,
     }).start();
   }, [bigSparkScale, smallSparkScale, contentOpacity]);
+
+  useEffect(() => {
+    if (etapa !== 'cargando') return;
+
+    Animated.parallel([
+      Animated.timing(logoOpacity, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.spring(logoScale, {
+        toValue: 1,
+        friction: 5,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    const timer = setTimeout(() => {
+      navigation.replace('Login');
+    }, CARGA_DURATION_MS);
+
+    return () => clearTimeout(timer);
+  }, [etapa, navigation, logoOpacity, logoScale]);
+
+  if (etapa === 'cargando') {
+    return (
+      <GradientBackground style={styles.container}>
+        <Animated.Image
+          source={logo.mark}
+          style={[styles.loadingLogo, { opacity: logoOpacity, transform: [{ scale: logoScale }] }]}
+          resizeMode="contain"
+        />
+      </GradientBackground>
+    );
+  }
 
   return (
     <GradientBackground style={styles.container}>
@@ -62,7 +113,7 @@ export default function RegisterSuccessScreen({ navigation }) {
 
         <PrimaryButton
           label="Iniciar sesión"
-          onPress={() => navigation.replace('Login')}
+          onPress={() => setEtapa('cargando')}
           style={styles.button}
         />
       </Animated.View>
@@ -103,5 +154,10 @@ const styles = StyleSheet.create({
   button: {
     minWidth: 220,
     width: '100%',
+  },
+  loadingLogo: {
+    width: moderateScale(96),
+    height: moderateScale(138),
+    tintColor: '#FFFFFF',
   },
 });
