@@ -11,6 +11,12 @@ import ResultadoEscaneoScreen from '../screens/ResultadoEscaneoScreen';
 import PlantaDetalleScreen from '../screens/PlantaDetalleScreen';
 import VincularDispositivoScreen from '../screens/VincularDispositivoScreen';
 import ConfigurarUmbralesScreen from '../screens/ConfigurarUmbralesScreen';
+import CambiarContrasenaScreen from '../screens/CambiarContrasenaScreen';
+import ConfiguracionScreen from '../screens/ConfiguracionScreen';
+import NotificacionesScreen from '../screens/NotificacionesScreen';
+import TerminosDeUsoScreen from '../screens/TerminosDeUsoScreen';
+import PoliticaDePrivacidadScreen from '../screens/PoliticaDePrivacidadScreen';
+import ContactanosScreen from '../screens/ContactanosScreen';
 import MainTabNavigator from './MainTabNavigator';
 
 const Stack = createNativeStackNavigator();
@@ -45,6 +51,12 @@ export default function RootNavigator() {
       <Stack.Screen name="PlantaDetalle" component={PlantaDetalleScreen} />
       <Stack.Screen name="VincularDispositivo" component={VincularDispositivoScreen} />
       <Stack.Screen name="ConfigurarUmbrales" component={ConfigurarUmbralesScreen} />
+      <Stack.Screen name="CambiarContrasena" component={CambiarContrasenaScreen} />
+      <Stack.Screen name="Configuracion" component={ConfiguracionScreen} />
+      <Stack.Screen name="Notificaciones" component={NotificacionesScreen} />
+      <Stack.Screen name="TerminosDeUso" component={TerminosDeUsoScreen} />
+      <Stack.Screen name="PoliticaDePrivacidad" component={PoliticaDePrivacidadScreen} />
+      <Stack.Screen name="Contactanos" component={ContactanosScreen} />
     </Stack.Navigator>
   );
 }
