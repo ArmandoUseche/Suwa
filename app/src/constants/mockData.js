@@ -38,11 +38,17 @@ export const mockEstadoPlanta = {
 // fijo acá.
 export const mockAlertasNoLeidas = 2;
 
-// Nombre del usuario logueado, para el saludo "Hola, {nombre}" y
-// "¡Comencemos, {nombre}!" en Monitoreo. Placeholder hasta que haya un
-// estado de sesión real (login conectado al backend) del que sacarlo.
+// Datos del usuario logueado, para el saludo "Hola, {nombre}" en
+// Monitoreo y para la pantalla de Perfil (Paso 8). Placeholder hasta
+// que haya un estado de sesión real (login conectado al backend) del
+// que sacarlo -- `usuario` es el nombre de usuario derivado del correo
+// (antes del @), como en el mockup, no algo que se pida aparte en el
+// registro (RegisterScreen no tiene un campo de usuario separado).
 export const mockUsuario = {
   nombre: 'Jose',
+  apellidos: 'Pérez',
+  correo: 'jose.perez@gmail.com',
+  usuario: 'jose.perez',
 };
 
 // Si el usuario ya vinculó un dispositivo o no. Con esto en `false`,
