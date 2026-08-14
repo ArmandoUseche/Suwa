@@ -30,9 +30,35 @@ export function AppStateProvider({ children }) {
     setPlantas((prev) => prev.map((p) => (p.id === plantaId ? { ...p, ...cambios } : p)));
   };
 
+  // Agrega una planta nueva a la lista -- se llama desde
+  // ResultadoEscaneoScreen ("Añadir a mis plantas"). La planta nueva
+  // arranca `enMonitoreo: false`: solo puede haber una planta conectada
+  // al kit físico a la vez, y agregarla acá no cambia sola cuál es esa
+  // (eso pasa al vincular el kit a una planta puntual, algo que todavía
+  // no está construido -- por ahora todas las plantas nuevas entran
+  // como "sin conectar", igual que el Potus de ejemplo).
+  const agregarPlanta = (datos) => {
+    const nuevaPlanta = {
+      id: `pl-${Date.now()}`,
+      enMonitoreo: false,
+      humedadActual: null,
+      humedadEstado: null,
+      kitConexion: null,
+      ...datos,
+    };
+    setPlantas((prev) => [...prev, nuevaPlanta]);
+    return nuevaPlanta;
+  };
+
   return (
     <AppStateContext.Provider
-      value={{ tieneDispositivoVinculado, vincularDispositivo, plantas, actualizarUmbrales }}
+      value={{
+        tieneDispositivoVinculado,
+        vincularDispositivo,
+        plantas,
+        actualizarUmbrales,
+        agregarPlanta,
+      }}
     >
       {children}
     </AppStateContext.Provider>
