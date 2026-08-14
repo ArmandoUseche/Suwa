@@ -137,10 +137,16 @@ export const mockParametrosGemini = {
 //  1. mockTieneDispositivoVinculado en false -> "vincular dispositivo"
 //     (misma bandera que ya usan Monitoreo/Historial/Escanear, no se
 //     repite acá).
-//  2. Con el kit vinculado, mockTienePlantas en false -> "Sin registros
-//     aún" con foto+cruz verde (mockup real).
+//  2. Con el kit vinculado y `plantas` vacío -> "Sin registros aún"
+//     con foto+cruz verde (mockup real). Antes esto tenía su propia
+//     bandera (mockTienePlantas) separada del array -- se sacó porque
+//     ahora que "Añadir a mis plantas" sí agrega de verdad (ver
+//     AppStateContext.agregarPlanta), tener 2 fuentes de verdad
+//     (la bandera Y el array) se podían desincronizar entre sí. Ahora
+//     "¿tiene plantas?" es simplemente plantas.length > 0 en la
+//     pantalla, calculado del array de acá abajo -- para probar el
+//     estado vacío, vaciá este array directamente.
 //  3. Con plantas -> la lista de acá abajo.
-export const mockTienePlantas = false;
 
 // Cada planta puede o no estar "en monitoreo" (conectada al kit físico
 // AHORA MISMO). Solo puede haber una planta en monitoreo a la vez (un
