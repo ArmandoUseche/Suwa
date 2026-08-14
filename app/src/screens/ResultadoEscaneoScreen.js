@@ -5,8 +5,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenHeaderPill from '../components/ScreenHeaderPill';
 import StatChip from '../components/StatChip';
 import { PrimaryButton, SecondaryButton } from '../components/Buttons';
-import { icons } from '../constants/images';
+import { icons, illustrations } from '../constants/images';
 import { mockIdentificacionPlantNet, mockParametrosGemini } from '../constants/mockData';
+import { useAppState } from '../context/AppStateContext';
 import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
 
@@ -37,6 +38,7 @@ const DURACION_CALCULANDO = 1100;
 export default function ResultadoEscaneoScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
   const { fotoUri } = route.params ?? {};
+  const { agregarPlanta } = useAppState();
   const [etapa, setEtapa] = useState('identificando'); // identificando | calculando | listo
 
   useEffect(() => {
@@ -59,12 +61,21 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
   const identificacion = mockIdentificacionPlantNet;
   const parametros = mockParametrosGemini;
 
-  // "Añadir a mis plantas" todavía no tiene a dónde guardar de verdad
-  // (Mis Plantas es la próxima parte del Paso 7) -- por ahora, igual que
-  // el resto de los botones mock del proyecto, solo vuelve al tab
-  // principal. Se conecta cuando exista esa pantalla.
+  // Arma el objeto de planta con las 2 fuentes de datos por separado
+  // (identificación de PlantNet + parámetros de Gemini) y lo agrega de
+  // verdad a la lista de Mis Plantas -- ya no es un botón mock. Nace
+  // "sin conectar" (enMonitoreo: false, ver comentario en
+  // AppStateContext.agregarPlanta): agregarla acá no la vincula sola al
+  // kit físico, eso es una acción aparte.
   const handleGuardar = () => {
-    navigation.navigate('Main');
+    agregarPlanta({
+      nombreComun: identificacion.nombreComun,
+      nombreCientifico: identificacion.nombreCientifico,
+      foto: fotoUri ? { uri: fotoUri } : illustrations.escanearEjemplo,
+      luzIdeal: parametros.luzIdeal,
+      temperaturaIdeal: parametros.temperaturaIdeal,
+    });
+    navigation.navigate('Main', { screen: 'MisPlantas' });
   };
 
   return (
