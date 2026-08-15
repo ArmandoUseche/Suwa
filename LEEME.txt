@@ -1,51 +1,43 @@
-Resultado del escaneo, con el flujo real de las 2 IAs (PlantNet +
-Gemini). 4 archivos. No agrega dependencias, no hace falta npm install.
+Fix: la ilustración de Mis Plantas vacío ahora es circular (igual que
+Monitoreo/Historial). 2 archivos.
 
-⚠️ Esto REEMPLAZA por completo la entrega anterior ("resultado del
-escaneo mock") que nunca llegaste a aplicar -- no hace falta que
-apliques esa, solo esta. Los 4 archivos de acá son la versión completa
-y definitiva.
+git add app/src/assets/illustrations/mis-plantas-vacio.jpg
+git commit -m "fix: recortar la ilustracion de Mis Plantas a un cuadrado limpio"
 
-git add app/src/constants/mockData.js
-git commit -m "feat: separar el mock en 2 fuentes -- PlantNet (identificacion) y Gemini (parametros)"
+git add app/src/screens/MisPlantasScreen.js
+git commit -m "fix: mostrar la ilustracion en circulo, mismo lenguaje visual que Monitoreo/Historial"
 
-git add app/src/screens/ResultadoEscaneoScreen.js
-git commit -m "feat: pantalla de resultado con las 2 etapas de carga (identificando / calculando)"
+Qué pasó: la imagen original que subiste (12.png) era una tarjeta
+rectangular con esquinas redondeadas envuelta en un marco negro (se ve
+en cualquier visor de imágenes, no en la app -- el marco no era tuyo a
+propósito, parece un recorte de pantalla). La había guardado tal cual,
+como un rectángulo con "contain" -- por eso no era circular como las
+otras 2 pantallas.
 
-git add app/src/navigation/RootNavigator.js
-git commit -m "feat: registrar ResultadoEscaneo en el stack raiz"
+Intenté primero quitar el fondo (mismo método que usamos con
+welcome-hero-cutout e historial-vacio-ilustracion), pero esta imagen
+tenía un contorno claro entre el marco negro y el fondo mint que
+rompía ese método y dejaba manchas feas. En vez de insistir con eso,
+recorté un CUADRADO limpio del área central (maceta + cruz + fondo
+mint original, sin el marco negro) y dejo que el círculo lo recorte
+React Native en el momento -- el mismo criterio que ya usa PlantPhoto
+en Monitoreo (foto cuadrada + borderRadius: mitad del tamaño). Más
+simple y sin artefactos.
 
-git add app/src/screens/EscanearCameraScreen.js
-git commit -m "feat: capturar/elegir foto navega al resultado en vez de quedarse en la camara"
+----------------------------------------------------------------------
 
-Qué cambia respecto a la entrega anterior (la que no llegaste a
-aplicar): esa tenía todo el resultado mezclado en un solo mock plano,
-como si fuera una sola respuesta -- no reflejaba que en realidad son 2
-IAs con 2 responsabilidades separadas:
+Sobre lo del commit final con "add .": no lo puedo meter como un commit
+mío en el LEEME, porque yo no tengo forma de saber qué archivos sueltos
+tenés vos en tu carpeta en este momento (package-lock.json actualizado,
+cambios de app.json de instalaciones que corriste, etc.) -- eso solo lo
+sabés vos parado en tu terminal. Lo que sí puedo darte es el comando
+exacto para que lo corras vos, al final, después de aplicar todo lo de
+arriba:
 
-1. mockData.js -- ahora son 2 objetos separados en vez de 1:
-   - mockIdentificacionPlantNet (nombreComun, nombreCientifico,
-     coincidencia) -- lo que PlantNet devuelve. En la versión real se la
-     llama 2 VECES seguidas para confirmar que la identificación no fue
-     casualidad.
-   - mockParametrosGemini (humedadIdeal, temperaturaIdeal, luzIdeal) --
-     lo que Gemini calcula DESPUÉS, ya con la especie confirmada por
-     PlantNet. PlantNet no sabe nada de esto, por diseño.
+  git add .
+  git commit -m "chore: sincronizar package-lock.json, app.json y otros archivos sueltos"
 
-2. ResultadoEscaneoScreen.js -- ahora tiene 2 etapas de carga antes de
-   mostrar el resultado, simuladas con 2 timers (identificando →
-   calculando → listo) en vez de mostrar todo de golpe. Es una
-   simulación a propósito: como todavía no hay API keys, esto deja la
-   pantalla YA con la forma real que va a tener (2 llamadas, 2 tiempos
-   de espera), y cuando tengas las keys, cada timer se reemplaza por su
-   llamada real en el mismo lugar -- están marcados con TODO en el
-   código, en la función donde arrancan los timers.
-
-3. RootNavigator.js / EscanearCameraScreen.js -- igual que la entrega
-   anterior (la ruta + que capturar/elegir foto navegue para acá), no
-   cambió nada de esto.
-
-Probar el flujo completo: Escanear → cámara → sacar/elegir foto →
-debería verse primero "Identificando tu planta..." con el spinner,
-después "Calculando los parámetros de riego...", y recién ahí el
-resultado con tu foto real.
+Ojo: "git add ." suma TODO lo que haya cambiado y no esté en
+.gitignore, no soleamente lo de esta entrega -- si tenés algún cambio a
+medio hacer que no querés commitear todavía, revisá "git status" antes
+de correrlo.

@@ -36,7 +36,8 @@
         {
           "photosPermission": "SUWA necesita acceso a tus fotos para que puedas elegir una imagen ya tomada al escanear una planta."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ]
   }
 }
