@@ -32,6 +32,22 @@ export default function PlantaDetalleScreen({ route, navigation }) {
   const planta = plantas.find((p) => p.id === plantaId) ?? plantas[0];
   const [showProgramarRiego, setShowProgramarRiego] = useState(false);
 
+  // Resguardo: esta pantalla solo debería alcanzarse con al menos una
+  // planta ya cargada (se llega desde un item de la lista de Mis
+  // Plantas), pero si `plantas` llegara vacío igual (ej. navegación
+  // directa, o se vacía el array a mano para probar el estado vacío
+  // mientras esta pantalla ya estaba abierta), `planta` sería
+  // `undefined` y todo lo de abajo (`planta.nombreComun`, etc.)
+  // tiraría error en vez de mostrar una pantalla en blanco.
+  if (!planta) {
+    return (
+      <View style={styles.emptyGuard}>
+        <Text style={typography.body}>No se encontró esta planta.</Text>
+        <PrimaryButton label="Volver" onPress={() => navigation.goBack()} style={styles.emptyGuardButton} />
+      </View>
+    );
+  }
+
   const handleRegarAhora = () => {
     // Mock -- mismo criterio que "Regar ahora" en el dashboard de
     // Monitoreo (POST /api/riego/activar cuando se conecte).
@@ -146,6 +162,16 @@ export default function PlantaDetalleScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
+  emptyGuard: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
+  emptyGuardButton: {
+    minWidth: moderateScale(160),
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,
