@@ -30,9 +30,25 @@ export default function ConfigurarUmbralesScreen({ route, navigation }) {
   const { plantas, actualizarUmbrales } = useAppState();
   const planta = plantas.find((p) => p.id === plantaId) ?? plantas[0];
 
-  const [humedad, setHumedad] = useState(String(planta.humedadActual ?? ''));
-  const [temperatura, setTemperatura] = useState(String(planta.temperaturaIdeal ?? ''));
-  const [luz, setLuz] = useState(planta.luzIdeal ?? 'Media');
+  // Los hooks tienen que llamarse siempre, así que el `?.` de acá evita
+  // que truene ANTES de llegar al resguardo de abajo si `planta` viniera
+  // undefined (plantas vacío) -- el resguardo en sí no puede ir antes de
+  // estas líneas por la misma razón (reglas de hooks de React).
+  const [humedad, setHumedad] = useState(String(planta?.humedadActual ?? ''));
+  const [temperatura, setTemperatura] = useState(String(planta?.temperaturaIdeal ?? ''));
+  const [luz, setLuz] = useState(planta?.luzIdeal ?? 'Media');
+
+  // Mismo resguardo que en PlantaDetalleScreen: esta pantalla solo
+  // debería alcanzarse con una planta ya cargada, pero si `plantas`
+  // llegara vacío, mejor esto que un error en blanco.
+  if (!planta) {
+    return (
+      <View style={styles.emptyGuard}>
+        <Text style={typography.body}>No se encontró esta planta.</Text>
+        <PrimaryButton label="Volver" onPress={() => navigation.goBack()} style={styles.emptyGuardButton} />
+      </View>
+    );
+  }
 
   const handleGuardar = () => {
     actualizarUmbrales(planta.id, {
@@ -105,6 +121,16 @@ export default function ConfigurarUmbralesScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
+  emptyGuard: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
+  emptyGuardButton: {
+    minWidth: moderateScale(160),
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,
