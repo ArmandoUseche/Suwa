@@ -1,6 +1,6 @@
 import { createContext, useContext, useState } from 'react';
 
-import { mockPlantas, mockTieneDispositivoVinculado } from '../constants/mockData';
+import { mockAlertas, mockPlantas, mockTieneDispositivoVinculado } from '../constants/mockData';
 
 // Estado compartido de la app que SÍ cambia en vivo mientras la usás
 // (a diferencia de la mayoría de los mocks del proyecto, que son
@@ -23,8 +23,16 @@ export function AppStateProvider({ children }) {
     mockTieneDispositivoVinculado
   );
   const [plantas, setPlantas] = useState(mockPlantas);
+  const [alertas, setAlertas] = useState(mockAlertas);
 
   const vincularDispositivo = () => setTieneDispositivoVinculado(true);
+
+  // Se llama al tocar una alerta en AlertasScreen. Real:
+  // PATCH /api/alertas/:id/leida cuando se conecte (ver
+  // puntos-abiertos-backend.md).
+  const marcarAlertaLeida = (alertaId) => {
+    setAlertas((prev) => prev.map((a) => (a.id === alertaId ? { ...a, leida: true } : a)));
+  };
 
   const actualizarUmbrales = (plantaId, cambios) => {
     setPlantas((prev) => prev.map((p) => (p.id === plantaId ? { ...p, ...cambios } : p)));
@@ -58,6 +66,8 @@ export function AppStateProvider({ children }) {
         plantas,
         actualizarUmbrales,
         agregarPlanta,
+        alertas,
+        marcarAlertaLeida,
       }}
     >
       {children}
