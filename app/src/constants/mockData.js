@@ -32,12 +32,6 @@ export const mockEstadoPlanta = {
   proximoRiegoTexto: 'Automatización: próximo riego hoy a las 6:00pm',
 };
 
-// Cantidad de alertas sin leer, para el badge del ícono de notificaciones.
-// Cuando se conecte el socket (evento `nueva_alerta`) y el endpoint
-// GET /api/alertas/:dispositivoId, este valor sale de ahí en vez de estar
-// fijo acá.
-export const mockAlertasNoLeidas = 2;
-
 // Datos del usuario logueado, para el saludo "Hola, {nombre}" en
 // Monitoreo y para la pantalla de Perfil (Paso 8). Placeholder hasta
 // que haya un estado de sesión real (login conectado al backend) del
