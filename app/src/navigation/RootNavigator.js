@@ -21,10 +21,10 @@ import MainTabNavigator from './MainTabNavigator';
 
 const Stack = createNativeStackNavigator();
 
-// Navegador raíz de la app. Por ahora tiene el onboarding completo (Paso 2)
-// y el flujo de auth en construcción (Paso 3: Welcome ya está, Login y
-// Register siguen como stub hasta que se completen). El tab navigator se
-// agrega en el Paso 4.
+// Navegador raíz de la app: Splash -> Onboarding -> flujo de auth ->
+// tabs principales (Main), más las pantallas que se abren "encima" del
+// tab navigator (detalle de planta, vincular dispositivo, cámara de
+// Escanear, y las de Perfil/Configuración del Paso 8).
 export default function RootNavigator() {
   return (
     <Stack.Navigator
