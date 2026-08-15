@@ -123,7 +123,7 @@ function EstadoVacio({ insets, titulo, descripcion, botonLabel, botonIcon, onBot
           <Image
             source={illustrations.misPlantasVacio}
             style={styles.image}
-            resizeMode="contain"
+            resizeMode="cover"
           />
         </View>
 
@@ -160,9 +160,14 @@ const styles = StyleSheet.create({
     marginTop: EMPTY_STATE_GAP_AFTER_HEADER,
     marginBottom: EMPTY_STATE_GAP_AFTER_IMAGE,
   },
+  // Círculo, mismo tamaño y criterio que la foto de la planta en
+  // Monitoreo (PlantPhoto) y el blob+ilustración de Historial -- antes
+  // era un rectángulo con "contain", rompía el lenguaje circular que
+  // comparten las otras 2 pantallas de estado vacío.
   image: {
     width: EMPTY_STATE_IMAGE_SIZE,
-    height: EMPTY_STATE_IMAGE_SIZE * 0.6,
+    height: EMPTY_STATE_IMAGE_SIZE,
+    borderRadius: EMPTY_STATE_IMAGE_SIZE / 2,
   },
   title: emptyStateStyles.title,
   description: emptyStateStyles.description,
