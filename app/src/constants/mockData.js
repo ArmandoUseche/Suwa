@@ -180,3 +180,37 @@ export const mockPlantas = [
     kitConexion: null,
   },
 ];
+
+// Alertas del kit para la pantalla de Alertas (se llega desde la
+// campanita del dashboard de Monitoreo). Mismos campos exactos del
+// modelo Alerta del contrato de API (tipo, mensaje, dispositivoId,
+// leida, timestamp) -- el estado "leida" vive en AppStateContext
+// (marcarAlertaLeida), no acá, porque cambia en vivo al tocar una
+// alerta, igual que tieneDispositivoVinculado o plantas.
+export const mockAlertas = [
+  {
+    id: 'al1',
+    tipo: 'nivel_agua_bajo',
+    mensaje: 'El nivel de agua del depósito está bajo. Rellénalo pronto para no interrumpir el riego automático.',
+    dispositivoId: 'suwa-kit-01',
+    leida: false,
+    timestamp: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+  },
+  {
+    id: 'al2',
+    tipo: 'lectura_anomala',
+    mensaje: 'La humedad del suelo bajó de golpe. Revisa que el sensor esté bien puesto en la tierra.',
+    dispositivoId: 'suwa-kit-01',
+    leida: false,
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
+  },
+  {
+    id: 'al3',
+    tipo: 'falla_sistema',
+    mensaje: 'El kit perdió la conexión Wi-Fi por unos minutos y ya se reconectó solo.',
+    dispositivoId: 'suwa-kit-01',
+    leida: true,
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
+  },
+];
+
