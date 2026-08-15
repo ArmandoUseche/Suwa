@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import PlantGreetingBanner from '../components/PlantGreetingBanner';
@@ -95,6 +95,14 @@ function ConDispositivo() {
   const insets = useSafeAreaInsets();
   const lectura = mockUltimaLectura;
 
+  // Mismo criterio que "Regar ahora" en el detalle de planta
+  // (PlantaDetalleScreen) -- antes acá no hacía nada al tocarlo, quedaba
+  // inconsistente con esa otra pantalla. Real: POST /api/riego/activar
+  // cuando se conecte (ver puntos-abiertos-backend.md).
+  const handleRegarAhora = () => {
+    Alert.alert('Riego activado', 'Se activó el riego manual.');
+  };
+
   return (
     <View style={styles.plainContainer}>
       <ScrollView
@@ -136,7 +144,7 @@ function ConDispositivo() {
           />
         </View>
 
-        <PrimaryButton label="Regar ahora" onPress={() => {}} style={styles.regarButton} />
+        <PrimaryButton label="Regar ahora" onPress={handleRegarAhora} style={styles.regarButton} />
 
         <Text style={styles.automationCaption}>{mockEstadoPlanta.proximoRiegoTexto}</Text>
       </ScrollView>
