@@ -51,7 +51,7 @@ export default function PerfilScreen({ navigation }) {
         <Text style={styles.nombre}>{mockUsuario.nombre}</Text>
 
         <View style={styles.card}>
-          <SettingsRow label="Gmail" value={mockUsuario.correo} />
+          <SettingsRow label="Correo" value={mockUsuario.correo} />
           <View style={styles.divider} />
           <SettingsRow label="Usuario" value={mockUsuario.usuario} />
           <View style={styles.divider} />
