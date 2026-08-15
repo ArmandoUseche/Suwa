@@ -19,16 +19,16 @@ export default function ConfiguracionScreen({ navigation }) {
           />
           <View style={styles.divider} />
           <SettingsRow
-            label="Terms of use"
+            label="Términos de uso"
             onPress={() => navigation.navigate('TerminosDeUso')}
           />
           <View style={styles.divider} />
           <SettingsRow
-            label="Privacy policy"
+            label="Política de privacidad"
             onPress={() => navigation.navigate('PoliticaDePrivacidad')}
           />
           <View style={styles.divider} />
-          <SettingsRow label="Contact us" onPress={() => navigation.navigate('Contactanos')} />
+          <SettingsRow label="Contáctanos" onPress={() => navigation.navigate('Contactanos')} />
         </View>
       </ScrollView>
     </View>
