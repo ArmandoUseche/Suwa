@@ -7,7 +7,7 @@ import PressableScale from '../components/PressableScale';
 import FormTextInput from '../components/FormTextInput';
 import { PrimaryButton } from '../components/Buttons';
 import { useAppState } from '../context/AppStateContext';
-import { colors, radius, spacing, typography } from '../constants/theme';
+import { colors, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
 
 // Vincular dispositivo (Paso 7, se llega desde el botón "Vincular
