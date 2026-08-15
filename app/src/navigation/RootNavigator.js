@@ -17,6 +17,7 @@ import NotificacionesScreen from '../screens/NotificacionesScreen';
 import TerminosDeUsoScreen from '../screens/TerminosDeUsoScreen';
 import PoliticaDePrivacidadScreen from '../screens/PoliticaDePrivacidadScreen';
 import ContactanosScreen from '../screens/ContactanosScreen';
+import AlertasScreen from '../screens/AlertasScreen';
 import MainTabNavigator from './MainTabNavigator';
 
 const Stack = createNativeStackNavigator();
@@ -57,6 +58,7 @@ export default function RootNavigator() {
       <Stack.Screen name="TerminosDeUso" component={TerminosDeUsoScreen} />
       <Stack.Screen name="PoliticaDePrivacidad" component={PoliticaDePrivacidadScreen} />
       <Stack.Screen name="Contactanos" component={ContactanosScreen} />
+      <Stack.Screen name="Alertas" component={AlertasScreen} />
     </Stack.Navigator>
   );
 }
