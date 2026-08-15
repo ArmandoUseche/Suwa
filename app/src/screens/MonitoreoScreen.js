@@ -1,10 +1,12 @@
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import PlantGreetingBanner from '../components/PlantGreetingBanner';
 import PlantPhoto from '../components/PlantPhoto';
 import StatChip from '../components/StatChip';
 import { PrimaryButton } from '../components/Buttons';
+import PressableScale from '../components/PressableScale';
 import {
   EMPTY_STATE_GAP_AFTER_HEADER,
   EMPTY_STATE_GAP_AFTER_IMAGE,
@@ -45,7 +47,7 @@ export default function MonitoreoScreen({ navigation }) {
   if (!tieneDispositivoVinculado) {
     return <SinDispositivo navigation={navigation} />;
   }
-  return <ConDispositivo />;
+  return <ConDispositivo navigation={navigation} />;
 }
 
 function SinDispositivo({ navigation }) {
@@ -91,9 +93,11 @@ function SinDispositivo({ navigation }) {
   );
 }
 
-function ConDispositivo() {
+function ConDispositivo({ navigation }) {
   const insets = useSafeAreaInsets();
   const lectura = mockUltimaLectura;
+  const { alertas } = useAppState();
+  const alertasNoLeidas = alertas.filter((a) => !a.leida).length;
 
   // Mismo criterio que "Regar ahora" en el detalle de planta
   // (PlantaDetalleScreen) -- antes acá no hacía nada al tocarlo, quedaba
@@ -109,8 +113,35 @@ function ConDispositivo() {
         contentContainerStyle={styles.dashboardScroll}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.bannerSection, { paddingTop: insets.top + spacing.md * 3 }]}>
-          <PlantGreetingBanner nombre={mockUsuario.nombre} kitConectado />
+        <View style={[styles.bannerOuter, { paddingTop: insets.top + spacing.md * 3 }]}>
+          <View style={styles.bannerInner}>
+            <PlantGreetingBanner nombre={mockUsuario.nombre} kitConectado />
+
+            {/* Sin mockup puntual para esto -- el ícono de campanita
+                estaba previsto desde el plan original ("el centro de
+                alertas va como ícono de notificación en el header de
+                Monitoreo") pero se perdió en el rediseño del
+                dashboard. Se ubica acá, sobre el banner, en el mismo
+                lugar donde Perfil pone su ícono de ajustes -- si
+                aparece un mockup puntual para esto, se reacomoda
+                fácil. `bannerInner` no tiene padding propio, así el
+                `top`/`right` de acá quedan relativos al borde real del
+                banner (si estuviera directo en `bannerOuter`, el
+                paddingTop dinámico de arriba lo hubiera corrido más
+                arriba de lo esperado). */}
+            <PressableScale
+              onPress={() => navigation.navigate('Alertas')}
+              style={styles.bellButton}
+              hitSlop={10}
+            >
+              <Ionicons name="notifications-outline" size={moderateScale(20)} color={colors.textDark} />
+              {alertasNoLeidas > 0 && (
+                <View style={styles.bellBadge}>
+                  <Text style={styles.bellBadgeText}>{alertasNoLeidas}</Text>
+                </View>
+              )}
+            </PressableScale>
+          </View>
         </View>
 
         <View style={styles.plantCard}>
@@ -168,6 +199,46 @@ const styles = StyleSheet.create({
   // (paddingHorizontal acá).
   bannerSection: {
     paddingHorizontal: spacing.lg,
+  },
+  // Versión con campanita (estado conectado): el padding dinámico va en
+  // el contenedor de afuera (bannerOuter); bannerInner no tiene padding
+  // propio, así el botón absoluto queda pegado al borde real del
+  // banner en vez de a un borde "corrido" por el padding.
+  bannerOuter: {
+    paddingHorizontal: spacing.lg,
+  },
+  bannerInner: {
+    position: 'relative',
+  },
+  bellButton: {
+    position: 'absolute',
+    top: spacing.sm,
+    right: spacing.sm,
+    width: moderateScale(36),
+    height: moderateScale(36),
+    borderRadius: moderateScale(18),
+    backgroundColor: colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bellBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    minWidth: moderateScale(15),
+    height: moderateScale(15),
+    borderRadius: moderateScale(8),
+    backgroundColor: colors.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+    borderWidth: 1.5,
+    borderColor: colors.background,
+  },
+  bellBadgeText: {
+    color: colors.textOnPrimary,
+    fontSize: moderateScale(9),
+    fontWeight: '700',
   },
   plantPhotoWrapper: {
     alignItems: 'center',
