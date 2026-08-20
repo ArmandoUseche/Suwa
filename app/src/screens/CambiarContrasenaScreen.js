@@ -5,19 +5,15 @@ import SolidHeaderBar from '../components/SolidHeaderBar';
 import FormTextInput from '../components/FormTextInput';
 import { PrimaryButton } from '../components/Buttons';
 import { colors, spacing } from '../constants/theme';
+import { cambiarContrasenaAPI } from '../services/api';
 
-// Cambiar contraseña (Paso 8, se llega desde Perfil). El mockup tenía
-// los 3 campos + botón pegados arriba; acá van centrados verticalmente
-// en el espacio debajo del header, por pedido explícito.
-//
-// No hay pantalla de "recuperar contraseña" en el proyecto (ya se
-// había decidido así) -- acá solo se cambia sabiendo la actual.
 export default function CambiarContrasenaScreen({ navigation }) {
   const [actual, setActual] = useState('');
   const [nueva, setNueva] = useState('');
   const [confirmar, setConfirmar] = useState('');
+  const [cargando, setCargando] = useState(false);
 
-  const handleConfirmar = () => {
+  const handleConfirmar = async () => {
     if (!actual || !nueva || !confirmar) {
       Alert.alert('Faltan datos', 'Completá los 3 campos para continuar.');
       return;
@@ -26,12 +22,23 @@ export default function CambiarContrasenaScreen({ navigation }) {
       Alert.alert('No coinciden', 'La nueva contraseña y su confirmación no son iguales.');
       return;
     }
-    // Mock -- no hay endpoint de cambiar contraseña en el contrato de
-    // API todavía. Cuando exista, acá se manda { actual, nueva } en vez
-    // de solo mostrar la confirmación.
-    Alert.alert('Listo', 'Tu contraseña se actualizó correctamente.', [
-      { text: 'OK', onPress: () => navigation.goBack() },
-    ]);
+    if (nueva.length < 6) {
+      Alert.alert('Contraseña muy corta', 'La nueva contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    setCargando(true);
+    try {
+      await cambiarContrasenaAPI({ contrasenaActual: actual, contrasenaNueva: nueva });
+      Alert.alert('Listo', 'Tu contraseña se actualizó correctamente.', [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
+    } catch (error) {
+      const mensaje = error.response?.data?.error || 'Error al cambiar la contraseña.';
+      Alert.alert('Error', mensaje);
+    } finally {
+      setCargando(false);
+    }
   };
 
   return (
@@ -64,7 +71,12 @@ export default function CambiarContrasenaScreen({ navigation }) {
           style={styles.input}
         />
 
-        <PrimaryButton label="Confirmar" onPress={handleConfirmar} style={styles.button} />
+        <PrimaryButton
+          label={cargando ? 'Actualizando...' : 'Confirmar'}
+          onPress={handleConfirmar}
+          disabled={cargando}
+          style={styles.button}
+        />
       </KeyboardAvoidingView>
     </View>
   );

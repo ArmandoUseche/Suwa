@@ -80,4 +80,34 @@ async function login(req, res) {
   }
 }
 
-module.exports = { registro, login };
+async function cambiarContrasena(req, res) {
+  try {
+    const { contrasenaActual, contrasenaNueva } = req.body;
+
+    if (!contrasenaActual || !contrasenaNueva) {
+      return res.status(400).json({ error: 'Todos los campos son requeridos' });
+    }
+    if (contrasenaNueva.length < 6) {
+      return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres' });
+    }
+
+    const usuario = await Usuario.findById(req.usuarioId);
+    if (!usuario) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    const esValida = await bcrypt.compare(contrasenaActual, usuario.passwordHash);
+    if (!esValida) {
+      return res.status(401).json({ error: 'La contraseña actual es incorrecta' });
+    }
+
+    usuario.passwordHash = await bcrypt.hash(contrasenaNueva, 10);
+    await usuario.save();
+
+    res.json({ mensaje: 'Contraseña actualizada correctamente' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+module.exports = { registro, login, cambiarContrasena };

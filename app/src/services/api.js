@@ -27,6 +27,9 @@ export const registroAPI = (datos) =>
 export const loginAPI = (datos) =>
   api.post('/api/auth/login', datos);
 
+export const cambiarContrasenaAPI = (datos) =>
+  api.patch('/api/auth/cambiar-contrasena', datos);
+
 // ── SENSORES ──
 export const getUltimaLecturaAPI = (dispositivoId) =>
   api.get(`/api/sensores/${dispositivoId}/ultima`);
