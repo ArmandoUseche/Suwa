@@ -14,6 +14,7 @@ import FormTextInput from '../components/FormTextInput';
 import { PrimaryButton } from '../components/Buttons';
 import { colors, radius, spacing, typography } from '../constants/theme';
 import { contentMaxWidth, moderateScale } from '../utils/responsive';
+import { useAuth } from '../context/AuthContext';
 
 // Reglas de validación del formulario de Registro. Las separamos de la
 // pantalla para que sean fáciles de testear/ajustar sin tocar el JSX.
@@ -40,6 +41,7 @@ function getFormErrors(form) {
 
 // Formulario de Registro (mockup 6).
 export default function RegisterScreen({ navigation }) {
+  const { registro } = useAuth();
   const [form, setForm] = useState({
     nombre: '',
     apellidos: '',
@@ -49,11 +51,12 @@ export default function RegisterScreen({ navigation }) {
     aceptaTerminos: false,
   });
   const [errorMessage, setErrorMessage] = useState(null);
+  const [cargando, setCargando] = useState(false);
 
   const updateField = (field) => (value) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const errors = getFormErrors(form);
     const firstError = Object.values(errors)[0];
 
@@ -63,9 +66,23 @@ export default function RegisterScreen({ navigation }) {
     }
 
     setErrorMessage(null);
-    // TODO(backend): conectar con el endpoint real de registro de usuario
-    // cuando esté disponible en el contrato de API.
-    navigation.replace('RegisterSuccess');
+    setCargando(true);
+
+    try {
+      await registro(
+        form.nombre,
+        form.apellidos,
+        form.correoOTelefono,
+        form.contrasena
+      );
+      navigation.replace('RegisterSuccess');
+    } catch (error) {
+      const mensaje =
+        error.response?.data?.error || 'Error al registrarse. Intenta de nuevo.';
+      setErrorMessage(mensaje);
+    } finally {
+      setCargando(false);
+    }
   };
 
   return (
@@ -133,8 +150,9 @@ export default function RegisterScreen({ navigation }) {
           )}
 
           <PrimaryButton
-            label="Registrarse"
+            label={cargando ? 'Registrando...' : 'Registrarse'}
             onPress={handleSubmit}
+            disabled={cargando}
             style={styles.submitButton}
           />
         </ScrollView>

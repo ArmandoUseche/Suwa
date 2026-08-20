@@ -14,6 +14,7 @@ import FormTextInput from '../components/FormTextInput';
 import { PrimaryButton } from '../components/Buttons';
 import { colors, spacing, typography } from '../constants/theme';
 import { contentMaxWidth, moderateScale } from '../utils/responsive';
+import { useAuth } from '../context/AuthContext';
 
 function getFormErrors(form) {
   const errors = {};
@@ -22,15 +23,16 @@ function getFormErrors(form) {
   return errors;
 }
 
-// Formulario de Login (mockup 9).
 export default function LoginScreen({ navigation }) {
+  const { login } = useAuth();
   const [form, setForm] = useState({ correo: '', contrasena: '' });
   const [errorMessage, setErrorMessage] = useState(null);
+  const [cargando, setCargando] = useState(false);
 
   const updateField = (field) => (value) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const errors = getFormErrors(form);
     const firstError = Object.values(errors)[0];
 
@@ -40,9 +42,18 @@ export default function LoginScreen({ navigation }) {
     }
 
     setErrorMessage(null);
-    // TODO(backend): conectar con el endpoint real de login cuando
-    // esté disponible en el contrato de API.
-    navigation.replace('Main');
+    setCargando(true);
+
+    try {
+      await login(form.correo, form.contrasena);
+      navigation.replace('Main');
+    } catch (error) {
+      const mensaje =
+        error.response?.data?.error || 'Error al iniciar sesión. Intenta de nuevo.';
+      setErrorMessage(mensaje);
+    } finally {
+      setCargando(false);
+    }
   };
 
   return (
@@ -82,8 +93,9 @@ export default function LoginScreen({ navigation }) {
           )}
 
           <PrimaryButton
-            label="Iniciar sesión"
+            label={cargando ? 'Ingresando...' : 'Iniciar sesión'}
             onPress={handleSubmit}
+            disabled={cargando}
             style={styles.submitButton}
           />
 
@@ -146,9 +158,6 @@ const styles = StyleSheet.create({
   },
   registerLink: {
     ...typography.caption,
-    // fontWeight no sirve sobre una fuente cargada como archivo
-    // (Inter_400Regular es un solo peso); para que se vea en semi-negrita
-    // hay que apuntar directo al archivo de ese peso.
     fontFamily: 'Inter_600SemiBold',
     color: colors.primaryDark,
   },
