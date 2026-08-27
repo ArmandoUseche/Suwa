@@ -8,12 +8,13 @@ const connectDB = require('./config/db');
 const sensorRoutes = require('./routes/sensorRoutes');
 const riegoRoutes = require('./routes/riegoRoutes');
 const alertaRoutes = require('./routes/alertaRoutes');
-
 const authRoutes = require('./routes/authRoutes');
+const escaneoRoutes = require('./routes/escaneoRoutes');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
+
 
 app.use(cors());
 app.use(express.json());
@@ -29,6 +30,7 @@ app.use('/api/sensores', sensorRoutes);
 app.use('/api/riego', riegoRoutes);
 app.use('/api/alertas', alertaRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/escaneo', escaneoRoutes);
 
 io.on('connection', (socket) => {
   console.log('Cliente conectado:', socket.id);
