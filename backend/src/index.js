@@ -41,7 +41,7 @@ io.on('connection', (socket) => {
 const PORT = process.env.PORT || 3000;
 
 connectDB().then(() => {
-  server.listen(PORT, () => {
-    console.log(`SUWA backend escuchando en el puerto ${PORT}`);
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`SUWA backend escuchando en todas las interfaces de red en el puerto ${PORT}`);
   });
 });

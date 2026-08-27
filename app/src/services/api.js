@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Cambia esta IP por la de tu computador cuando pruebes en el celular físico.
 // Para el emulador de Android usa: http://10.0.2.2:3000
 // Para Expo Go en celular físico usa: http://TU_IP_LOCAL:3000
-const BASE_URL = 'http://192.168.0.13:3000';
+const BASE_URL = 'http://192.168.0.16:3000';
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -50,5 +50,15 @@ export const getAlertasAPI = (dispositivoId) =>
 
 export const marcarAlertaLeidaAPI = (id) =>
   api.patch(`/api/alertas/${id}/leida`);
+
+// ── RECUPERACIÓN DE CONTRASEÑA ──
+export const olvideContrasenaAPI = (correoOTelefono) =>
+  api.post('/api/auth/olvide-contrasena', { correoOTelefono });
+
+export const verificarCodigoAPI = (correoOTelefono, codigo) =>
+  api.post('/api/auth/verificar-codigo', { correoOTelefono, codigo });
+
+export const nuevaContrasenaAPI = (correoOTelefono, codigo, contrasenaNueva) =>
+  api.post('/api/auth/nueva-contrasena', { correoOTelefono, codigo, contrasenaNueva });
 
 export default api;
