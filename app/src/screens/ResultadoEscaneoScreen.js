@@ -1,72 +1,59 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import ScreenHeaderPill from '../components/ScreenHeaderPill';
 import StatChip from '../components/StatChip';
 import { PrimaryButton, SecondaryButton } from '../components/Buttons';
 import { icons, illustrations } from '../constants/images';
-import { mockIdentificacionPlantNet, mockParametrosGemini } from '../constants/mockData';
 import { useAppState } from '../context/AppStateContext';
 import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
+import { escanearPlantaAPI } from '../services/api';
 
-// Duración de cada etapa simulada (ver comentario grande más abajo).
-const DURACION_IDENTIFICANDO = 1100;
-const DURACION_CALCULANDO = 1100;
-
-// Resultado del escaneo (Paso 7, sigue a EscanearCameraScreen). Recibe
-// la foto capturada/elegida por parámetro de navegación (`fotoUri`).
-//
-// EL FLUJO REAL TIENE 2 IAS, NO UNA:
-//  1. PlantNet identifica la especie -- se la llama 2 VECES seguidas
-//     para confirmar que no fue casualidad (si no coinciden, se le
-//     pediría otra foto a la persona en vez de mostrar un resultado
-//     dudoso -- ese caso todavía no está manejado acá, queda para
-//     cuando se conecte la API real).
-//  2. Con la especie ya confirmada, se la manda a Gemini (otra IA,
-//     prompteada para calcular los parámetros de riego). PlantNet NO
-//     sabe nada de humedad/temperatura/luz -- son 2 fuentes de datos
-//     separadas.
-//
-// Como todavía no hay API keys, acá se SIMULA esa secuencia con 2
-// timers (identificando → calculando → listo) en vez de mostrar el
-// resultado de golpe -- así la pantalla ya queda con la forma real que
-// va a tener (2 etapas de carga, no 1), y cuando se conecten las APIs
-// de verdad, cada timer se reemplaza por su llamada real en el mismo
-// lugar (ver los comentarios "TODO" en handleIdentificar).
 export default function ResultadoEscaneoScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
   const { fotoUri } = route.params ?? {};
   const { agregarPlanta } = useAppState();
-  const [etapa, setEtapa] = useState('identificando'); // identificando | calculando | listo
+  const [etapa, setEtapa] = useState('identificando'); // identificando | calculando | listo | rechazado
+  const [identificacion, setIdentificacion] = useState(null);
+  const [parametros, setParametros] = useState(null);
+  const [mensajeRechazo, setMensajeRechazo] = useState('');
 
   useEffect(() => {
-    // TODO(cuando haya API keys): reemplazar esta secuencia simulada
-    // por las llamadas reales, en el mismo orden:
-    //   1. await PlantNet.identificar(fotoUri)  -- 2 veces, confirmar
-    //      que coinciden
-    //   2. await Gemini.calcularParametros(especieConfirmada)
-    // Los mocks (mockIdentificacionPlantNet / mockParametrosGemini) ya
-    // están separados en 2 objetos distintos justamente para que este
-    // reemplazo sea directo, sin tener que reordenar nada acá.
-    const t1 = setTimeout(() => setEtapa('calculando'), DURACION_IDENTIFICANDO);
-    const t2 = setTimeout(() => setEtapa('listo'), DURACION_IDENTIFICANDO + DURACION_CALCULANDO);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
-  }, []);
+    if (!fotoUri) return;
 
-  const identificacion = mockIdentificacionPlantNet;
-  const parametros = mockParametrosGemini;
+    // Cambia a "calculando" después de 2s para mejor UX mientras espera la API
+    const timerCalculando = setTimeout(() => {
+      setEtapa((prev) => (prev === 'identificando' ? 'calculando' : prev));
+    }, 2000);
 
-  // Arma el objeto de planta con las 2 fuentes de datos por separado
-  // (identificación de PlantNet + parámetros de Gemini) y lo agrega de
-  // verdad a la lista de Mis Plantas -- ya no es un botón mock. Nace
-  // "sin conectar" (enMonitoreo: false, ver comentario en
-  // AppStateContext.agregarPlanta): agregarla acá no la vincula sola al
-  // kit físico, eso es una acción aparte.
+    escanearPlantaAPI(fotoUri)
+      .then((res) => {
+        clearTimeout(timerCalculando);
+        setIdentificacion(res.data.identificacion);
+        setParametros(res.data.parametros);
+        setEtapa('listo');
+      })
+      .catch((error) => {
+        clearTimeout(timerCalculando);
+        const data = error.response?.data;
+
+        if (data?.rechazado) {
+          setMensajeRechazo(data.error);
+          setEtapa('rechazado');
+        } else {
+          Alert.alert(
+            'Error',
+            data?.error || 'No se pudo escanear la planta. Intenta de nuevo.',
+            [{ text: 'OK', onPress: () => navigation.goBack() }]
+          );
+        }
+      });
+
+    return () => clearTimeout(timerCalculando);
+  }, [fotoUri]);
+
   const handleGuardar = () => {
     agregarPlanta({
       nombreComun: identificacion.nombreComun,
@@ -92,7 +79,8 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
           <Image source={{ uri: fotoUri }} style={styles.photo} resizeMode="cover" />
         )}
 
-        {etapa !== 'listo' ? (
+        {/* Estado: cargando */}
+        {(etapa === 'identificando' || etapa === 'calculando') && (
           <View style={styles.loadingBlock}>
             <ActivityIndicator size="large" color={colors.primary} />
             <Text style={styles.loadingText}>
@@ -101,7 +89,24 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
                 : 'Calculando los parámetros de riego...'}
             </Text>
           </View>
-        ) : (
+        )}
+
+        {/* Estado: rechazado por bajo porcentaje */}
+        {etapa === 'rechazado' && (
+          <View style={styles.loadingBlock}>
+            <Text style={styles.rechazadoEmoji}>🌿</Text>
+            <Text style={styles.rechazadoTitulo}>No pudimos identificarla</Text>
+            <Text style={styles.rechazadoMensaje}>{mensajeRechazo}</Text>
+            <SecondaryButton
+              label="Escanear de nuevo"
+              onPress={() => navigation.goBack()}
+              style={styles.secondaryButton}
+            />
+          </View>
+        )}
+
+        {/* Estado: resultado exitoso */}
+        {etapa === 'listo' && identificacion && parametros && (
           <>
             <View style={styles.nameBlock}>
               <Text style={styles.nombreComun}>{identificacion.nombreComun}</Text>
@@ -127,7 +132,12 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
                 unit="°C"
                 status="Temperatura"
               />
-              <StatChip icon={icons.soleado} value={parametros.luzIdeal} unit="" status="Luz" />
+              <StatChip
+                icon={icons.soleado}
+                value={parametros.luzIdeal}
+                unit=""
+                status="Luz"
+              />
             </View>
 
             <PrimaryButton
@@ -174,6 +184,23 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
     marginTop: spacing.md,
+  },
+  rechazadoEmoji: {
+    fontSize: moderateScale(48),
+    marginBottom: spacing.md,
+  },
+  rechazadoTitulo: {
+    ...typography.h1,
+    fontSize: moderateScale(22),
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  rechazadoMensaje: {
+    ...typography.body,
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginBottom: spacing.xl,
+    lineHeight: moderateScale(22),
   },
   nameBlock: {
     alignItems: 'center',

@@ -61,4 +61,18 @@ export const verificarCodigoAPI = (correoOTelefono, codigo) =>
 export const nuevaContrasenaAPI = (correoOTelefono, codigo, contrasenaNueva) =>
   api.post('/api/auth/nueva-contrasena', { correoOTelefono, codigo, contrasenaNueva });
 
+// ── ESCANEO ──
+export const escanearPlantaAPI = async (fotoUri) => {
+  const formData = new FormData();
+  formData.append('foto', {
+    uri: fotoUri,
+    type: 'image/jpeg',
+    name: 'planta.jpg',
+  });
+
+  return api.post('/api/escaneo', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
+
 export default api;
