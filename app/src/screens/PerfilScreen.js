@@ -4,16 +4,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import PressableScale from '../components/PressableScale';
 import SettingsRow from '../components/SettingsRow';
-import { mockUsuario } from '../constants/mockData';
+import { useAuth } from '../context/AuthContext';
 import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
 
-// Perfil (Paso 8). No hay estado "sin perfil" -- hace falta cuenta
-// para entrar a la app, así que siempre hay datos que mostrar (a
-// diferencia de Monitoreo/Historial/Escanear/Mis Plantas, acá no hay
-// pantalla vacía).
 export default function PerfilScreen({ navigation }) {
   const insets = useSafeAreaInsets();
+  const { usuario, logout } = useAuth();
 
   const handleCerrarSesion = () => {
     Alert.alert('Cerrar sesión', '¿Seguro que querés cerrar sesión?', [
@@ -22,10 +19,7 @@ export default function PerfilScreen({ navigation }) {
         text: 'Cerrar sesión',
         style: 'destructive',
         onPress: () => {
-          // Vuelve a la pantalla de Bienvenida y borra todo el stack de
-          // navegación de por medio -- así el botón de volver del
-          // celular no puede regresar a pantallas de una sesión que ya
-          // cerró.
+          logout();
           navigation.getParent()?.reset({ index: 0, routes: [{ name: 'Welcome' }] });
         },
       },
@@ -48,14 +42,20 @@ export default function PerfilScreen({ navigation }) {
         <View style={styles.avatarWrapper}>
           <View style={styles.avatar} />
         </View>
-        <Text style={styles.nombre}>{mockUsuario.nombre}</Text>
+        <Text style={styles.nombre}>{usuario?.nombre}</Text>
 
         <View style={styles.card}>
-          <SettingsRow label="Correo" value={mockUsuario.correo} />
+          <SettingsRow label="Correo" value={usuario?.correoOTelefono} />
           <View style={styles.divider} />
-          <SettingsRow label="Usuario" value={mockUsuario.usuario} />
+          <SettingsRow
+            label="Usuario"
+            value={usuario?.correoOTelefono?.split('@')[0]}
+          />
           <View style={styles.divider} />
-          <SettingsRow label="Nombre" value={`${mockUsuario.nombre} ${mockUsuario.apellidos}`} />
+          <SettingsRow
+            label="Nombre"
+            value={`${usuario?.nombre} ${usuario?.apellidos}`}
+          />
         </View>
 
         <View style={styles.card}>
@@ -68,7 +68,7 @@ export default function PerfilScreen({ navigation }) {
         <View style={styles.card}>
           <SettingsRow
             label="Cerrar sesión"
-            subtitle={mockUsuario.correo}
+            subtitle={usuario?.correoOTelefono}
             danger
             onPress={handleCerrarSesion}
           />

@@ -1,40 +1,48 @@
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native';
 
 import SolidHeaderBar from '../components/SolidHeaderBar';
 import FormTextInput from '../components/FormTextInput';
 import { PrimaryButton } from '../components/Buttons';
 import { colors, spacing } from '../constants/theme';
-import { cambiarContrasenaAPI } from '../services/api';
+import { nuevaContrasenaAPI } from '../services/api';
 
-export default function CambiarContrasenaScreen({ navigation }) {
-  const [actual, setActual] = useState('');
+export default function NuevaContrasenaScreen({ navigation, route }) {
+  const { correo, codigo } = route.params;
   const [nueva, setNueva] = useState('');
   const [confirmar, setConfirmar] = useState('');
   const [cargando, setCargando] = useState(false);
 
   const handleConfirmar = async () => {
-    if (!actual || !nueva || !confirmar) {
-      Alert.alert('Faltan datos', 'Completá los 3 campos para continuar.');
+    if (!nueva || !confirmar) {
+      Alert.alert('Faltan datos', 'Completa los 2 campos para continuar.');
       return;
     }
     if (nueva !== confirmar) {
-      Alert.alert('No coinciden', 'La nueva contraseña y su confirmación no son iguales.');
+      Alert.alert('No coinciden', 'Las contraseñas no son iguales.');
       return;
     }
     if (nueva.length < 6) {
-      Alert.alert('Contraseña muy corta', 'La nueva contraseña debe tener al menos 6 caracteres.');
+      Alert.alert('Contraseña muy corta', 'Debe tener al menos 6 caracteres.');
       return;
     }
 
     setCargando(true);
     try {
-      await cambiarContrasenaAPI({ contrasenaActual: actual, contrasenaNueva: nueva });
-      Alert.alert('Listo', 'Tu contraseña se actualizó correctamente.', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+      await nuevaContrasenaAPI(correo, codigo, nueva);
+      Alert.alert(
+        '¡Listo!',
+        'Tu contraseña se actualizó correctamente. Inicia sesión con tu nueva contraseña.',
+        [{ text: 'Iniciar sesión', onPress: () => navigation.navigate('Login') }]
+      );
     } catch (error) {
-      const mensaje = error.response?.data?.error || 'Error al cambiar la contraseña.';
+      const mensaje = error.response?.data?.error || 'Error al actualizar la contraseña.';
       Alert.alert('Error', mensaje);
     } finally {
       setCargando(false);
@@ -43,19 +51,12 @@ export default function CambiarContrasenaScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <SolidHeaderBar title="Cambiar contraseña" onBack={() => navigation.goBack()} />
+      <SolidHeaderBar title="Nueva contraseña" onBack={() => navigation.goBack()} />
 
       <KeyboardAvoidingView
         style={styles.content}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <FormTextInput
-          label="Contraseña actual"
-          isPassword
-          value={actual}
-          onChangeText={setActual}
-          style={styles.input}
-        />
         <FormTextInput
           label="Nueva contraseña"
           isPassword

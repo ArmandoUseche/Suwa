@@ -19,6 +19,9 @@ import PoliticaDePrivacidadScreen from '../screens/PoliticaDePrivacidadScreen';
 import ContactanosScreen from '../screens/ContactanosScreen';
 import AlertasScreen from '../screens/AlertasScreen';
 import MainTabNavigator from './MainTabNavigator';
+import OlvideContrasenaScreen from '../screens/OlvideContrasenaScreen';
+import VerificarCodigoScreen from '../screens/VerificarCodigoScreen';
+import NuevaContrasenaScreen from '../screens/NuevaContrasenaScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -59,6 +62,10 @@ export default function RootNavigator() {
       <Stack.Screen name="PoliticaDePrivacidad" component={PoliticaDePrivacidadScreen} />
       <Stack.Screen name="Contactanos" component={ContactanosScreen} />
       <Stack.Screen name="Alertas" component={AlertasScreen} />
+
+      <Stack.Screen name="OlvideContrasena" component={OlvideContrasenaScreen} />
+      <Stack.Screen name="VerificarCodigo" component={VerificarCodigoScreen} />
+      <Stack.Screen name="NuevaContrasena" component={NuevaContrasenaScreen} />
     </Stack.Navigator>
   );
 }
