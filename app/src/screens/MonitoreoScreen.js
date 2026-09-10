@@ -1,4 +1,5 @@
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -14,17 +15,49 @@ import {
   emptyStateStyles,
 } from '../constants/emptyState';
 import { icons } from '../constants/images';
-import {
-  mockEstadoPlanta,
-  mockEstadosLectura,
-  mockUltimaLectura,
-} from '../constants/mockData';
+import { mockEstadoPlanta } from '../constants/mockData';
 import { useAppState } from '../context/AppStateContext';
 import { useAuth } from '../context/AuthContext';
 import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
+import { activarRiegoAPI, getUltimaLecturaAPI } from '../services/api';
 
 const PLANT_PHOTO_SIZE = EMPTY_STATE_IMAGE_SIZE;
+
+// ID del kit físico. Coincide con el que usa el firmware (Arduino UNO
+// R4 WiFi) para reportar sus lecturas y con el que espera el backend.
+// Cuando exista vinculación real de dispositivo por usuario (pendiente,
+// ver VincularDispositivoScreen), esto debería venir del usuario/planta
+// en vez de estar fijo acá.
+const DISPOSITIVO_ID = 'suwa-kit-01';
+
+// Cada cuánto se refresca la lectura mientras la pantalla está
+// abierta. No es tiempo real instantáneo (para eso haría falta el
+// socket 'nueva_lectura', que implica agregar socket.io-client), pero
+// para el dashboard es suficientemente frecuente.
+const INTERVALO_REFRESCO_MS = 10000;
+
+// Umbrales simples para mostrar "Óptimo"/"Alta"/"Baja", etc. Son un
+// primer criterio razonable, no vienen de ningún dato de la planta
+// todavía (eso depende del umbral por especie, que es un pendiente de
+// backend/firmware más grande, ver CONTEXTO_CONTINUIDAD.md).
+function estadoHumedadSuelo(valor) {
+  if (valor < 20) return 'Baja';
+  if (valor > 70) return 'Alta';
+  return 'Óptimo';
+}
+
+function estadoTemperatura(valor) {
+  if (valor < 15) return 'Fría';
+  if (valor > 30) return 'Alta';
+  return 'Ideal';
+}
+
+function estadoHumedadAmbiente(valor) {
+  if (valor < 30) return 'Seca';
+  if (valor > 80) return 'Muy alta';
+  return 'Buena';
+}
 
 export default function MonitoreoScreen({ navigation }) {
   const { tieneDispositivoVinculado } = useAppState();
@@ -71,14 +104,77 @@ function SinDispositivo({ navigation }) {
 
 function ConDispositivo({ navigation }) {
   const insets = useSafeAreaInsets();
-  const lectura = mockUltimaLectura;
   const { alertas } = useAppState();
   const { usuario } = useAuth();
   const alertasNoLeidas = alertas.filter((a) => !a.leida).length;
 
-  const handleRegarAhora = () => {
-    Alert.alert('Riego activado', 'Se activó el riego manual.');
+  const [lectura, setLectura] = useState(null);
+  const [cargandoInicial, setCargandoInicial] = useState(true);
+  const [errorCarga, setErrorCarga] = useState(false);
+  const [regando, setRegando] = useState(false);
+
+  const cargarUltimaLectura = useCallback(async () => {
+    try {
+      const respuesta = await getUltimaLecturaAPI(DISPOSITIVO_ID);
+      setLectura(respuesta.data);
+      setErrorCarga(false);
+    } catch (error) {
+      // Si ya teníamos una lectura previa, la dejamos en pantalla en
+      // vez de reemplazarla por un error -- es mejor mostrar el
+      // último dato conocido que una pantalla rota mientras el
+      // backend/la placa estén momentáneamente caídos.
+      if (!lectura) {
+        setErrorCarga(true);
+      }
+    } finally {
+      setCargandoInicial(false);
+    }
+  }, [lectura]);
+
+  useEffect(() => {
+    cargarUltimaLectura();
+    const intervalo = setInterval(cargarUltimaLectura, INTERVALO_REFRESCO_MS);
+    return () => clearInterval(intervalo);
+    // Solo se arma una vez al montar; cargarUltimaLectura ya captura
+    // el valor más reciente de "lectura" en cada llamada por closure.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleRegarAhora = async () => {
+    if (regando) return; // Evita doble-tap mientras ya hay un riego en curso
+    setRegando(true);
+    try {
+      await activarRiegoAPI(DISPOSITIVO_ID, 10);
+      Alert.alert('Riego activado', 'La orden de riego manual se envió al kit.');
+    } catch (error) {
+      Alert.alert(
+        'No se pudo activar el riego',
+        'Revisa que el kit esté conectado e inténtalo de nuevo.'
+      );
+    } finally {
+      setRegando(false);
+    }
   };
+
+  if (cargandoInicial) {
+    return (
+      <View style={[styles.plainContainer, styles.centered]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (errorCarga) {
+    return (
+      <View style={[styles.plainContainer, styles.centered, styles.errorPadding]}>
+        <Text style={typography.h2}>No se pudo cargar el monitoreo</Text>
+        <Text style={[typography.body, styles.errorText]}>
+          Revisa que el kit SUWA y el backend estén encendidos y conectados a la misma red.
+        </Text>
+        <PrimaryButton label="Reintentar" onPress={cargarUltimaLectura} style={styles.retryButton} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.plainContainer}>
@@ -120,23 +216,28 @@ function ConDispositivo({ navigation }) {
             icon={icons.gotaAgua}
             value={lectura.humedadSuelo}
             unit="%"
-            status={mockEstadosLectura.humedadSuelo}
+            status={estadoHumedadSuelo(lectura.humedadSuelo)}
           />
           <StatChip
             icon={icons.temperaturaAlta}
             value={lectura.temperatura}
             unit="°C"
-            status={mockEstadosLectura.temperatura}
+            status={estadoTemperatura(lectura.temperatura)}
           />
           <StatChip
             icon={icons.soleado}
             value={lectura.humedadAmbiente}
             unit="%"
-            status={mockEstadosLectura.humedadAmbiente}
+            status={estadoHumedadAmbiente(lectura.humedadAmbiente)}
           />
         </View>
 
-        <PrimaryButton label="Regar ahora" onPress={handleRegarAhora} style={styles.regarButton} />
+        <PrimaryButton
+          label={regando ? 'Regando...' : 'Regar ahora'}
+          onPress={handleRegarAhora}
+          disabled={regando}
+          style={styles.regarButton}
+        />
 
         <Text style={styles.automationCaption}>{mockEstadoPlanta.proximoRiegoTexto}</Text>
       </ScrollView>
@@ -148,6 +249,22 @@ const styles = StyleSheet.create({
   plainContainer: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  centered: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  errorPadding: {
+    paddingHorizontal: spacing.lg,
+  },
+  errorText: {
+    textAlign: 'center',
+    marginTop: spacing.sm,
+    color: colors.textMuted,
+  },
+  retryButton: {
+    marginTop: spacing.lg,
+    minWidth: 160,
   },
   emptyStateScroll: {
     paddingBottom: spacing.xl,
