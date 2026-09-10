@@ -10,6 +10,7 @@ const riegoRoutes = require('./routes/riegoRoutes');
 const alertaRoutes = require('./routes/alertaRoutes');
 const authRoutes = require('./routes/authRoutes');
 const escaneoRoutes = require('./routes/escaneoRoutes');
+const plantaRoutes = require('./routes/plantaRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -31,6 +32,7 @@ app.use('/api/riego', riegoRoutes);
 app.use('/api/alertas', alertaRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/escaneo', escaneoRoutes);
+app.use('/api/plantas', plantaRoutes);
 
 io.on('connection', (socket) => {
   console.log('Cliente conectado:', socket.id);

@@ -16,7 +16,7 @@ async function identificarConPlantNet(fotoBuffer, mimeType = 'image/jpeg') {
 
   const response = await axios.post(url, form, {
     headers: form.getHeaders(),
-    timeout: 15000,
+    timeout: 60000,
   });
 
   const resultado = response.data.results[0];

@@ -54,16 +54,21 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
     return () => clearTimeout(timerCalculando);
   }, [fotoUri]);
 
-  const handleGuardar = () => {
-    agregarPlanta({
+  const handleGuardar = async () => {
+  try {
+    await agregarPlanta({
       nombreComun: identificacion.nombreComun,
       nombreCientifico: identificacion.nombreCientifico,
       foto: fotoUri ? { uri: fotoUri } : illustrations.escanearEjemplo,
       luzIdeal: parametros.luzIdeal,
       temperaturaIdeal: parametros.temperaturaIdeal,
+      umbralHumedadMinimo: parametros.umbralHumedadMinimo,
     });
     navigation.navigate('Main', { screen: 'MisPlantas' });
-  };
+  } catch (error) {
+    Alert.alert('Error', 'No se pudo guardar la planta. Intenta de nuevo.');
+  }
+};
 
   return (
     <View style={styles.container}>

@@ -75,4 +75,20 @@ export const escanearPlantaAPI = async (fotoUri) => {
   });
 };
 
+// ── PLANTAS ──
+export const crearPlantaAPI = (datos) =>
+  api.post('/api/plantas', datos);
+
+export const obtenerPlantasAPI = () =>
+  api.get('/api/plantas');
+
+export const obtenerPlantaAPI = (id) =>
+  api.get(`/api/plantas/${id}`);
+
+export const actualizarPlantaAPI = (id, datos) =>
+  api.patch(`/api/plantas/${id}`, datos);
+
+export const eliminarPlantaAPI = (id) =>
+  api.delete(`/api/plantas/${id}`);
+
 export default api;

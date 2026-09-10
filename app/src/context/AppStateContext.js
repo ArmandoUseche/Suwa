@@ -1,60 +1,98 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { mockAlertas, mockTieneDispositivoVinculado } from '../constants/mockData';
+import { crearPlantaAPI, obtenerPlantasAPI } from '../services/api';
+import { useAuth } from './AuthContext';
 
-import { mockAlertas, mockPlantas, mockTieneDispositivoVinculado } from '../constants/mockData';
-
-// Estado compartido de la app que SÍ cambia en vivo mientras la usás
-// (a diferencia de la mayoría de los mocks del proyecto, que son
-// valores fijos que se editan a mano en mockData.js y piden recargar).
-// Hasta ahora no hacía falta -- nada "hacía" la acción de vincular un
-// dispositivo, solo mostrábamos el resultado ya vinculado o no. Ahora
-// que existe una pantalla real de "Vincular dispositivo", tiene sentido
-// que tocar el botón se refleje al toque en toda la app.
-//
-// Arranca desde los mismos valores mock de siempre (mockData.js), así
-// que para probar el estado inicial "sin vincular"/"sin plantas" seguís
-// editando esos mismos mocks como hasta ahora -- lo que cambia es que,
-// una vez que la app está corriendo, vincular un dispositivo o guardar
-// umbrales SÍ tiene efecto real dentro de esa sesión (se pierde al
-// recargar, porque sigue sin haber backend -- eso es esperado).
 const AppStateContext = createContext(null);
 
 export function AppStateProvider({ children }) {
+  const { usuario } = useAuth();
   const [tieneDispositivoVinculado, setTieneDispositivoVinculado] = useState(
     mockTieneDispositivoVinculado
   );
-  const [plantas, setPlantas] = useState(mockPlantas);
+  const [plantas, setPlantas] = useState([]);
   const [alertas, setAlertas] = useState(mockAlertas);
+  const [cargandoPlantas, setCargandoPlantas] = useState(false);
+
+  // Carga las plantas del usuario desde MongoDB al iniciar sesión
+  useEffect(() => {
+  if (!usuario) {
+    setPlantas([]);
+    return;
+  }
+  // Pequeño delay para asegurar que el token ya está en AsyncStorage
+  const timer = setTimeout(() => {
+    cargarPlantas();
+  }, 500);
+  return () => clearTimeout(timer);
+}, [usuario]);
+
+  const cargarPlantas = async () => {
+    setCargandoPlantas(true);
+    try {
+      const res = await obtenerPlantasAPI();
+      const plantasFormateadas = res.data.map((p) => ({
+        id: p._id,
+        nombreComun: p.nombreComun,
+        nombreCientifico: p.nombreCientifico,
+        foto: p.fotoUri ? { uri: p.fotoUri } : null,
+        luzIdeal: p.luzIdeal,
+        temperaturaIdeal: p.temperaturaIdeal,
+        umbralHumedadMinimo: p.umbralHumedadMinimo,
+        enMonitoreo: p.enMonitoreo,
+        dispositivoId: p.dispositivoId,
+        humedadActual: null,
+        humedadEstado: null,
+        kitConexion: null,
+      }));
+      setPlantas(plantasFormateadas);
+    } catch (error) {
+      console.log('Error cargando plantas:', error.message);
+    } finally {
+      setCargandoPlantas(false);
+    }
+  };
 
   const vincularDispositivo = () => setTieneDispositivoVinculado(true);
 
-  // Se llama al tocar una alerta en AlertasScreen. Real:
-  // PATCH /api/alertas/:id/leida cuando se conecte (ver
-  // puntos-abiertos-backend.md).
   const marcarAlertaLeida = (alertaId) => {
-    setAlertas((prev) => prev.map((a) => (a.id === alertaId ? { ...a, leida: true } : a)));
+    setAlertas((prev) =>
+      prev.map((a) => (a.id === alertaId ? { ...a, leida: true } : a))
+    );
   };
 
   const actualizarUmbrales = (plantaId, cambios) => {
-    setPlantas((prev) => prev.map((p) => (p.id === plantaId ? { ...p, ...cambios } : p)));
+    setPlantas((prev) =>
+      prev.map((p) => (p.id === plantaId ? { ...p, ...cambios } : p))
+    );
   };
 
-  // Agrega una planta nueva a la lista -- se llama desde
-  // ResultadoEscaneoScreen ("Añadir a mis plantas"). La planta nueva
-  // arranca `enMonitoreo: false`: solo puede haber una planta conectada
-  // al kit físico a la vez, y agregarla acá no cambia sola cuál es esa
-  // (eso pasa al vincular el kit a una planta puntual, algo que todavía
-  // no está construido -- por ahora todas las plantas nuevas entran
-  // como "sin conectar", igual que el Potus de ejemplo).
-  const agregarPlanta = (datos) => {
+  const agregarPlanta = async (datos) => {
+    const res = await crearPlantaAPI({
+      nombreComun: datos.nombreComun,
+      nombreCientifico: datos.nombreCientifico,
+      fotoUri: datos.foto?.uri || null,
+      luzIdeal: datos.luzIdeal || null,
+      temperaturaIdeal: datos.temperaturaIdeal || null,
+      umbralHumedadMinimo: datos.umbralHumedadMinimo || 30,
+    });
+
     const nuevaPlanta = {
-      id: `pl-${Date.now()}`,
-      enMonitoreo: false,
+      id: res.data._id,
+      nombreComun: res.data.nombreComun,
+      nombreCientifico: res.data.nombreCientifico,
+      foto: res.data.fotoUri ? { uri: res.data.fotoUri } : datos.foto || null,
+      luzIdeal: res.data.luzIdeal,
+      temperaturaIdeal: res.data.temperaturaIdeal,
+      umbralHumedadMinimo: res.data.umbralHumedadMinimo,
+      enMonitoreo: res.data.enMonitoreo,
+      dispositivoId: res.data.dispositivoId,
       humedadActual: null,
       humedadEstado: null,
       kitConexion: null,
-      ...datos,
     };
-    setPlantas((prev) => [...prev, nuevaPlanta]);
+
+    setPlantas((prev) => [nuevaPlanta, ...prev]);
     return nuevaPlanta;
   };
 
@@ -64,6 +102,8 @@ export function AppStateProvider({ children }) {
         tieneDispositivoVinculado,
         vincularDispositivo,
         plantas,
+        cargandoPlantas,
+        cargarPlantas,
         actualizarUmbrales,
         agregarPlanta,
         alertas,
