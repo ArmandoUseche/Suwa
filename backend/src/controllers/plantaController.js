@@ -9,6 +9,7 @@ async function crearPlanta(req, res) {
       luzIdeal,
       temperaturaIdeal,
       umbralHumedadMinimo,
+      dispositivoId,
     } = req.body;
 
     if (!nombreComun || !nombreCientifico) {
@@ -23,6 +24,7 @@ async function crearPlanta(req, res) {
       luzIdeal: luzIdeal || null,
       temperaturaIdeal: temperaturaIdeal || null,
       umbralHumedadMinimo: umbralHumedadMinimo || 30,
+      dispositivoId: dispositivoId || null,
     });
 
     res.status(201).json(planta);
