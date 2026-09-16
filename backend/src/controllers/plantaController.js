@@ -77,4 +77,24 @@ async function eliminarPlanta(req, res) {
   }
 }
 
-module.exports = { crearPlanta, obtenerPlantas, obtenerPlanta, actualizarPlanta, eliminarPlanta };
+// Sin autenticación: el firmware (Arduino) no puede manejar JWT fácilmente,
+// así que este endpoint solo expone el umbral de humedad, nada sensible.
+async function obtenerUmbralPorDispositivo(req, res) {
+  try {
+    const { dispositivoId } = req.params;
+    const planta = await Planta.findOne({ dispositivoId });
+    if (!planta) return res.status(404).json({ error: 'Dispositivo no vinculado a ninguna planta' });
+    res.json({ umbralHumedadMinimo: planta.umbralHumedadMinimo });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+module.exports = {
+  crearPlanta,
+  obtenerPlantas,
+  obtenerPlanta,
+  actualizarPlanta,
+  eliminarPlanta,
+  obtenerUmbralPorDispositivo,
+};
