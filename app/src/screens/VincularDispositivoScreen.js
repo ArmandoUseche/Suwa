@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -7,6 +7,7 @@ import PressableScale from '../components/PressableScale';
 import FormTextInput from '../components/FormTextInput';
 import { PrimaryButton } from '../components/Buttons';
 import { useAppState } from '../context/AppStateContext';
+import { crearPlantaAPI } from '../services/api';
 import { colors, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
 
@@ -19,29 +20,45 @@ import { moderateScale } from '../utils/responsive';
 // depende de ninguna de las 2, y es un cambio chico pasar a QR más
 // adelante si hace falta (mismo botón, cambia de dónde sale el código).
 //
-// No hay endpoint de "vincular dispositivo" en el contrato de API
-// original (ver puntos-abiertos-backend.md) -- por ahora esto simula la
-// conexión con un timer y después llama a vincularDispositivo() del
-// AppStateContext, que sí es estado real de la app (no hay que recargar
-// para ver el cambio reflejado en el resto de las pantallas).
+// Ya conectada a datos reales: usa crearPlantaAPI directo (no
+// agregarPlanta() del contexto, porque esa función no manda
+// dispositivoId todavía) para crear una planta "placeholder" con el
+// dispositivoId que el usuario escribió. Todavía no hay pantalla de
+// "completar datos de la planta" en este flujo -- el nombre queda
+// genérico y se puede editar después desde Mis Plantas/Configurar
+// umbrales (ya existen esas pantallas). El backend no valida que el
+// código corresponda a un kit real (no hay forma de eso sin que el
+// firmware confirme conexión), así que cualquier texto no vacío
+// "vincula" -- es una limitación conocida del alcance actual, igual
+// que con el kit hardcodeado en Monitoreo/Historial.
 export default function VincularDispositivoScreen({ navigation }) {
   const insets = useSafeAreaInsets();
-  const { vincularDispositivo } = useAppState();
+  const { vincularDispositivo, cargarPlantas } = useAppState();
   const [codigo, setCodigo] = useState('');
   const [conectando, setConectando] = useState(false);
 
-  const handleVincular = () => {
-    if (!codigo.trim()) return;
+  const handleVincular = async () => {
+    const dispositivoId = codigo.trim();
+    if (!dispositivoId) return;
+
     setConectando(true);
-    // TODO(cuando exista el endpoint real): reemplazar este setTimeout
-    // por la llamada real, por ejemplo POST /api/dispositivos/vincular
-    // con { codigo }. Si falla (código inválido), acá se mostraría un
-    // error en vez de llamar a vincularDispositivo().
-    setTimeout(() => {
+    try {
+      await crearPlantaAPI({
+        nombreComun: 'Mi planta',
+        nombreCientifico: 'Por identificar',
+        dispositivoId,
+      });
+      await cargarPlantas();
       vincularDispositivo();
-      setConectando(false);
       navigation.goBack();
-    }, 1200);
+    } catch (error) {
+      Alert.alert(
+        'No se pudo vincular',
+        'Revisa el código e inténtalo de nuevo. Si el problema sigue, confirma que el backend esté encendido.'
+      );
+    } finally {
+      setConectando(false);
+    }
   };
 
   return (
