@@ -69,11 +69,8 @@ function confirmarRiego({ lectura, humedadAlta }, nombrePlanta) {
 }
 
 export default function MonitoreoScreen({ navigation }) {
-  const { kitConectado, plantas } = useAppState();
+  const { plantas } = useAppState();
   const plantaEnMonitoreo = plantas.some((planta) => planta.enMonitoreo);
-  if (!kitConectado) {
-    return <SinDispositivo navigation={navigation} />;
-  }
   if (!plantaEnMonitoreo) {
     return <SinPlanta navigation={navigation} />;
   }
@@ -126,16 +123,16 @@ function SinPlanta({ navigation }) {
           <PlantPhoto size={PLANT_PHOTO_SIZE} />
         </View>
 
-        <Text style={styles.emptyTitle}>Kit conectado</Text>
+        <Text style={styles.emptyTitle}>Planta no seleccionada</Text>
         <Text style={styles.emptyDescription}>
-          Aún no has configurado una planta. Escanéala o regístrala para
-          comenzar el monitoreo y habilitar el riego automático.
+          Selecciona tu planta en la pantalla de Mis plantas para comenzar
+          el monitoreo y habilitar el riego automático.
         </Text>
 
         <PrimaryButton
-          label="Agregar planta"
-          icon="add"
-          onPress={() => navigation.navigate('Escanear')}
+          label="Seleccionar planta"
+          icon="leaf-outline"
+          onPress={() => navigation.navigate('MisPlantas')}
           style={styles.linkButton}
         />
       </ScrollView>
@@ -240,20 +237,19 @@ function ConDispositivo({ navigation }) {
         <View style={[styles.bannerOuter, { paddingTop: insets.top + spacing.md * 3 }]}>
           <View style={styles.bannerInner}>
             <PlantGreetingBanner nombre={usuario?.nombre} kitConectado />
-
-            <PressableScale
-              onPress={() => navigation.navigate('Alertas')}
-              style={styles.bellButton}
-              hitSlop={10}
-            >
-              <Ionicons name="notifications-outline" size={moderateScale(20)} color={colors.textDark} />
-              {alertasNoLeidas > 0 && (
-                <View style={styles.bellBadge}>
-                  <Text style={styles.bellBadgeText}>{alertasNoLeidas}</Text>
-                </View>
-              )}
-            </PressableScale>
           </View>
+          <PressableScale
+            onPress={() => navigation.navigate('Alertas')}
+            style={styles.bellButton}
+            hitSlop={10}
+          >
+            <Ionicons name="notifications-outline" size={moderateScale(20)} color={colors.textDark} />
+            {alertasNoLeidas > 0 && (
+              <View style={styles.bellBadge}>
+                <Text style={styles.bellBadgeText}>{alertasNoLeidas}</Text>
+              </View>
+            )}
+          </PressableScale>
         </View>
 
         <View style={styles.plantCard}>
@@ -331,11 +327,12 @@ const styles = StyleSheet.create({
   },
   bannerOuter: {
     paddingHorizontal: spacing.lg,
+    position: 'relative',
+    zIndex: 10,
+    elevation: 10,
   },
   bannerInner: {
     position: 'relative',
-    zIndex: 2,
-    elevation: 2,
   },
   bellButton: {
     position: 'absolute',
@@ -347,8 +344,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 3,
-    elevation: 4,
+    zIndex: 20,
+    elevation: 20,
   },
   bellBadge: {
     position: 'absolute',
