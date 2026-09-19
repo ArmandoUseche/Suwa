@@ -128,10 +128,10 @@ function SinPlanta({ navigation }) {
 
 function ConDispositivo({ navigation }) {
   const insets = useSafeAreaInsets();
-  const { alertas, plantas } = useAppState();
+  const { alertasVisibles, plantas } = useAppState();
   const { usuario } = useAuth();
   const planta = plantas.find((item) => item.enMonitoreo) || plantas[0];
-  const alertasNoLeidas = alertas.filter((a) => !a.leida).length;
+  const alertasNoLeidas = alertasVisibles.filter((a) => !a.leida).length;
 
   const [lectura, setLectura] = useState(null);
   const [cargandoInicial, setCargandoInicial] = useState(true);
