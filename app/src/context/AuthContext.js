@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { loginAPI, registroAPI } from '../services/api';
+import { actualizarPerfilAPI, loginAPI, registroAPI } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -48,8 +48,15 @@ export function AuthProvider({ children }) {
     setUsuario(null);
   }
 
+  async function actualizarPerfil(datos) {
+    const res = await actualizarPerfilAPI(datos);
+    await AsyncStorage.setItem('usuario', JSON.stringify(res.data.usuario));
+    setUsuario(res.data.usuario);
+    return res.data.usuario;
+  }
+
   return (
-    <AuthContext.Provider value={{ usuario, cargando, login, registro, logout }}>
+    <AuthContext.Provider value={{ usuario, cargando, login, registro, logout, actualizarPerfil }}>
       {children}
     </AuthContext.Provider>
   );
