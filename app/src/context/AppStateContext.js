@@ -57,7 +57,7 @@ export function AppStateProvider({ children }) {
     cargarDatos();
     const intervaloKit = setInterval(cargarEstadoKit, 10000);
     const intervaloAlertas = setInterval(cargarAlertas, 30000);
-    const suscripcionApp = AppState.addEventListener('change', (estado) => {
+    const suscripcionApp = AppState?.addEventListener?.('change', (estado) => {
       if (estado === 'active') {
         cargarEstadoKit();
         cargarAlertas();
@@ -66,7 +66,7 @@ export function AppStateProvider({ children }) {
     return () => {
       clearInterval(intervaloKit);
       clearInterval(intervaloAlertas);
-      suscripcionApp.remove();
+      suscripcionApp?.remove?.();
     };
   }, [usuario]);
 
