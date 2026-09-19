@@ -128,6 +128,19 @@ export const obtenerParametrosPlantaAPI = (nombreCientifico) =>
 export const crearPlantaAPI = (datos) =>
   api.post('/api/plantas', datos);
 
+export const subirFotoPlantaAPI = (id, fotoUri) => {
+  const formData = new FormData();
+  formData.append('foto', {
+    uri: fotoUri,
+    type: 'image/jpeg',
+    name: 'planta.jpg',
+  });
+  return api.post(`/api/plantas/${id}/foto`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 30000,
+  });
+};
+
 export const obtenerPlantasAPI = () =>
   api.get('/api/plantas');
 
