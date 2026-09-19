@@ -128,8 +128,9 @@ function SinPlanta({ navigation }) {
 
 function ConDispositivo({ navigation }) {
   const insets = useSafeAreaInsets();
-  const { alertas } = useAppState();
+  const { alertas, plantas } = useAppState();
   const { usuario } = useAuth();
+  const planta = plantas.find((item) => item.enMonitoreo) || plantas[0];
   const alertasNoLeidas = alertas.filter((a) => !a.leida).length;
 
   const [lectura, setLectura] = useState(null);
@@ -226,13 +227,13 @@ function ConDispositivo({ navigation }) {
         </View>
 
         <View style={styles.plantCard}>
-          <Text style={styles.plantCardTitle}>Planta</Text>
+          <Text style={styles.plantCardTitle}>{planta.nombreComun}</Text>
           <View style={styles.estadoPill}>
             <View style={styles.estadoDot} />
             <Text style={styles.estadoText}>Estado: saludable</Text>
           </View>
 
-          <PlantPhoto size={PLANT_PHOTO_SIZE} />
+          <PlantPhoto size={PLANT_PHOTO_SIZE} source={planta.foto} />
         </View>
 
         <View style={styles.statsRow}>
