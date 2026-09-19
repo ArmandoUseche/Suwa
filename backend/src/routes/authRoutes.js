@@ -11,6 +11,7 @@ router.post('/login', authController.login);
 
 // PATCH /api/auth/cambiar-contrasena
 router.patch('/cambiar-contrasena', authMiddleware, authController.cambiarContrasena);
+router.patch('/perfil', authMiddleware, authController.actualizarPerfil);
 
 // POST /api/auth/olvide-contrasena
 router.post('/olvide-contrasena', authController.olvidoContrasena);
