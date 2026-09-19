@@ -38,15 +38,38 @@ export const actualizarPerfilAPI = (datos) =>
   api.patch('/api/auth/perfil', datos);
 
 // ── SENSORES ──
-export const getUltimaLecturaAPI = (dispositivoId) =>
-  api.get(`/api/sensores/${dispositivoId}/ultima`);
+export const getUltimaLecturaAPI = async (dispositivoId) => {
+  if (USAR_BACKEND_LOCAL) {
+    return api.get(`/api/sensores/${dispositivoId}/ultima`);
+  }
+
+  const resultados = await Promise.allSettled([
+    api.get(`/api/sensores/${dispositivoId}/ultima`),
+    axios.get(`${LOCAL_RIEGO_URL}/api/sensores/${dispositivoId}/ultima`, { timeout: 5000 }),
+  ]);
+  const lecturas = resultados
+    .filter((resultado) => resultado.status === 'fulfilled')
+    .map((resultado) => resultado.value)
+    .filter((respuesta) => respuesta?.data?.timestamp);
+
+  if (lecturas.length === 0) {
+    throw resultados.find((resultado) => resultado.status === 'rejected')?.reason
+      || new Error('No se pudo obtener la última lectura del kit.');
+  }
+
+  return lecturas.reduce((masReciente, actual) => (
+    new Date(actual.data.timestamp).getTime() > new Date(masReciente.data.timestamp).getTime()
+      ? actual
+      : masReciente
+  ));
+};
 
 export const analizarEstadoRiegoAPI = async (dispositivoId, umbralHumedadMinimo) => {
   const res = await getUltimaLecturaAPI(dispositivoId);
   const lectura = res.data;
   const timestamp = new Date(lectura.timestamp).getTime();
 
-  if (!Number.isFinite(timestamp) || Date.now() - timestamp > 30000) {
+  if (!Number.isFinite(timestamp) || Date.now() - timestamp > 60000) {
     const error = new Error('La última lectura del kit está desactualizada.');
     error.code = 'LECTURA_KIT_DESACTUALIZADA';
     throw error;
