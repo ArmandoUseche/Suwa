@@ -38,6 +38,25 @@ export const cambiarContrasenaAPI = (datos) =>
 export const getUltimaLecturaAPI = (dispositivoId) =>
   api.get(`/api/sensores/${dispositivoId}/ultima`);
 
+export const analizarEstadoRiegoAPI = async (dispositivoId, umbralHumedadMinimo) => {
+  const res = await getUltimaLecturaAPI(dispositivoId);
+  const lectura = res.data;
+  const timestamp = new Date(lectura.timestamp).getTime();
+
+  if (!Number.isFinite(timestamp) || Date.now() - timestamp > 30000) {
+    const error = new Error('La última lectura del kit está desactualizada.');
+    error.code = 'LECTURA_KIT_DESACTUALIZADA';
+    throw error;
+  }
+
+  return {
+    lectura,
+    humedadAlta: Number.isFinite(Number(lectura.humedadSuelo))
+      && Number.isFinite(Number(umbralHumedadMinimo))
+      && Number(lectura.humedadSuelo) >= Number(umbralHumedadMinimo),
+  };
+};
+
 export const getHistorialSensoresAPI = (dispositivoId) =>
   api.get(`/api/sensores/${dispositivoId}`);
 
