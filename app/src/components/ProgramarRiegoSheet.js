@@ -87,7 +87,7 @@ export default function ProgramarRiegoSheet({
             value={hora}
             mode="time"
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={(event, selectedDate) => {
+            onValueChange={(event, selectedDate) => {
               if (selectedDate) setHora(selectedDate);
             }}
           />

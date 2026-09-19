@@ -23,10 +23,10 @@ import { DISPOSITIVO_ID } from '../constants/device';
 
 // Pantalla de Historial (Paso 6).
 //
-// Tiene DOS estados, igual que Monitoreo pero con su propia bandera --
+// Tiene estados de carga, error, vacío y datos --
 // un usuario puede tener el kit vinculado y aun así no tener ninguna
 // lectura ni riego registrado todavía:
-//  - Sin datos (mockTieneDatosHistorial = false, mockup real): ilustración
+//  - Sin datos: ilustración
 //    + "Sin registros aún" + botón para vincular dispositivo.
 //  - Con datos: selector Día/Semana/Año + pestañas de sensor + gráfica
 //    + lista de "Registros recientes".
@@ -35,6 +35,8 @@ export default function HistorialScreen() {
   const [lecturas, setLecturas] = useState([]);
   const [riegos, setRiegos] = useState([]);
   const [cargando, setCargando] = useState(true);
+  const [errorCarga, setErrorCarga] = useState(false);
+  const [intento, setIntento] = useState(0);
 
   useEffect(() => {
     let activo = true;
@@ -44,14 +46,14 @@ export default function HistorialScreen() {
     ])
       .then(([sensoresRes, riegoRes]) => {
         if (!activo) return;
+        setErrorCarga(false);
         const lecturas = Array.isArray(sensoresRes.data) ? sensoresRes.data : [];
         setLecturas(agruparCadaCincoMinutos(lecturas));
         setRiegos(Array.isArray(riegoRes.data) ? riegoRes.data : []);
       })
       .catch(() => {
         if (activo) {
-          setLecturas([]);
-          setRiegos([]);
+          setErrorCarga(true);
         }
       })
       .finally(() => {
@@ -61,13 +63,32 @@ export default function HistorialScreen() {
     return () => {
       activo = false;
     };
-  }, []);
+  }, [intento]);
 
   if (cargando) {
     return (
       <View style={styles.loading}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Cargando historial...</Text>
+      </View>
+    );
+  }
+
+  if (errorCarga) {
+    return (
+      <View style={[styles.loading, styles.errorState]}>
+        <Text style={styles.errorTitle}>No se pudo cargar el historial</Text>
+        <Text style={styles.errorDescription}>
+          Verifica la conexión y vuelve a intentarlo. Tus registros no se han eliminado.
+        </Text>
+        <PrimaryButton
+          label="Reintentar"
+          onPress={() => {
+            setErrorCarga(false);
+            setCargando(true);
+            setIntento((valor) => valor + 1);
+          }}
+        />
       </View>
     );
   }
@@ -282,6 +303,19 @@ const styles = StyleSheet.create({
   loadingText: {
     ...typography.caption,
     color: colors.textMuted,
+  },
+  errorState: {
+    padding: spacing.xl,
+  },
+  errorTitle: {
+    ...typography.h2,
+    textAlign: 'center',
+  },
+  errorDescription: {
+    ...typography.body,
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginVertical: spacing.md,
   },
   // Igual que Monitoreo: fondo blanco liso, no el degradado verde --
   // por eso acá tampoco se usa GradientBackground.

@@ -8,7 +8,52 @@ const USAR_BACKEND_LOCAL = false;
 const BASE_URL = USAR_BACKEND_LOCAL
   ? 'http://192.168.101.5:3000' 
   : 'https://suwa-rrg5.onrender.com';
-const LOCAL_RIEGO_URL = 'http://10.238.0.16:3000';
+
+const LOCAL_RIEGO_URLS = [
+  process.env.EXPO_PUBLIC_LOCAL_RIEGO_URL,
+  'http://192.168.101.5:3000',
+  'http://10.238.0.16:3000',
+  'http://192.168.43.1:3000',
+  'http://192.168.0.5:3000',
+  'http://192.168.1.5:3000',
+].filter(Boolean);
+
+const obtenerTimestampLectura = (lectura) => {
+  if (!lectura) return Number.NaN;
+  const valor = lectura.timestamp ?? lectura.createdAt;
+  const timestamp = valor ? new Date(valor).getTime() : Number.NaN;
+  return Number.isFinite(timestamp) ? timestamp : Number.NaN;
+};
+
+async function consultarBackendLocal(endpoint, metodo = 'get', datos = undefined) {
+  const errores = [];
+
+  for (const baseUrl of LOCAL_RIEGO_URLS) {
+    try {
+      const config = { timeout: 5000 };
+      if (metodo === 'get') {
+        const respuesta = await axios.get(`${baseUrl}${endpoint}`, config);
+        return respuesta;
+      }
+      if (metodo === 'post') {
+        const respuesta = await axios.post(`${baseUrl}${endpoint}`, datos, config);
+        return respuesta;
+      }
+      if (metodo === 'delete') {
+        const respuesta = await axios.delete(`${baseUrl}${endpoint}`, config);
+        return respuesta;
+      }
+      throw new Error(`Método no soportado: ${metodo}`);
+    } catch (error) {
+      errores.push(error);
+    }
+  }
+
+  const error = new Error('No se pudo comunicar con el backend local del kit. Verifica que el PC tenga el backend activo y que el teléfono esté en la misma red.');
+  error.code = 'BACKEND_LOCAL_NO_DISPONIBLE';
+  error.causa = errores[0] ?? null;
+  throw error;
+}
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -45,20 +90,22 @@ export const getUltimaLecturaAPI = async (dispositivoId) => {
 
   const resultados = await Promise.allSettled([
     api.get(`/api/sensores/${dispositivoId}/ultima`),
-    axios.get(`${LOCAL_RIEGO_URL}/api/sensores/${dispositivoId}/ultima`, { timeout: 5000 }),
+    consultarBackendLocal(`/api/sensores/${dispositivoId}/ultima`, 'get'),
   ]);
+
   const lecturas = resultados
     .filter((resultado) => resultado.status === 'fulfilled')
     .map((resultado) => resultado.value)
-    .filter((respuesta) => respuesta?.data?.timestamp);
+    .filter((respuesta) => Number.isFinite(obtenerTimestampLectura(respuesta?.data)));
 
   if (lecturas.length === 0) {
-    throw resultados.find((resultado) => resultado.status === 'rejected')?.reason
+    const error = resultados.find((resultado) => resultado.status === 'rejected')?.reason
       || new Error('No se pudo obtener la última lectura del kit.');
+    throw error;
   }
 
   return lecturas.reduce((masReciente, actual) => (
-    new Date(actual.data.timestamp).getTime() > new Date(masReciente.data.timestamp).getTime()
+    obtenerTimestampLectura(actual.data) > obtenerTimestampLectura(masReciente.data)
       ? actual
       : masReciente
   ));
@@ -67,9 +114,9 @@ export const getUltimaLecturaAPI = async (dispositivoId) => {
 export const analizarEstadoRiegoAPI = async (dispositivoId, umbralHumedadMinimo) => {
   const res = await getUltimaLecturaAPI(dispositivoId);
   const lectura = res.data;
-  const timestamp = new Date(lectura.timestamp).getTime();
+  const timestamp = obtenerTimestampLectura(lectura);
 
-  if (!Number.isFinite(timestamp) || Date.now() - timestamp > 60000) {
+  if (!lectura || !Number.isFinite(timestamp) || Date.now() - timestamp > 60000) {
     const error = new Error('La última lectura del kit está desactualizada.');
     error.code = 'LECTURA_KIT_DESACTUALIZADA';
     throw error;
@@ -96,7 +143,7 @@ export const activarRiegoAPI = async (dispositivoId, duracionSegundos = 10) => {
 
   const [renderResult, localResult] = await Promise.allSettled([
     api.post('/api/riego/activar', datos),
-    axios.post(`${LOCAL_RIEGO_URL}/api/riego/activar`, datos, { timeout: 5000 }),
+    consultarBackendLocal('/api/riego/activar', 'post', datos),
   ]);
 
   if (localResult.status === 'rejected') {
@@ -116,7 +163,7 @@ export const getHistorialRiegoAPI = (dispositivoId) =>
   api.get(`/api/riego/${dispositivoId}/historial`);
 
 const enviarProgramacionLocal = (datos) =>
-  axios.post(`${LOCAL_RIEGO_URL}/api/riego/programado`, datos, { timeout: 5000 });
+  consultarBackendLocal('/api/riego/programado', 'post', datos);
 
 export const programarRiegoAPI = async (datos) => {
   if (USAR_BACKEND_LOCAL) return api.post('/api/riego/programado', datos);
@@ -141,7 +188,7 @@ export const obtenerRiegoProgramadoAPI = async (dispositivoId) => {
 
   const [renderResult, localResult] = await Promise.allSettled([
     api.get(`/api/riego/programado/${dispositivoId}`),
-    axios.get(`${LOCAL_RIEGO_URL}/api/riego/programado/${dispositivoId}`, { timeout: 5000 }),
+    consultarBackendLocal(`/api/riego/programado/${dispositivoId}`, 'get'),
   ]);
   if (renderResult.status === 'fulfilled') return renderResult.value;
   if (localResult.status === 'fulfilled') return localResult.value;
@@ -153,7 +200,7 @@ export const cancelarRiegoProgramadoAPI = async (dispositivoId) => {
 
   const [renderResult, localResult] = await Promise.allSettled([
     api.delete(`/api/riego/programado/${dispositivoId}`),
-    axios.delete(`${LOCAL_RIEGO_URL}/api/riego/programado/${dispositivoId}`, { timeout: 5000 }),
+    consultarBackendLocal(`/api/riego/programado/${dispositivoId}`, 'delete'),
   ]);
   if (localResult.status === 'rejected') {
     const error = new Error('No se pudo cancelar la programación en el backend local.');

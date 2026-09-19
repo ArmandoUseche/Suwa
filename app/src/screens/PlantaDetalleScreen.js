@@ -302,11 +302,9 @@ export default function PlantaDetalleScreen({ route, navigation }) {
           </View>
         )}
 
-        {/* Centro de alertas / umbrales -- placeholder por ahora
-            (Paso 8), la configuración real todavía no está construida. */}
         <View style={styles.configSection}>
           <PressableScale
-            onPress={() => Alert.alert('Centro de alertas', 'Se conecta más adelante.')}
+            onPress={() => navigation.navigate('Alertas')}
             style={styles.configRow}
           >
             <Ionicons name="notifications-outline" size={moderateScale(20)} color={colors.textDark} />

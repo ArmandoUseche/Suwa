@@ -34,9 +34,9 @@ const INTERVALO_REFRESCO_MS = 10000;
 // primer criterio razonable, no vienen de ningún dato de la planta
 // todavía (eso depende del umbral por especie, que es un pendiente de
 // backend/firmware más grande, ver CONTEXTO_CONTINUIDAD.md).
-function estadoHumedadSuelo(valor) {
-  if (valor < 20) return 'Baja';
-  if (valor > 70) return 'Alta';
+function estadoHumedadSuelo(valor, umbral = 30) {
+  if (valor < umbral) return 'Baja';
+  if (valor > Math.min(100, umbral + 40)) return 'Alta';
   return 'Óptimo';
 }
 
@@ -267,7 +267,7 @@ function ConDispositivo({ navigation }) {
             icon={icons.gotaAgua}
             value={lectura.humedadSuelo}
             unit="%"
-            status={estadoHumedadSuelo(lectura.humedadSuelo)}
+            status={estadoHumedadSuelo(lectura.humedadSuelo, planta.umbralHumedadMinimo)}
           />
           <StatChip
             icon={icons.temperaturaAlta}

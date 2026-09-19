@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import SolidHeaderBar from '../components/SolidHeaderBar';
@@ -8,20 +8,23 @@ import { PrimaryButton } from '../components/Buttons';
 import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
 
-// Contáctanos (Paso 8). Sin mockup -- datos de contacto + un mensaje
-// corto opcional, mismo lenguaje visual que el resto. El envío es mock
-// (no hay endpoint de contacto en el contrato de API).
+// Contáctanos: abre el cliente de correo del dispositivo con el mensaje
+// preparado, ya que el backend no tiene un endpoint de contacto.
 export default function ContactanosScreen({ navigation }) {
   const [mensaje, setMensaje] = useState('');
 
-  const handleEnviar = () => {
+  const handleEnviar = async () => {
     if (!mensaje.trim()) {
       Alert.alert('Escribí algo', 'Contanos qué necesitás antes de enviar.');
       return;
     }
-    Alert.alert('¡Gracias!', 'Recibimos tu mensaje, te vamos a responder pronto.', [
-      { text: 'OK', onPress: () => navigation.goBack() },
-    ]);
+    const url = `mailto:soporte@suwa.app?subject=${encodeURIComponent('Consulta SUWA')}&body=${encodeURIComponent(mensaje.trim())}`;
+    const puedeAbrir = await Linking.canOpenURL(url);
+    if (!puedeAbrir) {
+      Alert.alert('No se pudo abrir el correo', 'Puedes escribirnos directamente a soporte@suwa.app.');
+      return;
+    }
+    await Linking.openURL(url);
   };
 
   return (

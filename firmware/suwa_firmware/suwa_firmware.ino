@@ -48,10 +48,10 @@
 #include <DHT.h>
 
 // ---- Backend ----
-// Ya NO es fijo -- este es solo el valor por defecto de fábrica antes
-// de que se guarde uno desde el portal SUWA-Config (ver
-// cargarHostGuardadoSiExiste() y la sección de EEPROM más abajo).
-String servidorHost = "192.168.101.5";
+// Este es el valor por defecto para el hotspot actual. Si luego cambia la
+// red, el host puede seguir configurándose desde el portal SUWA-Config.
+const char* HOST_BACKEND_POR_DEFECTO = "10.238.0.16";
+String servidorHost = HOST_BACKEND_POR_DEFECTO;
 const int SERVER_PORT = 3000;
 const char* DISPOSITIVO_ID = "suwa-kit-01";
 
@@ -120,7 +120,9 @@ const int EEPROM_PASS_ADDR = 35;
 // host nunca se guardó, simplemente se usa el valor por defecto de
 // fábrica (servidorHost, declarado arriba) en vez de leer basura.
 const int EEPROM_HOST_MARCA_ADDR = 98;
-const byte MARCA_HOST_VALIDO = 0xBB;
+// Invalida el host antiguo guardado en EEPROM al instalar este firmware.
+// Las credenciales WiFi no se borran.
+const byte MARCA_HOST_VALIDO = 0xBC;
 const int EEPROM_HOST_LEN_ADDR = 99;
 const int EEPROM_HOST_ADDR = 100;
 
@@ -200,6 +202,9 @@ void leerHost(String& host) {
 void cargarHostGuardadoSiExiste() {
   if (hayHostGuardado()) {
     leerHost(servidorHost);
+    if (servidorHost.length() == 0) {
+      servidorHost = HOST_BACKEND_POR_DEFECTO;
+    }
   }
   Serial.print("Host del backend en uso: ");
   Serial.println(servidorHost);
