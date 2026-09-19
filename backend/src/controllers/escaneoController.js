@@ -1,4 +1,10 @@
-const { identificarConPlantNet, obtenerParametrosConGemini } = require('../services/escaneoService');
+const {
+  identificarConGemini,
+  identificarConPlantNet,
+  obtenerParametrosConGemini,
+} = require('../services/escaneoService');
+
+const COINCIDENCIA_MINIMA_PLANTNET = 20;
 
 async function escanearPlanta(req, res) {
   try {
@@ -6,19 +12,32 @@ async function escanearPlanta(req, res) {
       return res.status(400).json({ error: 'No se recibió ninguna imagen' });
     }
 
-    const candidatas = await identificarConPlantNet(
-      req.file.buffer,
-      req.file.mimetype
-    );
+    let candidatas;
+    let fuente = 'plantnet';
+
+    try {
+      candidatas = await identificarConPlantNet(req.file.buffer, req.file.mimetype);
+    } catch (error) {
+      console.warn('PlantNet no disponible, se usará Gemini:', error.message);
+      candidatas = [];
+    }
+
+    if (
+      candidatas.length === 0 ||
+      candidatas[0].coincidencia < COINCIDENCIA_MINIMA_PLANTNET
+    ) {
+      fuente = 'gemini';
+      candidatas = await identificarConGemini(req.file.buffer, req.file.mimetype);
+    }
 
     if (candidatas.length === 0) {
       return res.status(422).json({
         rechazado: true,
-        error: 'No se encontraron coincidencias para esta imagen. Intenta con una foto más clara y enfocada en la planta.',
+        error: 'No se pudo identificar la planta. Intenta con una foto más clara o ingresa su nombre manualmente.',
       });
     }
 
-    res.json({ candidatas });
+    res.json({ candidatas, fuente });
   } catch (error) {
     console.error('Error en escaneo:', error.message);
 
