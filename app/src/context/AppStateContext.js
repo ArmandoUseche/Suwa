@@ -5,6 +5,7 @@ import {
   eliminarPlantaAPI,
   getUltimaLecturaAPI,
   obtenerPlantasAPI,
+  actualizarPlantaAPI,
 } from '../services/api';
 import { useAuth } from './AuthContext';
 import { illustrations } from '../constants/images';
@@ -117,13 +118,40 @@ export function AppStateProvider({ children }) {
       kitConexion: null,
     };
 
-    setPlantas((prev) => [nuevaPlanta, ...prev]);
+    setPlantas((prev) => [
+      nuevaPlanta,
+      ...prev.map((planta) =>
+        planta.dispositivoId === DISPOSITIVO_ID
+          ? { ...planta, enMonitoreo: false }
+          : planta
+      ),
+    ]);
     return nuevaPlanta;
   };
 
   const eliminarPlanta = async (plantaId) => {
     await eliminarPlantaAPI(plantaId);
     setPlantas((prev) => prev.filter((planta) => planta.id !== plantaId));
+  };
+
+  const actualizarPlanta = async (plantaId, cambios) => {
+    const plantaActualizada = await actualizarPlantaAPI(plantaId, cambios);
+    const planta = plantaActualizada.data;
+    setPlantas((prev) => prev.map((item) => {
+      if (item.id === plantaId) {
+        return {
+          ...item,
+          ...cambios,
+          foto: planta.fotoUri ? { uri: planta.fotoUri } : item.foto,
+          enMonitoreo: planta.enMonitoreo,
+        };
+      }
+      if (cambios.enMonitoreo && item.dispositivoId === DISPOSITIVO_ID) {
+        return { ...item, enMonitoreo: false };
+      }
+      return item;
+    }));
+    return planta;
   };
 
   return (
@@ -137,6 +165,7 @@ export function AppStateProvider({ children }) {
         actualizarUmbrales,
         agregarPlanta,
         eliminarPlanta,
+        actualizarPlanta,
         alertas,
         marcarAlertaLeida,
       }}
