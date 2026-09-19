@@ -6,6 +6,8 @@ import {
   getUltimaLecturaAPI,
   obtenerPlantasAPI,
   actualizarPlantaAPI,
+  getAlertasAPI,
+  marcarAlertaLeidaAPI,
 } from '../services/api';
 import { useAuth } from './AuthContext';
 import { illustrations } from '../constants/images';
@@ -45,12 +47,16 @@ export function AppStateProvider({ children }) {
     }
 
     const cargarDatos = async () => {
-      await Promise.all([cargarEstadoKit(), cargarPlantas()]);
+      await Promise.all([cargarEstadoKit(), cargarPlantas(), cargarAlertas()]);
     };
 
     cargarDatos();
-    const intervalo = setInterval(cargarEstadoKit, 10000);
-    return () => clearInterval(intervalo);
+    const intervaloKit = setInterval(cargarEstadoKit, 10000);
+    const intervaloAlertas = setInterval(cargarAlertas, 30000);
+    return () => {
+      clearInterval(intervaloKit);
+      clearInterval(intervaloAlertas);
+    };
   }, [usuario]);
 
   const cargarPlantas = async () => {
@@ -79,10 +85,35 @@ export function AppStateProvider({ children }) {
     }
   };
 
-  const marcarAlertaLeida = (alertaId) => {
-    setAlertas((prev) =>
-      prev.map((a) => (a.id === alertaId ? { ...a, leida: true } : a))
-    );
+  const cargarAlertas = async () => {
+    try {
+      const res = await getAlertasAPI(DISPOSITIVO_ID);
+      const alertasFormateadas = (Array.isArray(res.data) ? res.data : []).map((alerta) => ({
+        id: alerta._id,
+        tipo: alerta.tipo,
+        mensaje: alerta.mensaje,
+        dispositivoId: alerta.dispositivoId,
+        leida: Boolean(alerta.leida),
+        timestamp: alerta.timestamp,
+      }));
+      setAlertas(alertasFormateadas);
+    } catch (error) {
+      console.warn('Error cargando alertas:', error.message);
+    }
+  };
+
+  const marcarAlertaLeida = async (alertaId) => {
+    const alerta = alertas.find((item) => item.id === alertaId);
+    if (!alerta || alerta.leida) return;
+
+    try {
+      await marcarAlertaLeidaAPI(alertaId);
+      setAlertas((prev) =>
+        prev.map((a) => (a.id === alertaId ? { ...a, leida: true } : a))
+      );
+    } catch (error) {
+      console.warn('Error marcando alerta como leída:', error.message);
+    }
   };
 
   const actualizarUmbrales = (plantaId, cambios) => {
