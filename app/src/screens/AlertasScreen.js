@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import SolidHeaderBar from '../components/SolidHeaderBar';
@@ -14,7 +14,8 @@ import { moderateScale } from '../utils/responsive';
 // contrato (GET /api/alertas/:dispositivoId, PATCH /api/alertas/:id/leida)
 // ya estaba definido desde el principio; lo que faltaba era esto.
 export default function AlertasScreen({ navigation }) {
-  const { alertasVisibles, marcarAlertaLeida } = useAppState();
+  const { alertasVisibles, marcarAlertaLeida, marcarTodasAlertasLeidas } = useAppState();
+  const hayNoLeidas = alertasVisibles.some((alerta) => !alerta.leida);
 
   return (
     <View style={styles.container}>
@@ -27,6 +28,11 @@ export default function AlertasScreen({ navigation }) {
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+          {hayNoLeidas && (
+            <TouchableOpacity style={styles.leerTodas} onPress={marcarTodasAlertasLeidas}>
+              <Text style={styles.leerTodasText}>Leer todas</Text>
+            </TouchableOpacity>
+          )}
           {alertasVisibles.map((alerta) => (
             <AlertaItem
               key={alerta.id}
@@ -63,5 +69,15 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.textMuted,
     textAlign: 'center',
+  },
+  leerTodas: {
+    alignSelf: 'flex-end',
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+  },
+  leerTodasText: {
+    ...typography.caption,
+    color: colors.primaryDark,
+    fontFamily: 'Inter_600SemiBold',
   },
 });

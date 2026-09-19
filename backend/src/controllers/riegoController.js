@@ -196,6 +196,9 @@ async function procesarRiegosProgramados() {
     );
     if (!actualizada) continue;
 
+    comandosPendientes.set(programacion.dispositivoId, {
+      duracionSegundos: programacion.duracionSegundos,
+    });
   }
 }
 

@@ -4,6 +4,7 @@ const alertaController = require('../controllers/alertaController');
 
 // GET /api/alertas/:dispositivoId -> lista de alertas del dispositivo
 router.get('/:dispositivoId', alertaController.obtenerAlertas);
+router.patch('/:dispositivoId/leidas', alertaController.marcarTodasLeidas);
 
 // PATCH /api/alertas/:id/leida -> marcar alerta como leída desde la app
 router.patch('/:id/leida', alertaController.marcarLeida);

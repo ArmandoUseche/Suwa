@@ -25,4 +25,16 @@ async function marcarLeida(req, res) {
   }
 }
 
-module.exports = { obtenerAlertas, marcarLeida };
+async function marcarTodasLeidas(req, res) {
+  try {
+    const resultado = await Alerta.updateMany(
+      { dispositivoId: req.params.dispositivoId, leida: false },
+      { $set: { leida: true } }
+    );
+    res.json({ ok: true, modificadas: resultado.modifiedCount });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+module.exports = { obtenerAlertas, marcarLeida, marcarTodasLeidas };

@@ -48,10 +48,13 @@ const PORT = process.env.PORT || 3000;
 connectDB().then(() => {
   server.listen(PORT, '0.0.0.0', () => {
     console.log(`SUWA backend escuchando en todas las interfaces de red en el puerto ${PORT}`);
+    procesarRiegosProgramados().catch((error) => {
+      console.error('Error procesando riegos programados al iniciar:', error.message);
+    });
     setInterval(() => {
       procesarRiegosProgramados().catch((error) => {
         console.error('Error procesando riegos programados:', error.message);
       });
-    }, 30000);
+    }, 5000);
   });
 });

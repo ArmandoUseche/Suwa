@@ -278,7 +278,9 @@ export default function PlantaDetalleScreen({ route, navigation }) {
               <View>
                 <Text style={styles.kitTitle}>Kit SUWA</Text>
                 <Text style={styles.kitStatus}>
-                  {kitConectado ? 'Conexión estable' : 'Conexión inestable'}
+                  {kitConectado || planta.enMonitoreo
+                    ? 'Conexión estable'
+                    : 'Conexión inestable'}
                 </Text>
               </View>
             </View>

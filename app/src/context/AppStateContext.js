@@ -9,6 +9,7 @@ import {
   actualizarPlantaAPI,
   getAlertasAPI,
   marcarAlertaLeidaAPI,
+  marcarTodasAlertasLeidasAPI,
   subirFotoPlantaAPI,
 } from '../services/api';
 import { useAuth } from './AuthContext';
@@ -187,6 +188,11 @@ export function AppStateProvider({ children }) {
     }
   };
 
+  const marcarTodasAlertasLeidas = async () => {
+    await marcarTodasAlertasLeidasAPI(DISPOSITIVO_ID);
+    setAlertas((prev) => prev.map((alerta) => ({ ...alerta, leida: true })));
+  };
+
   const actualizarUmbrales = (plantaId, cambios) => {
     setPlantas((prev) =>
       prev.map((p) => (p.id === plantaId ? { ...p, ...cambios } : p))
@@ -288,6 +294,7 @@ export function AppStateProvider({ children }) {
         preferenciasNotificaciones,
         actualizarPreferenciaNotificacion,
         marcarAlertaLeida,
+        marcarTodasAlertasLeidas,
       }}
     >
       {children}

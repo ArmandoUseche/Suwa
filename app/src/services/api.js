@@ -148,6 +148,9 @@ export const getAlertasAPI = (dispositivoId) =>
 export const marcarAlertaLeidaAPI = (id) =>
   api.patch(`/api/alertas/${id}/leida`);
 
+export const marcarTodasAlertasLeidasAPI = (dispositivoId) =>
+  api.patch(`/api/alertas/${dispositivoId}/leidas`);
+
 // ── RECUPERACIÓN DE CONTRASEÑA ──
 export const olvideContrasenaAPI = (correoOTelefono) =>
   api.post('/api/auth/olvide-contrasena', { correoOTelefono });
