@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,15 +13,7 @@ import { DISPOSITIVO_ID } from '../constants/device';
 import { useAppState } from '../context/AppStateContext';
 import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
-import { activarRiegoAPI } from '../services/api';
-
-// Últimas 24h de humedad, mock -- cuando se conecte la API real, sale
-// del historial de LecturaSensor filtrado a las últimas 24h en vez de
-// estar fijo acá (mismo campo humedadSuelo del contrato, nada nuevo).
-const mockHumedad24h = {
-  labels: ['00h', '04h', '08h', '12h', '16h', '20h'],
-  valores: [22, 20, 24, 28, 25, 25],
-};
+import { activarRiegoAPI, getHistorialSensoresAPI } from '../services/api';
 
 // Detalle de una planta (Paso 7, se llega desde "Ver monitoreo"/"Ver
 // detalle" en la lista de Mis Plantas). Recibe `plantaId` por parámetro
@@ -37,6 +29,8 @@ export default function PlantaDetalleScreen({ route, navigation }) {
   const [guardandoFoto, setGuardandoFoto] = useState(false);
   const [activandoMonitoreo, setActivandoMonitoreo] = useState(false);
   const [regando, setRegando] = useState(false);
+  const [lecturas, setLecturas] = useState([]);
+  const [cargandoHistorial, setCargandoHistorial] = useState(false);
 
   // Resguardo: esta pantalla solo debería alcanzarse con al menos una
   // planta ya cargada (se llega desde un item de la lista de Mis
@@ -45,6 +39,30 @@ export default function PlantaDetalleScreen({ route, navigation }) {
   // mientras esta pantalla ya estaba abierta), `planta` sería
   // `undefined` y todo lo de abajo (`planta.nombreComun`, etc.)
   // tiraría error en vez de mostrar una pantalla en blanco.
+  useEffect(() => {
+    if (!planta?.enMonitoreo) {
+      setLecturas([]);
+      return undefined;
+    }
+    let activo = true;
+    setCargandoHistorial(true);
+    getHistorialSensoresAPI(DISPOSITIVO_ID)
+      .then((res) => {
+        if (activo) setLecturas(Array.isArray(res.data) ? res.data : []);
+      })
+      .catch(() => {
+        if (activo) setLecturas([]);
+      })
+      .finally(() => {
+        if (activo) setCargandoHistorial(false);
+      });
+    return () => {
+      activo = false;
+    };
+  }, [planta?.enMonitoreo]);
+
+  const historial24h = agruparLecturas24h(lecturas);
+
   if (!planta) {
     return (
       <View style={styles.emptyGuard}>
@@ -143,10 +161,21 @@ export default function PlantaDetalleScreen({ route, navigation }) {
                 <Text style={styles.historyTitle}>History</Text>
                 <Text style={styles.historySubtitle}>Último 24h</Text>
               </View>
-              <HistorialChart
-                labels={mockHumedad24h.labels}
-                series={[{ label: 'Humedad', unit: '%', color: colors.primary, values: mockHumedad24h.valores }]}
-              />
+              {cargandoHistorial ? (
+                <ActivityIndicator color={colors.primary} />
+              ) : historial24h.length > 0 ? (
+                <HistorialChart
+                  labels={historial24h.map((item) => item.label)}
+                  series={[{
+                    label: 'Humedad',
+                    unit: '%',
+                    color: colors.primary,
+                    values: historial24h.map((item) => item.humedadSuelo),
+                  }]}
+                />
+              ) : (
+                <Text style={styles.sinHistorial}>Aún no hay lecturas de las últimas 24 horas.</Text>
+              )}
               <Text style={styles.luzText}>Luz: {planta.luzIdeal}</Text>
             </View>
 
@@ -232,6 +261,30 @@ export default function PlantaDetalleScreen({ route, navigation }) {
   );
 }
 
+function agruparLecturas24h(lecturas) {
+  const limite = Date.now() - 24 * 60 * 60 * 1000;
+  const grupos = new Map();
+  lecturas
+    .filter((lectura) => new Date(lectura.timestamp).getTime() >= limite)
+    .forEach((lectura) => {
+      const timestamp = new Date(lectura.timestamp).getTime();
+      if (!Number.isFinite(timestamp)) return;
+      const clave = Math.floor(timestamp / (60 * 60 * 1000));
+      const grupo = grupos.get(clave) || [];
+      grupo.push(lectura);
+      grupos.set(clave, grupo);
+    });
+
+  return [...grupos.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([, grupo]) => ({
+      label: `${String(new Date(grupo[0].timestamp).getHours()).padStart(2, '0')}h`,
+      humedadSuelo: Math.round(
+        grupo.reduce((total, lectura) => total + Number(lectura.humedadSuelo || 0), 0) / grupo.length
+      ),
+    }));
+}
+
 const styles = StyleSheet.create({
   emptyGuard: {
     flex: 1,
@@ -291,6 +344,12 @@ const styles = StyleSheet.create({
   historySubtitle: {
     ...typography.caption,
     color: colors.textMuted,
+  },
+  sinHistorial: {
+    ...typography.caption,
+    color: colors.textMuted,
+    textAlign: 'center',
+    paddingVertical: spacing.lg,
   },
   luzText: {
     ...typography.body,
