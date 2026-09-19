@@ -34,6 +34,9 @@ export const loginAPI = (datos) =>
 export const cambiarContrasenaAPI = (datos) =>
   api.patch('/api/auth/cambiar-contrasena', datos);
 
+export const actualizarPerfilAPI = (datos) =>
+  api.patch('/api/auth/perfil', datos);
+
 // ── SENSORES ──
 export const getUltimaLecturaAPI = (dispositivoId) =>
   api.get(`/api/sensores/${dispositivoId}/ultima`);
