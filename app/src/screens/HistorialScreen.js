@@ -44,7 +44,8 @@ export default function HistorialScreen() {
     ])
       .then(([sensoresRes, riegoRes]) => {
         if (!activo) return;
-        setLecturas(Array.isArray(sensoresRes.data) ? sensoresRes.data : []);
+        const lecturas = Array.isArray(sensoresRes.data) ? sensoresRes.data : [];
+        setLecturas(agruparCadaCincoMinutos(lecturas));
         setRiegos(Array.isArray(riegoRes.data) ? riegoRes.data : []);
       })
       .catch(() => {
@@ -210,6 +211,27 @@ function agruparLecturas(lecturas, periodo) {
     temperatura: promedio(valores, 'temperatura'),
     humedadAmbiente: promedio(valores, 'humedadAmbiente'),
   }));
+}
+
+function agruparCadaCincoMinutos(lecturas) {
+  const grupos = new Map();
+  lecturas.forEach((lectura) => {
+    const timestamp = new Date(lectura.timestamp).getTime();
+    if (!Number.isFinite(timestamp)) return;
+    const clave = Math.floor(timestamp / (5 * 60 * 1000));
+    const grupo = grupos.get(clave) || [];
+    grupo.push(lectura);
+    grupos.set(clave, grupo);
+  });
+
+  return [...grupos.values()]
+    .map((grupo) => ({
+      ...grupo[grupo.length - 1],
+      humedadSuelo: promedio(grupo, 'humedadSuelo'),
+      temperatura: promedio(grupo, 'temperatura'),
+      humedadAmbiente: promedio(grupo, 'humedadAmbiente'),
+    }))
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 }
 
 function promedio(valores, campo) {
