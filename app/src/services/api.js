@@ -8,6 +8,7 @@ const USAR_BACKEND_LOCAL = false;
 const BASE_URL = USAR_BACKEND_LOCAL
   ? 'http://192.168.101.5:3000' 
   : 'https://suwa-rrg5.onrender.com';
+const LOCAL_RIEGO_URL = 'http://192.168.101.5:3000';
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -41,8 +42,28 @@ export const getHistorialSensoresAPI = (dispositivoId) =>
   api.get(`/api/sensores/${dispositivoId}`);
 
 // ── RIEGO ──
-export const activarRiegoAPI = (dispositivoId, duracionSegundos = 10) =>
-  api.post('/api/riego/activar', { dispositivoId, duracionSegundos });
+export const activarRiegoAPI = async (dispositivoId, duracionSegundos = 10) => {
+  const datos = { dispositivoId, duracionSegundos };
+
+  if (USAR_BACKEND_LOCAL) {
+    return api.post('/api/riego/activar', datos);
+  }
+
+  const [renderResult, localResult] = await Promise.allSettled([
+    api.post('/api/riego/activar', datos),
+    axios.post(`${LOCAL_RIEGO_URL}/api/riego/activar`, datos, { timeout: 5000 }),
+  ]);
+
+  if (localResult.status === 'rejected') {
+    const error = new Error(
+      'No se pudo entregar la orden al backend local que consulta el kit.'
+    );
+    error.causa = localResult.reason;
+    throw error;
+  }
+
+  return renderResult.status === 'fulfilled' ? renderResult.value : localResult.value;
+};
 
 export const getHistorialRiegoAPI = (dispositivoId) =>
   api.get(`/api/riego/${dispositivoId}/historial`);
