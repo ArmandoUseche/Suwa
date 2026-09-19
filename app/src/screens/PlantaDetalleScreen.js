@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -28,9 +29,11 @@ const mockHumedad24h = {
 export default function PlantaDetalleScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
   const { plantaId } = route.params ?? {};
-  const { plantas } = useAppState();
+  const { plantas, actualizarPlanta } = useAppState();
   const planta = plantas.find((p) => p.id === plantaId) ?? plantas[0];
   const [showProgramarRiego, setShowProgramarRiego] = useState(false);
+  const [guardandoFoto, setGuardandoFoto] = useState(false);
+  const [activandoMonitoreo, setActivandoMonitoreo] = useState(false);
 
   // Resguardo: esta pantalla solo debería alcanzarse con al menos una
   // planta ya cargada (se llega desde un item de la lista de Mis
@@ -47,6 +50,46 @@ export default function PlantaDetalleScreen({ route, navigation }) {
       </View>
     );
   }
+
+  const tomarFoto = async () => {
+    const permiso = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permiso.granted) {
+      Alert.alert('Permiso requerido', 'Necesitamos acceso a la cámara para tomar la foto de la planta.');
+      return;
+    }
+
+    const resultado = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      quality: 0.8,
+    });
+    if (resultado.canceled || !resultado.assets?.[0]?.uri) return;
+
+    setGuardandoFoto(true);
+    try {
+      await actualizarPlanta(planta.id, { fotoUri: resultado.assets[0].uri });
+      Alert.alert('Foto actualizada', 'La foto principal de la planta fue guardada.');
+    } catch (error) {
+      Alert.alert('No se pudo guardar la foto', 'Intenta nuevamente.');
+    } finally {
+      setGuardandoFoto(false);
+    }
+  };
+
+  const ponerEnMonitoreo = async () => {
+    setActivandoMonitoreo(true);
+    try {
+      await actualizarPlanta(planta.id, {
+        dispositivoId: planta.dispositivoId,
+        enMonitoreo: true,
+      });
+      Alert.alert('Planta principal actualizada', `${planta.nombreComun} ahora está en monitoreo.`);
+    } catch (error) {
+      Alert.alert('No se pudo cambiar la planta principal', 'Intenta nuevamente.');
+    } finally {
+      setActivandoMonitoreo(false);
+    }
+  };
 
   const handleRegarAhora = () => {
     // Mock -- mismo criterio que "Regar ahora" en el dashboard de
@@ -70,7 +113,15 @@ export default function PlantaDetalleScreen({ route, navigation }) {
           <View style={{ width: moderateScale(26) }} />
         </View>
 
-        <Image source={planta.foto} style={styles.foto} resizeMode="cover" />
+        <View style={styles.fotoContainer}>
+          <Image source={planta.foto} style={styles.foto} resizeMode="cover" />
+          <SecondaryButton
+            label={guardandoFoto ? 'Guardando foto...' : 'Tomar foto principal'}
+            onPress={tomarFoto}
+            disabled={guardandoFoto}
+            style={styles.fotoButton}
+          />
+        </View>
 
         {planta.enMonitoreo ? (
           <>
@@ -125,6 +176,12 @@ export default function PlantaDetalleScreen({ route, navigation }) {
               planta desde Monitoreo para empezar a verla acá.
             </Text>
             <Text style={styles.luzText}>Luz ideal: {planta.luzIdeal}</Text>
+            <PrimaryButton
+              label={activandoMonitoreo ? 'Actualizando...' : 'Poner en monitoreo'}
+              onPress={ponerEnMonitoreo}
+              disabled={activandoMonitoreo}
+              style={styles.monitoreoButton}
+            />
           </View>
         )}
 
@@ -195,6 +252,13 @@ const styles = StyleSheet.create({
   foto: {
     width: '100%',
     height: moderateScale(280),
+  },
+  fotoContainer: {
+    alignItems: 'center',
+  },
+  fotoButton: {
+    marginTop: spacing.md,
+    minWidth: moderateScale(190),
   },
   historySection: {
     paddingHorizontal: spacing.lg,
@@ -269,6 +333,9 @@ const styles = StyleSheet.create({
   },
   sinMonitoreoBlock: {
     paddingHorizontal: spacing.lg,
+    marginTop: spacing.lg,
+  },
+  monitoreoButton: {
     marginTop: spacing.lg,
   },
   sinMonitoreoText: {
