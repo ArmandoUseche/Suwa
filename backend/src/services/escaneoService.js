@@ -3,6 +3,7 @@ const FormData = require('form-data');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const PLANTNET_TIMEOUT_MS = 120000;
 
 // ── PLANTNET ──
 async function identificarConPlantNet(fotoBuffer, mimeType = 'image/jpeg') {
@@ -16,7 +17,7 @@ async function identificarConPlantNet(fotoBuffer, mimeType = 'image/jpeg') {
 
   const response = await axios.post(url, form, {
     headers: form.getHeaders(),
-    timeout: 60000,
+    timeout: PLANTNET_TIMEOUT_MS,
   });
 
   const resultado = response.data.results[0];
