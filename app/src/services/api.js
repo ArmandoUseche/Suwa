@@ -8,7 +8,7 @@ const USAR_BACKEND_LOCAL = false;
 const BASE_URL = USAR_BACKEND_LOCAL
   ? 'http://192.168.101.5:3000' 
   : 'https://suwa-rrg5.onrender.com';
-const LOCAL_RIEGO_URL = 'http://192.168.101.5:3000';
+const LOCAL_RIEGO_URL = 'http://10.238.0.16:3000';
 
 const api = axios.create({
   baseURL: BASE_URL,
