@@ -14,20 +14,20 @@ import { moderateScale } from '../utils/responsive';
 // contrato (GET /api/alertas/:dispositivoId, PATCH /api/alertas/:id/leida)
 // ya estaba definido desde el principio; lo que faltaba era esto.
 export default function AlertasScreen({ navigation }) {
-  const { alertas, marcarAlertaLeida } = useAppState();
+  const { alertasVisibles, marcarAlertaLeida } = useAppState();
 
   return (
     <View style={styles.container}>
       <SolidHeaderBar title="Alertas" onBack={() => navigation.goBack()} />
 
-      {alertas.length === 0 ? (
+      {alertasVisibles.length === 0 ? (
         <View style={styles.empty}>
           <Ionicons name="notifications-off-outline" size={moderateScale(40)} color={colors.textMuted} />
           <Text style={styles.emptyText}>No tienes alertas por ahora.</Text>
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          {alertas.map((alerta) => (
+          {alertasVisibles.map((alerta) => (
             <AlertaItem
               key={alerta.id}
               tipo={alerta.tipo}
