@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { AppState, createContext, useContext, useEffect, useRef, useState } from 'react';
 import { DISPOSITIVO_ID } from '../constants/device';
 import {
   crearPlantaAPI,
@@ -21,8 +21,11 @@ export function AppStateProvider({ children }) {
   const [plantas, setPlantas] = useState([]);
   const [alertas, setAlertas] = useState([]);
   const [cargandoPlantas, setCargandoPlantas] = useState(false);
+  const consultandoKit = useRef(false);
 
   const cargarEstadoKit = async () => {
+    if (consultandoKit.current) return;
+    consultandoKit.current = true;
     setCargandoKit(true);
     try {
       const res = await getUltimaLecturaAPI(DISPOSITIVO_ID);
@@ -34,6 +37,7 @@ export function AppStateProvider({ children }) {
       setKitConectado(false);
     } finally {
       setCargandoKit(false);
+      consultandoKit.current = false;
     }
   };
 
@@ -53,9 +57,16 @@ export function AppStateProvider({ children }) {
     cargarDatos();
     const intervaloKit = setInterval(cargarEstadoKit, 10000);
     const intervaloAlertas = setInterval(cargarAlertas, 30000);
+    const suscripcionApp = AppState.addEventListener('change', (estado) => {
+      if (estado === 'active') {
+        cargarEstadoKit();
+        cargarAlertas();
+      }
+    });
     return () => {
       clearInterval(intervaloKit);
       clearInterval(intervaloAlertas);
+      suscripcionApp.remove();
     };
   }, [usuario]);
 
