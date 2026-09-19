@@ -70,10 +70,11 @@ function confirmarRiego({ lectura, humedadAlta }, nombrePlanta) {
 
 export default function MonitoreoScreen({ navigation }) {
   const { kitConectado, plantas } = useAppState();
+  const plantaEnMonitoreo = plantas.some((planta) => planta.enMonitoreo);
   if (!kitConectado) {
     return <SinDispositivo navigation={navigation} />;
   }
-  if (plantas.length === 0) {
+  if (!plantaEnMonitoreo) {
     return <SinPlanta navigation={navigation} />;
   }
   return <ConDispositivo navigation={navigation} />;
@@ -333,6 +334,8 @@ const styles = StyleSheet.create({
   },
   bannerInner: {
     position: 'relative',
+    zIndex: 2,
+    elevation: 2,
   },
   bellButton: {
     position: 'absolute',
@@ -344,6 +347,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 3,
+    elevation: 4,
   },
   bellBadge: {
     position: 'absolute',
