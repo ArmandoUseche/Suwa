@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import ScreenHeaderPill from '../components/ScreenHeaderPill';
@@ -15,14 +15,11 @@ import {
   emptyStateStyles,
 } from '../constants/emptyState';
 import { illustrations } from '../constants/images';
-import {
-  mockLecturasSemana,
-  mockRegistrosRecientes,
-  mockTieneDatosHistorial,
-} from '../constants/mockData';
 import { colors, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
 import { useAppState } from '../context/AppStateContext';
+import { getHistorialRiegoAPI, getHistorialSensoresAPI } from '../services/api';
+import { DISPOSITIVO_ID } from '../constants/device';
 
 // Pantalla de Historial (Paso 6).
 //
@@ -35,10 +32,49 @@ import { useAppState } from '../context/AppStateContext';
 //    + lista de "Registros recientes".
 export default function HistorialScreen() {
   const { kitConectado } = useAppState();
-  if (!mockTieneDatosHistorial) {
+  const [lecturas, setLecturas] = useState([]);
+  const [riegos, setRiegos] = useState([]);
+  const [cargando, setCargando] = useState(true);
+
+  useEffect(() => {
+    let activo = true;
+    Promise.all([
+      getHistorialSensoresAPI(DISPOSITIVO_ID),
+      getHistorialRiegoAPI(DISPOSITIVO_ID),
+    ])
+      .then(([sensoresRes, riegoRes]) => {
+        if (!activo) return;
+        setLecturas(Array.isArray(sensoresRes.data) ? sensoresRes.data : []);
+        setRiegos(Array.isArray(riegoRes.data) ? riegoRes.data : []);
+      })
+      .catch(() => {
+        if (activo) {
+          setLecturas([]);
+          setRiegos([]);
+        }
+      })
+      .finally(() => {
+        if (activo) setCargando(false);
+      });
+
+    return () => {
+      activo = false;
+    };
+  }, []);
+
+  if (cargando) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Cargando historial...</Text>
+      </View>
+    );
+  }
+
+  if (lecturas.length === 0 && riegos.length === 0) {
     return <SinDatos kitConectado={kitConectado} />;
   }
-  return <ConDatos />;
+  return <ConDatos lecturas={lecturas} riegos={riegos} />;
 }
 
 function SinDatos({ kitConectado }) {
@@ -81,22 +117,27 @@ function SinDatos({ kitConectado }) {
   );
 }
 
-function ConDatos() {
+function ConDatos({ lecturas, riegos }) {
   const insets = useSafeAreaInsets();
   const [periodo, setPeriodo] = useState('Semana');
   const [sensorKey, setSensorKey] = useState('humedadSuelo');
 
+  const datosPeriodo = useMemo(
+    () => agruparLecturas(lecturas, periodo),
+    [lecturas, periodo]
+  );
   const sensorType = SENSOR_TYPES.find((s) => s.key === sensorKey);
-  const labels = mockLecturasSemana.map((l) => l.dia);
-  // Cada sensor de la pestaña activa se convierte en una serie de la
-  // gráfica -- 1 para Humedad, 2 (temperatura + humedad ambiente) para
-  // Temperatura.
+  const labels = datosPeriodo.map((l) => l.label);
   const series = sensorType.sensors.map((s) => ({
     label: s.label,
     unit: s.unit,
     color: s.color,
-    values: mockLecturasSemana.map((l) => l[s.field]),
+    values: datosPeriodo.map((l) => l[s.field]),
   }));
+  const registros = useMemo(
+    () => construirRegistros(lecturas, riegos),
+    [lecturas, riegos]
+  );
 
   return (
     <View style={styles.container}>
@@ -117,12 +158,16 @@ function ConDatos() {
         </View>
 
         <View style={styles.chartSection}>
-          <HistorialChart labels={labels} series={series} />
+          {datosPeriodo.length > 0 ? (
+            <HistorialChart labels={labels} series={series} />
+          ) : (
+            <Text style={styles.sinLecturas}>No hay lecturas en este período.</Text>
+          )}
         </View>
 
         <Text style={styles.recentTitle}>Registros recientes</Text>
         <View style={styles.recordsList}>
-          {mockRegistrosRecientes.map((registro) => (
+          {registros.map((registro) => (
             <HistorialRecordItem key={registro.id} {...registro} />
           ))}
         </View>
@@ -131,7 +176,91 @@ function ConDatos() {
   );
 }
 
+function agruparLecturas(lecturas, periodo) {
+  const ahora = Date.now();
+  const duracion = periodo === 'Día'
+    ? 24 * 60 * 60 * 1000
+    : periodo === 'Semana'
+      ? 7 * 24 * 60 * 60 * 1000
+      : 365 * 24 * 60 * 60 * 1000;
+  const filtradas = lecturas
+    .filter((lectura) => ahora - new Date(lectura.timestamp).getTime() <= duracion)
+    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+  const grupos = new Map();
+  filtradas.forEach((lectura) => {
+    const fecha = new Date(lectura.timestamp);
+    const clave = periodo === 'Día'
+      ? `${fecha.getFullYear()}-${fecha.getMonth()}-${fecha.getDate()}-${fecha.getHours()}`
+      : periodo === 'Semana'
+        ? `${fecha.getFullYear()}-${fecha.getMonth()}-${fecha.getDate()}`
+        : `${fecha.getFullYear()}-${fecha.getMonth()}`;
+    const grupo = grupos.get(clave) || { valores: [], fecha };
+    grupo.valores.push(lectura);
+    grupos.set(clave, grupo);
+  });
+
+  return [...grupos.values()].map(({ valores, fecha }) => ({
+    label: periodo === 'Día'
+      ? `${String(fecha.getHours()).padStart(2, '0')}h`
+      : periodo === 'Semana'
+        ? fecha.toLocaleDateString('es-ES', { weekday: 'short' }).replace('.', '')
+        : fecha.toLocaleDateString('es-ES', { month: 'short' }).replace('.', ''),
+    humedadSuelo: promedio(valores, 'humedadSuelo'),
+    temperatura: promedio(valores, 'temperatura'),
+    humedadAmbiente: promedio(valores, 'humedadAmbiente'),
+  }));
+}
+
+function promedio(valores, campo) {
+  const numeros = valores.map((valor) => Number(valor[campo])).filter(Number.isFinite);
+  if (numeros.length === 0) return 0;
+  return Math.round(numeros.reduce((total, valor) => total + valor, 0) / numeros.length);
+}
+
+function construirRegistros(lecturas, riegos) {
+  const registrosLecturas = lecturas.slice(0, 10).map((lectura) => ({
+    id: `lectura-${lectura._id}`,
+    tipo: 'alerta',
+    titulo: 'Lectura registrada',
+    descripcion: `Humedad del suelo: ${lectura.humedadSuelo}%`,
+    horaTexto: formatearHora(lectura.timestamp),
+    horaTimestamp: new Date(lectura.timestamp).getTime(),
+  }));
+  const registrosRiego = riegos.slice(0, 10).map((riego) => ({
+    id: `riego-${riego._id}`,
+    tipo: riego.tipo === 'manual' ? 'riego_manual' : 'riego_automatico',
+    titulo: riego.tipo === 'manual' ? 'Riego manual' : 'Riego automático',
+    descripcion: `${riego.duracionSegundos || 0} segundos de duración`,
+    horaTexto: formatearHora(riego.timestamp),
+    horaTimestamp: new Date(riego.timestamp).getTime(),
+  }));
+
+  return [...registrosLecturas, ...registrosRiego]
+    .sort((a, b) => b.horaTimestamp - a.horaTimestamp)
+    .slice(0, 10)
+    .map(({ horaTimestamp, ...registro }) => registro);
+}
+
+function formatearHora(timestamp) {
+  const fecha = new Date(timestamp);
+  return Number.isNaN(fecha.getTime())
+    ? 'Sin fecha'
+    : fecha.toLocaleString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
 const styles = StyleSheet.create({
+  loading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background,
+    gap: spacing.sm,
+  },
+  loadingText: {
+    ...typography.caption,
+    color: colors.textMuted,
+  },
   // Igual que Monitoreo: fondo blanco liso, no el degradado verde --
   // por eso acá tampoco se usa GradientBackground.
   container: {
@@ -194,6 +323,12 @@ const styles = StyleSheet.create({
   },
   chartSection: {
     marginTop: spacing.md,
+  },
+  sinLecturas: {
+    ...typography.caption,
+    color: colors.textMuted,
+    textAlign: 'center',
+    paddingVertical: spacing.xl,
   },
   recentTitle: {
     ...typography.h2,
