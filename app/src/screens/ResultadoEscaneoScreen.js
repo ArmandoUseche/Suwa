@@ -19,6 +19,7 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
   const [identificacion, setIdentificacion] = useState(null);
   const [parametros, setParametros] = useState(null);
   const [candidatas, setCandidatas] = useState([]);
+  const [fuenteIdentificacion, setFuenteIdentificacion] = useState(null);
   const [mensajeRechazo, setMensajeRechazo] = useState('');
 
   useEffect(() => {
@@ -46,6 +47,7 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
       .then((res) => {
         clearTimeout(timerCalculando);
         setCandidatas(res.data.candidatas);
+        setFuenteIdentificacion(res.data.fuente);
         setEtapa('confirmando');
       })
       .catch((error) => {
@@ -125,7 +127,11 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
         {etapa === 'confirmando' && (
           <View style={styles.candidatesBlock}>
             <Text style={styles.candidatesTitle}>
-              {manualNombre ? 'Confirmando planta' : 'Selecciona la planta correcta'}
+              {manualNombre
+                ? 'Confirmando planta'
+                : fuenteIdentificacion === 'gemini'
+                  ? 'PlantNet no encontró una coincidencia clara. Gemini propone:'
+                  : 'Selecciona la planta correcta'}
             </Text>
             {!manualNombre && candidatas.map((candidata) => (
               <SecondaryButton
