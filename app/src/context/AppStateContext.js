@@ -1,4 +1,5 @@
 import { AppState, createContext, useContext, useEffect, useRef, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DISPOSITIVO_ID } from '../constants/device';
 import {
   crearPlantaAPI,
@@ -13,6 +14,22 @@ import { useAuth } from './AuthContext';
 import { illustrations } from '../constants/images';
 
 const AppStateContext = createContext(null);
+const PREFERENCIAS_POR_DEFECTO = { riego: true, humedad: true, sistema: true };
+const CLAVE_PREFERENCIAS = 'preferencias-notificaciones';
+
+function obtenerClavePreferencias(usuario) {
+  const usuarioId = usuario?._id || usuario?.id || usuario?.correoOTelefono || 'anonimo';
+  return `${CLAVE_PREFERENCIAS}:${usuarioId}`;
+}
+
+function alertaPermitida(alerta, preferencias) {
+  const categoria = {
+    nivel_agua_bajo: 'riego',
+    lectura_anomala: 'humedad',
+    falla_sistema: 'sistema',
+  }[alerta.tipo];
+  return categoria ? preferencias[categoria] : true;
+}
 
 export function AppStateProvider({ children }) {
   const { usuario } = useAuth();
@@ -20,8 +37,42 @@ export function AppStateProvider({ children }) {
   const [cargandoKit, setCargandoKit] = useState(false);
   const [plantas, setPlantas] = useState([]);
   const [alertas, setAlertas] = useState([]);
+  const [preferenciasNotificaciones, setPreferenciasNotificaciones] = useState(PREFERENCIAS_POR_DEFECTO);
   const [cargandoPlantas, setCargandoPlantas] = useState(false);
   const consultandoKit = useRef(false);
+  const clavePreferencias = obtenerClavePreferencias(usuario);
+
+  const cargarPreferenciasNotificaciones = async () => {
+    try {
+      const guardadas = await AsyncStorage.getItem(clavePreferencias);
+      if (!guardadas) {
+        setPreferenciasNotificaciones(PREFERENCIAS_POR_DEFECTO);
+        return;
+      }
+      const preferencias = JSON.parse(guardadas);
+      setPreferenciasNotificaciones({
+        ...PREFERENCIAS_POR_DEFECTO,
+        ...Object.fromEntries(
+          Object.keys(PREFERENCIAS_POR_DEFECTO)
+            .filter((key) => typeof preferencias?.[key] === 'boolean')
+            .map((key) => [key, preferencias[key]])
+        ),
+      });
+    } catch (error) {
+      console.warn('Error cargando preferencias de notificaciones:', error.message);
+      setPreferenciasNotificaciones(PREFERENCIAS_POR_DEFECTO);
+    }
+  };
+
+  const actualizarPreferenciaNotificacion = async (key, value) => {
+    const nuevasPreferencias = { ...preferenciasNotificaciones, [key]: value };
+    setPreferenciasNotificaciones(nuevasPreferencias);
+    try {
+      await AsyncStorage.setItem(clavePreferencias, JSON.stringify(nuevasPreferencias));
+    } catch (error) {
+      console.warn('Error guardando preferencias de notificaciones:', error.message);
+    }
+  };
 
   const cargarEstadoKit = async () => {
     if (consultandoKit.current) return;
@@ -47,11 +98,17 @@ export function AppStateProvider({ children }) {
       setKitConectado(false);
       setPlantas([]);
       setAlertas([]);
+      setPreferenciasNotificaciones(PREFERENCIAS_POR_DEFECTO);
       return undefined;
     }
 
     const cargarDatos = async () => {
-      await Promise.all([cargarEstadoKit(), cargarPlantas(), cargarAlertas()]);
+      await Promise.all([
+        cargarEstadoKit(),
+        cargarPlantas(),
+        cargarAlertas(),
+        cargarPreferenciasNotificaciones(),
+      ]);
     };
 
     cargarDatos();
@@ -61,6 +118,7 @@ export function AppStateProvider({ children }) {
       if (estado === 'active') {
         cargarEstadoKit();
         cargarAlertas();
+        cargarPreferenciasNotificaciones();
       }
     });
     return () => {
@@ -68,6 +126,7 @@ export function AppStateProvider({ children }) {
       clearInterval(intervaloAlertas);
       suscripcionApp?.remove?.();
     };
+
   }, [usuario]);
 
   const cargarPlantas = async () => {
@@ -196,6 +255,10 @@ export function AppStateProvider({ children }) {
     return planta;
   };
 
+  const alertasVisibles = alertas.filter((alerta) =>
+    alertaPermitida(alerta, preferenciasNotificaciones)
+  );
+
   return (
     <AppStateContext.Provider
       value={{
@@ -209,6 +272,9 @@ export function AppStateProvider({ children }) {
         eliminarPlanta,
         actualizarPlanta,
         alertas,
+        alertasVisibles,
+        preferenciasNotificaciones,
+        actualizarPreferenciaNotificacion,
         marcarAlertaLeida,
       }}
     >
