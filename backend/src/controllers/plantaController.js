@@ -76,28 +76,28 @@ async function actualizarPlanta(req, res) {
       );
     }
 
-    async function subirFoto(req, res) {
-      try {
-        if (!req.file) {
-          return res.status(400).json({ error: 'No se recibió ninguna imagen' });
-        }
-
-        const fotoUri = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
-        const planta = await Planta.findOneAndUpdate(
-          { _id: req.params.id, usuarioId: req.usuarioId },
-          { fotoUri },
-          { new: true }
-        );
-        if (!planta) return res.status(404).json({ error: 'Planta no encontrada' });
-        res.json(planta);
-      } catch (error) {
-        res.status(500).json({ error: error.message });
-      }
-    }
-
     const planta = await Planta.findOneAndUpdate(
       { _id: req.params.id, usuarioId: req.usuarioId },
       req.body,
+      { new: true }
+    );
+    if (!planta) return res.status(404).json({ error: 'Planta no encontrada' });
+    res.json(planta);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+async function subirFoto(req, res) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se recibió ninguna imagen' });
+    }
+
+    const fotoUri = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+    const planta = await Planta.findOneAndUpdate(
+      { _id: req.params.id, usuarioId: req.usuarioId },
+      { fotoUri },
       { new: true }
     );
     if (!planta) return res.status(404).json({ error: 'Planta no encontrada' });
