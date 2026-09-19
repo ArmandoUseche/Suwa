@@ -1,4 +1,4 @@
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import ScreenHeaderPill from '../components/ScreenHeaderPill';
@@ -33,7 +33,18 @@ import { moderateScale } from '../utils/responsive';
 //     acá también, sin recargar.
 export default function MisPlantasScreen({ navigation }) {
   const insets = useSafeAreaInsets();
-  const { plantas } = useAppState();
+  const { plantas, eliminarPlanta } = useAppState();
+
+  const handleEliminar = async (planta) => {
+    try {
+      await eliminarPlanta(planta.id);
+    } catch (error) {
+      Alert.alert(
+        'No se pudo eliminar',
+        error.response?.data?.error || 'Intenta de nuevo en unos momentos.'
+      );
+    }
+  };
 
   if (plantas.length === 0) {
     return (
@@ -69,6 +80,7 @@ export default function MisPlantasScreen({ navigation }) {
             <PlantaCard
               planta={enMonitoreo}
               onPress={() => navigation.navigate('PlantaDetalle', { plantaId: enMonitoreo.id })}
+              onEliminar={() => handleEliminar(enMonitoreo)}
             />
           </>
         )}
@@ -82,6 +94,7 @@ export default function MisPlantasScreen({ navigation }) {
                   key={planta.id}
                   planta={planta}
                   onPress={() => navigation.navigate('PlantaDetalle', { plantaId: planta.id })}
+                  onEliminar={() => handleEliminar(planta)}
                 />
               ))}
             </View>
