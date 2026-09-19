@@ -11,6 +11,9 @@ cp .env.example .env   # y completa MONGODB_URI con tu cluster de MongoDB Atlas
 npm run dev
 ```
 
+Para la guía completa de instalación, operación, mantenimiento y solución de
+problemas, consulta `../docs/MANUAL_TECNICO_Y_MANTENIMIENTO.md`.
+
 ## Endpoints principales
 
 | Método | Ruta | Descripción |
@@ -23,6 +26,10 @@ npm run dev
 | GET | `/api/riego/:dispositivoId/historial` | Historial de riegos |
 | GET | `/api/alertas/:dispositivoId` | Alertas del dispositivo |
 | PATCH | `/api/alertas/:id/leida` | Marca una alerta como leída |
+| PATCH | `/api/alertas/:dispositivoId/leidas` | Marca todas las alertas como leídas |
+| POST | `/api/riego/programado` | Crea o reemplaza el riego diario |
+| GET | `/api/riego/programado/:dispositivoId` | Consulta la programación activa |
+| DELETE | `/api/riego/programado/:dispositivoId` | Cancela la programación |
 
 ## Eventos de Socket.io
 
@@ -30,6 +37,9 @@ npm run dev
 - `nueva_alerta` — se emite cuando se genera una alerta automática
 - `comando_riego` — se emite hacia el firmware cuando el usuario activa riego manual
 - `nuevo_evento_riego` — se emite cuando se completa un ciclo de riego
+
+La placa no consume estos eventos directamente. Para recibir órdenes, consulta
+`GET /api/riego/comando-pendiente/:dispositivoId` mediante polling HTTP.
 
 ## Modelos (MongoDB)
 

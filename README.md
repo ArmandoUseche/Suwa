@@ -36,7 +36,7 @@ del riego.
 
 | Capa | Tecnología |
 |---|---|
-| Firmware | C++ (Arduino IDE), ESP32/Arduino UNO |
+| Firmware | C++ (Arduino IDE), placa compatible con WiFiS3 |
 | Backend | Node.js, Express, Socket.io, Mongoose |
 | Base de datos | MongoDB (Atlas) |
 | App móvil | React Native, React Navigation, Axios |
@@ -53,5 +53,10 @@ del riego.
 
 ## Cómo levantar el entorno local
 
-Ver instrucciones específicas en `backend/README.md`, `app/README.md` y
-`firmware/README.md`.
+Ver:
+
+- [Manual de uso](docs/MANUAL_DE_USO.md)
+- [Manual técnico y de mantenimiento](docs/MANUAL_TECNICO_Y_MANTENIMIENTO.md)
+- [Arquitectura](docs/arquitectura.md)
+- [README del backend](backend/README.md)
+- [README del firmware](firmware/README.md)

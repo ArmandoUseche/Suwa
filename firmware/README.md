@@ -1,11 +1,12 @@
-# suwa-firmware
+# Firmware SUWA
 
-Firmware base para ESP32, escrito en C++ (Arduino IDE).
+Firmware del kit SUWA, escrito en C++ para Arduino IDE y placas compatibles
+con `WiFiS3`.
 
 ## Qué hace
 
 1. Se conecta al WiFi.
-2. Cada minuto lee humedad de suelo (sensor capacitivo, analógico) y
+2. Cada cinco segundos lee humedad de suelo (sensor capacitivo, analógico) y
    temperatura/humedad ambiente (DHT11).
 3. Envía la lectura al backend (`POST /api/sensores`).
 4. Si la humedad de suelo cae bajo el umbral, activa la bomba (relé) y
@@ -13,16 +14,21 @@ Firmware base para ESP32, escrito en C++ (Arduino IDE).
 
 ## Antes de subir el código
 
-- Edita `WIFI_SSID`, `WIFI_PASSWORD`, `SERVER_URL` y `DISPOSITIVO_ID`.
-- Calibra `SECO` y `MOJADO` en `mapearHumedad()` con tu sensor real
-  (sumerge el sensor en agua y en aire seco, anota las lecturas crudas).
+- Selecciona la placa y el puerto correctos en Arduino IDE.
+- El sketch guarda SSID, contraseña y host del backend en EEPROM.
+- El host predeterminado actual es `10.238.0.16`; si cambia la red, usa el
+  portal `SUWA-Config` para configurar la IP del computador.
+- Calibra `CRUDO_SECO` y `CRUDO_HUMEDO` en el sketch con tu sensor real.
 - Instala las librerías: **DHT sensor library** (Adafruit) y **ArduinoJson**
   desde el Administrador de Librerías del Arduino IDE.
 
-## Pendiente (para siguientes iteraciones)
+## Comunicación y operación
 
-- Escuchar el comando `comando_riego` que emite el backend por Socket.io,
-  para el riego manual desde la app (esto requiere una librería de
-  WebSocket/Socket.io para ESP32, o exponer un endpoint HTTP que el
-  backend consulte por polling).
-- Sensor de nivel de agua en el depósito, para la alerta de "nivel bajo".
+- El firmware envía lecturas con `POST /api/sensores`.
+- Consulta comandos con `GET /api/riego/comando-pendiente/:dispositivoId`.
+- Consulta el umbral con `GET /api/plantas/dispositivo/:dispositivoId`.
+- Reporta eventos con `POST /api/riego/evento`.
+- El comando `BORRAR` en el monitor serial reinicia la configuración Wi-Fi.
+
+Para el manual completo consulta
+`../docs/MANUAL_TECNICO_Y_MANTENIMIENTO.md`.
