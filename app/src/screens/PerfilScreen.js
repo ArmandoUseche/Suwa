@@ -45,16 +45,18 @@ export default function PerfilScreen({ navigation }) {
         <Text style={styles.nombre}>{usuario?.nombre}</Text>
 
         <View style={styles.card}>
-          <SettingsRow label="Correo" value={usuario?.correoOTelefono} />
+          <SettingsRow label="Correo" value={usuario?.correoOTelefono} onPress={() => navigation.navigate('EditarPerfil')} />
           <View style={styles.divider} />
           <SettingsRow
             label="Usuario"
-            value={usuario?.correoOTelefono?.split('@')[0]}
+            value={usuario?.usuario || usuario?.correoOTelefono?.split('@')[0]}
+            onPress={() => navigation.navigate('EditarPerfil')}
           />
           <View style={styles.divider} />
           <SettingsRow
             label="Nombre"
             value={`${usuario?.nombre} ${usuario?.apellidos}`}
+            onPress={() => navigation.navigate('EditarPerfil')}
           />
         </View>
 
