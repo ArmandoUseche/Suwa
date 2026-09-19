@@ -9,9 +9,11 @@ import ProgramarRiegoSheet from '../components/ProgramarRiegoSheet';
 import PressableScale from '../components/PressableScale';
 import { PrimaryButton, SecondaryButton } from '../components/Buttons';
 import { icons } from '../constants/images';
+import { DISPOSITIVO_ID } from '../constants/device';
 import { useAppState } from '../context/AppStateContext';
 import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
+import { activarRiegoAPI } from '../services/api';
 
 // Últimas 24h de humedad, mock -- cuando se conecte la API real, sale
 // del historial de LecturaSensor filtrado a las últimas 24h en vez de
@@ -34,6 +36,7 @@ export default function PlantaDetalleScreen({ route, navigation }) {
   const [showProgramarRiego, setShowProgramarRiego] = useState(false);
   const [guardandoFoto, setGuardandoFoto] = useState(false);
   const [activandoMonitoreo, setActivandoMonitoreo] = useState(false);
+  const [regando, setRegando] = useState(false);
 
   // Resguardo: esta pantalla solo debería alcanzarse con al menos una
   // planta ya cargada (se llega desde un item de la lista de Mis
@@ -91,10 +94,20 @@ export default function PlantaDetalleScreen({ route, navigation }) {
     }
   };
 
-  const handleRegarAhora = () => {
-    // Mock -- mismo criterio que "Regar ahora" en el dashboard de
-    // Monitoreo (POST /api/riego/activar cuando se conecte).
-    Alert.alert('Riego activado', `Se activó el riego manual de ${planta.nombreComun}.`);
+  const handleRegarAhora = async () => {
+    if (regando) return;
+    setRegando(true);
+    try {
+      await activarRiegoAPI(DISPOSITIVO_ID, 10);
+      Alert.alert('Riego activado', `La orden de riego de ${planta.nombreComun} se envió al kit.`);
+    } catch (error) {
+      Alert.alert(
+        'No se pudo activar el riego',
+        'Revisa que el kit esté conectado e inténtalo de nuevo.'
+      );
+    } finally {
+      setRegando(false);
+    }
   };
 
   return (
@@ -139,9 +152,10 @@ export default function PlantaDetalleScreen({ route, navigation }) {
 
             <View style={styles.actionsRow}>
               <PrimaryButton
-                label="Regar ahora"
+                label={regando ? 'Regando...' : 'Regar ahora'}
                 icon="water"
                 onPress={handleRegarAhora}
+                disabled={regando}
                 style={styles.actionButton}
               />
               <SecondaryButton
