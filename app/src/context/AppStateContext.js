@@ -1,6 +1,11 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { DISPOSITIVO_ID } from '../constants/device';
-import { crearPlantaAPI, getUltimaLecturaAPI, obtenerPlantasAPI } from '../services/api';
+import {
+  crearPlantaAPI,
+  eliminarPlantaAPI,
+  getUltimaLecturaAPI,
+  obtenerPlantasAPI,
+} from '../services/api';
 import { useAuth } from './AuthContext';
 
 const AppStateContext = createContext(null);
@@ -115,6 +120,11 @@ export function AppStateProvider({ children }) {
     return nuevaPlanta;
   };
 
+  const eliminarPlanta = async (plantaId) => {
+    await eliminarPlantaAPI(plantaId);
+    setPlantas((prev) => prev.filter((planta) => planta.id !== plantaId));
+  };
+
   return (
     <AppStateContext.Provider
       value={{
@@ -125,6 +135,7 @@ export function AppStateProvider({ children }) {
         cargarPlantas,
         actualizarUmbrales,
         agregarPlanta,
+        eliminarPlanta,
         alertas,
         marcarAlertaLeida,
       }}
