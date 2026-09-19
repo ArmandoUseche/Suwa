@@ -172,9 +172,13 @@ function ConDispositivo({ navigation }) {
       await activarRiegoAPI(DISPOSITIVO_ID, 10);
       Alert.alert('Riego activado', 'La orden de riego manual se envió al kit.');
     } catch (error) {
+      const mensaje = error.code === 'BACKEND_LOCAL_NO_DISPONIBLE'
+        ? 'La app no pudo comunicarse con el backend local que consulta la placa. '
+          + 'Inicia el backend en el PC y verifica que ambos dispositivos estén en la misma red.'
+        : 'Revisa que el kit esté conectado e inténtalo de nuevo.';
       Alert.alert(
         'No se pudo activar el riego',
-        'Revisa que el kit esté conectado e inténtalo de nuevo.'
+        mensaje
       );
     } finally {
       setRegando(false);
