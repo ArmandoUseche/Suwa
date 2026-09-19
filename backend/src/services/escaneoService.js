@@ -5,6 +5,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const PLANTNET_TIMEOUT_MS = 120000;
 const PLANTNET_RESULTADOS = 5;
+const GEMINI_MODELO = 'gemini-3.6-flash';
 
 // ── PLANTNET ──
 async function identificarConPlantNet(fotoBuffer, mimeType = 'image/jpeg') {
@@ -32,7 +33,7 @@ async function identificarConPlantNet(fotoBuffer, mimeType = 'image/jpeg') {
 
 // ── GEMINI ──
 async function obtenerParametrosConGemini(nombreCientifico) {
-  const model = genAI.getGenerativeModel({ model: 'gemini-3.6-flash' });
+  const model = genAI.getGenerativeModel({ model: GEMINI_MODELO });
 
   const prompt = `
     Eres un experto en plantas. Dame los parámetros óptimos de cuidado para la planta "${nombreCientifico}".
@@ -56,4 +57,56 @@ async function obtenerParametrosConGemini(nombreCientifico) {
   return parametros;
 }
 
-module.exports = { identificarConPlantNet, obtenerParametrosConGemini };
+async function identificarConGemini(fotoBuffer, mimeType = 'image/jpeg') {
+  const model = genAI.getGenerativeModel({ model: GEMINI_MODELO });
+  const prompt = `
+    Analiza esta imagen de una planta. Devuelve únicamente un objeto JSON válido,
+    sin bloques de código ni texto adicional, con exactamente esta estructura:
+    {
+      "candidatas": [
+        {
+          "nombreComun": "nombre común",
+          "nombreCientifico": "nombre científico",
+          "coincidencia": número entero entre 0 y 100
+        }
+      ]
+    }
+    Incluye hasta 5 especies posibles, ordenadas de mayor a menor probabilidad.
+    Si la imagen no muestra una planta o no hay información suficiente, devuelve
+    {"candidatas": []}. No inventes una especie con confianza alta cuando la
+    imagen no permita identificarla.
+  `;
+
+  const result = await model.generateContent([
+    { text: prompt },
+    {
+      inlineData: {
+        mimeType,
+        data: fotoBuffer.toString('base64'),
+      },
+    },
+  ]);
+  const texto = result.response.text().trim();
+  const limpio = texto.replace(/```json|```/g, '').trim();
+  const respuesta = JSON.parse(limpio);
+
+  if (!Array.isArray(respuesta.candidatas)) {
+    return [];
+  }
+
+  return respuesta.candidatas
+    .filter((candidata) => candidata?.nombreComun && candidata?.nombreCientifico)
+    .slice(0, 5)
+    .map((candidata) => ({
+      nombreComun: String(candidata.nombreComun),
+      nombreCientifico: String(candidata.nombreCientifico),
+      coincidencia: Math.max(0, Math.min(100, Math.round(Number(candidata.coincidencia) || 0))),
+      fuente: 'gemini',
+    }));
+}
+
+module.exports = {
+  identificarConPlantNet,
+  identificarConGemini,
+  obtenerParametrosConGemini,
+};
