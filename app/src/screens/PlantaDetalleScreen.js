@@ -45,7 +45,7 @@ function confirmarRiego({ lectura, humedadAlta }, nombrePlanta) {
 export default function PlantaDetalleScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
   const { plantaId } = route.params ?? {};
-  const { plantas, actualizarPlanta } = useAppState();
+  const { plantas, actualizarPlanta, kitConectado } = useAppState();
   const planta = plantas.find((p) => p.id === plantaId) ?? plantas[0];
   const [showProgramarRiego, setShowProgramarRiego] = useState(false);
   const [guardandoFoto, setGuardandoFoto] = useState(false);
@@ -278,7 +278,7 @@ export default function PlantaDetalleScreen({ route, navigation }) {
               <View>
                 <Text style={styles.kitTitle}>Kit SUWA</Text>
                 <Text style={styles.kitStatus}>
-                  {planta.kitConexion === 'estable' ? 'Conexión estable' : 'Conexión inestable'}
+                  {kitConectado ? 'Conexión estable' : 'Conexión inestable'}
                 </Text>
               </View>
             </View>
