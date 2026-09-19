@@ -13,7 +13,23 @@ import { DISPOSITIVO_ID } from '../constants/device';
 import { useAppState } from '../context/AppStateContext';
 import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
-import { activarRiegoAPI, getHistorialSensoresAPI } from '../services/api';
+import { activarRiegoAPI, analizarEstadoRiegoAPI, getHistorialSensoresAPI } from '../services/api';
+
+function confirmarRiego({ lectura, humedadAlta }, nombrePlanta) {
+  if (!humedadAlta) return Promise.resolve(true);
+
+  return new Promise((resolve) => {
+    Alert.alert(
+      'Humedad alta',
+      `${nombrePlanta} registra ${lectura.humedadSuelo}% de humedad, por encima de su umbral. ¿Quieres regar de todas formas?`,
+      [
+        { text: 'Cancelar', style: 'cancel', onPress: () => resolve(false) },
+        { text: 'Regar de todas formas', onPress: () => resolve(true) },
+      ],
+      { cancelable: true, onDismiss: () => resolve(false) }
+    );
+  });
+}
 
 // Detalle de una planta (Paso 7, se llega desde "Ver monitoreo"/"Ver
 // detalle" en la lista de Mis Plantas). Recibe `plantaId` por parámetro
@@ -116,13 +132,21 @@ export default function PlantaDetalleScreen({ route, navigation }) {
     if (regando) return;
     setRegando(true);
     try {
+      const analisis = await analizarEstadoRiegoAPI(
+        DISPOSITIVO_ID,
+        planta.umbralHumedadMinimo
+      );
+      const continuar = await confirmarRiego(analisis, planta.nombreComun);
+      if (!continuar) return;
       await activarRiegoAPI(DISPOSITIVO_ID, 10);
       Alert.alert('Riego activado', `La orden de riego de ${planta.nombreComun} se envió al kit.`);
     } catch (error) {
-      const mensaje = error.code === 'BACKEND_LOCAL_NO_DISPONIBLE'
-        ? 'La app no pudo comunicarse con el backend local que consulta la placa. '
-          + 'Inicia el backend en el PC y verifica que ambos dispositivos estén en la misma red.'
-        : 'Revisa que el kit esté conectado e inténtalo de nuevo.';
+      const mensaje = error.code === 'LECTURA_KIT_DESACTUALIZADA'
+        ? 'No hay una lectura reciente del kit. Espera unos segundos y vuelve a intentarlo.'
+        : error.code === 'BACKEND_LOCAL_NO_DISPONIBLE'
+          ? 'La app no pudo comunicarse con el backend local que consulta la placa. '
+            + 'Inicia el backend en el PC y verifica que ambos dispositivos estén en la misma red.'
+          : 'Revisa que el kit esté conectado e inténtalo de nuevo.';
       Alert.alert(
         'No se pudo activar el riego',
         mensaje
@@ -130,6 +154,7 @@ export default function PlantaDetalleScreen({ route, navigation }) {
     } finally {
       setRegando(false);
     }
+
   };
 
   return (
