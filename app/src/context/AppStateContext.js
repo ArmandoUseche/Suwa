@@ -9,6 +9,7 @@ import {
   actualizarPlantaAPI,
   getAlertasAPI,
   marcarAlertaLeidaAPI,
+  subirFotoPlantaAPI,
 } from '../services/api';
 import { useAuth } from './AuthContext';
 import { illustrations } from '../constants/images';
@@ -196,7 +197,7 @@ export function AppStateProvider({ children }) {
     const res = await crearPlantaAPI({
       nombreComun: datos.nombreComun,
       nombreCientifico: datos.nombreCientifico,
-      fotoUri: datos.foto?.uri || null,
+      fotoUri: null,
       luzIdeal: datos.luzIdeal || null,
       temperaturaIdeal: datos.temperaturaIdeal || null,
       umbralHumedadMinimo: datos.umbralHumedadMinimo || 30,
@@ -204,16 +205,22 @@ export function AppStateProvider({ children }) {
       enMonitoreo: true,
     });
 
+    let plantaGuardada = res.data;
+    if (datos.foto?.uri?.startsWith('file:')) {
+      const fotoRes = await subirFotoPlantaAPI(res.data._id, datos.foto.uri);
+      plantaGuardada = fotoRes.data;
+    }
+
     const nuevaPlanta = {
-      id: res.data._id,
-      nombreComun: res.data.nombreComun,
-      nombreCientifico: res.data.nombreCientifico,
-      foto: res.data.fotoUri ? { uri: res.data.fotoUri } : datos.foto || null,
-      luzIdeal: res.data.luzIdeal,
-      temperaturaIdeal: res.data.temperaturaIdeal,
-      umbralHumedadMinimo: res.data.umbralHumedadMinimo,
-      enMonitoreo: res.data.enMonitoreo,
-      dispositivoId: res.data.dispositivoId,
+      id: plantaGuardada._id,
+      nombreComun: plantaGuardada.nombreComun,
+      nombreCientifico: plantaGuardada.nombreCientifico,
+      foto: plantaGuardada.fotoUri ? { uri: plantaGuardada.fotoUri } : datos.foto || null,
+      luzIdeal: plantaGuardada.luzIdeal,
+      temperaturaIdeal: plantaGuardada.temperaturaIdeal,
+      umbralHumedadMinimo: plantaGuardada.umbralHumedadMinimo,
+      enMonitoreo: plantaGuardada.enMonitoreo,
+      dispositivoId: plantaGuardada.dispositivoId,
       humedadActual: null,
       humedadEstado: null,
       kitConexion: null,
@@ -236,13 +243,18 @@ export function AppStateProvider({ children }) {
   };
 
   const actualizarPlanta = async (plantaId, cambios) => {
-    const plantaActualizada = await actualizarPlantaAPI(plantaId, cambios);
-    const planta = plantaActualizada.data;
+    const { fotoUri, ...cambiosPlanta } = cambios;
+    const plantaActualizada = await actualizarPlantaAPI(plantaId, cambiosPlanta);
+    let planta = plantaActualizada.data;
+    if (fotoUri?.startsWith('file:')) {
+      const fotoRes = await subirFotoPlantaAPI(plantaId, fotoUri);
+      planta = fotoRes.data;
+    }
     setPlantas((prev) => prev.map((item) => {
       if (item.id === plantaId) {
         return {
           ...item,
-          ...cambios,
+          ...cambiosPlanta,
           foto: planta.fotoUri ? { uri: planta.fotoUri } : item.foto,
           enMonitoreo: planta.enMonitoreo,
         };
