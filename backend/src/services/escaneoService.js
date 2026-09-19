@@ -4,6 +4,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const PLANTNET_TIMEOUT_MS = 120000;
+const PLANTNET_RESULTADOS = 5;
 
 // ── PLANTNET ──
 async function identificarConPlantNet(fotoBuffer, mimeType = 'image/jpeg') {
@@ -13,20 +14,20 @@ async function identificarConPlantNet(fotoBuffer, mimeType = 'image/jpeg') {
     contentType: mimeType,
   });
 
-  const url = `https://my-api.plantnet.org/v2/identify/all?api-key=${process.env.PLANTNET_API_KEY}&lang=es&nb-results=1`;
+  const url = `https://my-api.plantnet.org/v2/identify/all?api-key=${process.env.PLANTNET_API_KEY}&lang=es&nb-results=${PLANTNET_RESULTADOS}`;
 
   const response = await axios.post(url, form, {
     headers: form.getHeaders(),
     timeout: PLANTNET_TIMEOUT_MS,
   });
 
-  const resultado = response.data.results[0];
+  const resultados = Array.isArray(response.data.results) ? response.data.results : [];
 
-  return {
+  return resultados.map((resultado) => ({
     nombreComun: resultado.species.commonNames?.[0] || resultado.species.scientificNameWithoutAuthor,
     nombreCientifico: resultado.species.scientificNameWithoutAuthor,
     coincidencia: Math.round(resultado.score * 100),
-  };
+  }));
 }
 
 // ── GEMINI ──

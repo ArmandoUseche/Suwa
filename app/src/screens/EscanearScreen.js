@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenHeaderPill from '../components/ScreenHeaderPill';
 import ViewfinderFrame from '../components/ViewfinderFrame';
 import { PrimaryButton } from '../components/Buttons';
+import FormTextInput from '../components/FormTextInput';
 import {
   EMPTY_STATE_GAP_AFTER_HEADER,
   EMPTY_STATE_GAP_AFTER_IMAGE,
@@ -12,6 +13,7 @@ import {
 } from '../constants/emptyState';
 import { illustrations } from '../constants/images';
 import { colors, radius, spacing } from '../constants/theme';
+import { useState } from 'react';
 
 // Intro de Escanear (Paso 7). Mismo esqueleto que Monitoreo/Historial
 // (header + imagen central + título + descripción + botón, con las
@@ -20,6 +22,7 @@ import { colors, radius, spacing } from '../constants/theme';
 //
 export default function EscanearScreen({ navigation }) {
   const insets = useSafeAreaInsets();
+  const [nombrePlanta, setNombrePlanta] = useState('');
 
   return (
     <View style={styles.container}>
@@ -59,6 +62,23 @@ export default function EscanearScreen({ navigation }) {
           onPress={() => navigation.navigate('EscanearCamara')}
           style={styles.button}
         />
+        <Text style={styles.orText}>O ingresa el nombre si ya conoces tu planta</Text>
+        <FormTextInput
+          label="Nombre común o científico"
+          value={nombrePlanta}
+          onChangeText={setNombrePlanta}
+          style={styles.input}
+        />
+        <PrimaryButton
+          label="Usar este nombre"
+          disabled={!nombrePlanta.trim()}
+          onPress={() =>
+            navigation.navigate('ResultadoEscaneo', {
+              manualNombre: nombrePlanta.trim(),
+            })
+          }
+          style={styles.button}
+        />
       </ScrollView>
     </View>
   );
@@ -92,4 +112,12 @@ const styles = StyleSheet.create({
   title: emptyStateStyles.title,
   description: emptyStateStyles.description,
   button: emptyStateStyles.button,
+  orText: {
+    ...emptyStateStyles.description,
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  input: {
+    marginHorizontal: spacing.lg,
+  },
 });

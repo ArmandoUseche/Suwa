@@ -1,72 +1,24 @@
 const { identificarConPlantNet, obtenerParametrosConGemini } = require('../services/escaneoService');
 
-const UMBRAL_MINIMO = 60; // % mínimo de coincidencia aceptable
-
 async function escanearPlanta(req, res) {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No se recibió ninguna imagen' });
     }
 
-    // ── LLAMADA 1 a PlantNet ──
-    const identificacion1 = await identificarConPlantNet(
+    const candidatas = await identificarConPlantNet(
       req.file.buffer,
       req.file.mimetype
     );
 
-    // Verificar umbral en la primera llamada
-    if (identificacion1.coincidencia < UMBRAL_MINIMO) {
+    if (candidatas.length === 0) {
       return res.status(422).json({
         rechazado: true,
-        coincidencia: identificacion1.coincidencia,
-        error: `Se obtuvo solo un ${identificacion1.coincidencia}% de coincidencia. Intenta con una foto más clara, con buena iluminación y enfocando solo la planta.`,
+        error: 'No se encontraron coincidencias para esta imagen. Intenta con una foto más clara y enfocada en la planta.',
       });
     }
 
-    // ── LLAMADA 2 a PlantNet para confirmar ──
-    const identificacion2 = await identificarConPlantNet(
-      req.file.buffer,
-      req.file.mimetype
-    );
-
-    // Verificar que las dos llamadas coincidan en la especie
-    if (identificacion1.nombreCientifico !== identificacion2.nombreCientifico) {
-      return res.status(422).json({
-        rechazado: true,
-        coincidencia: identificacion1.coincidencia,
-        error: `La identificación no fue consistente entre dos intentos. Intenta con una foto más clara y enfocada en una sola parte de la planta.`,
-      });
-    }
-
-    // Verificar umbral en la segunda llamada también
-    if (identificacion2.coincidencia < UMBRAL_MINIMO) {
-      return res.status(422).json({
-        rechazado: true,
-        coincidencia: identificacion2.coincidencia,
-        error: `Se obtuvo solo un ${identificacion2.coincidencia}% de coincidencia en la confirmación. Intenta con una foto más clara.`,
-      });
-    }
-
-    // Promedio de coincidencia de las dos llamadas
-    const coincidenciaPromedio = Math.round(
-      (identificacion1.coincidencia + identificacion2.coincidencia) / 2
-    );
-
-    const identificacionFinal = {
-      ...identificacion1,
-      coincidencia: coincidenciaPromedio,
-    };
-
-    // ── Gemini calcula los parámetros con la especie confirmada ──
-    const parametros = await obtenerParametrosConGemini(
-      identificacionFinal.nombreCientifico
-    );
-
-    res.json({
-      identificacion: identificacionFinal,
-      parametros,
-    });
-
+    res.json({ candidatas });
   } catch (error) {
     console.error('Error en escaneo:', error.message);
 
@@ -81,4 +33,19 @@ async function escanearPlanta(req, res) {
   }
 }
 
-module.exports = { escanearPlanta };
+async function obtenerParametros(req, res) {
+  try {
+    const { nombreCientifico } = req.body;
+    if (!nombreCientifico || typeof nombreCientifico !== 'string') {
+      return res.status(400).json({ error: 'nombreCientifico es requerido' });
+    }
+
+    const parametros = await obtenerParametrosConGemini(nombreCientifico.trim());
+    res.json({ parametros });
+  } catch (error) {
+    console.error('Error calculando parámetros:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+}
+
+module.exports = { escanearPlanta, obtenerParametros };

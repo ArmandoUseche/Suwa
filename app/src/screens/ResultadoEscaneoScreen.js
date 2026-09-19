@@ -9,19 +9,33 @@ import { icons, illustrations } from '../constants/images';
 import { useAppState } from '../context/AppStateContext';
 import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
-import { escanearPlantaAPI } from '../services/api';
+import { escanearPlantaAPI, obtenerParametrosPlantaAPI } from '../services/api';
 
 export default function ResultadoEscaneoScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
-  const { fotoUri } = route.params ?? {};
+  const { fotoUri, manualNombre } = route.params ?? {};
   const { agregarPlanta } = useAppState();
-  const [etapa, setEtapa] = useState('identificando'); // identificando | calculando | listo | rechazado
+  const [etapa, setEtapa] = useState(manualNombre ? 'confirmando' : 'identificando');
   const [identificacion, setIdentificacion] = useState(null);
   const [parametros, setParametros] = useState(null);
+  const [candidatas, setCandidatas] = useState([]);
   const [mensajeRechazo, setMensajeRechazo] = useState('');
 
   useEffect(() => {
-    if (!fotoUri) return;
+    if (manualNombre) {
+      setIdentificacion({
+        nombreComun: manualNombre,
+        nombreCientifico: manualNombre,
+        coincidencia: null,
+      });
+      confirmarPlanta({
+        nombreComun: manualNombre,
+        nombreCientifico: manualNombre,
+        coincidencia: null,
+      });
+      return undefined;
+    }
+    if (!fotoUri) return undefined;
 
     // Cambia a "calculando" después de 2s para mejor UX mientras espera la API
     const timerCalculando = setTimeout(() => {
@@ -31,9 +45,8 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
     escanearPlantaAPI(fotoUri)
       .then((res) => {
         clearTimeout(timerCalculando);
-        setIdentificacion(res.data.identificacion);
-        setParametros(res.data.parametros);
-        setEtapa('listo');
+        setCandidatas(res.data.candidatas);
+        setEtapa('confirmando');
       })
       .catch((error) => {
         clearTimeout(timerCalculando);
@@ -52,7 +65,20 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
       });
 
     return () => clearTimeout(timerCalculando);
-  }, [fotoUri]);
+  }, [fotoUri, manualNombre]);
+
+  const confirmarPlanta = async (candidata) => {
+    setIdentificacion(candidata);
+    setEtapa('calculando');
+    try {
+      const res = await obtenerParametrosPlantaAPI(candidata.nombreCientifico);
+      setParametros(res.data.parametros);
+      setEtapa('listo');
+    } catch (error) {
+      setMensajeRechazo(error.response?.data?.error || 'No se pudieron calcular los parámetros de la planta.');
+      setEtapa('rechazado');
+    }
+  };
 
   const handleGuardar = async () => {
   try {
@@ -96,7 +122,23 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
           </View>
         )}
 
-        {/* Estado: rechazado por bajo porcentaje */}
+        {etapa === 'confirmando' && (
+          <View style={styles.candidatesBlock}>
+            <Text style={styles.candidatesTitle}>
+              {manualNombre ? 'Confirmando planta' : 'Selecciona la planta correcta'}
+            </Text>
+            {!manualNombre && candidatas.map((candidata) => (
+              <SecondaryButton
+                key={candidata.nombreCientifico}
+                label={`${candidata.nombreComun} (${candidata.coincidencia}%)`}
+                onPress={() => confirmarPlanta(candidata)}
+                style={styles.candidateButton}
+              />
+            ))}
+          </View>
+        )}
+
+        {/* Estado: error de identificación o parámetros */}
         {etapa === 'rechazado' && (
           <View style={styles.loadingBlock}>
             <Text style={styles.rechazadoEmoji}>🌿</Text>
@@ -189,6 +231,19 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: 'center',
     marginTop: spacing.md,
+  },
+  candidatesBlock: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xl,
+  },
+  candidatesTitle: {
+    ...typography.h2,
+    fontSize: moderateScale(20),
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
+  candidateButton: {
+    marginBottom: spacing.sm,
   },
   rechazadoEmoji: {
     fontSize: moderateScale(48),
