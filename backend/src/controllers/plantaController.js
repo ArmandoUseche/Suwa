@@ -17,6 +17,13 @@ async function crearPlanta(req, res) {
       return res.status(400).json({ error: 'nombreComun y nombreCientifico son requeridos' });
     }
 
+    if (enMonitoreo && dispositivoId) {
+      await Planta.updateMany(
+        { usuarioId: req.usuarioId, dispositivoId, enMonitoreo: true },
+        { $set: { enMonitoreo: false } }
+      );
+    }
+
     const planta = await Planta.create({
       usuarioId: req.usuarioId,
       nombreComun,
@@ -56,6 +63,19 @@ async function obtenerPlanta(req, res) {
 
 async function actualizarPlanta(req, res) {
   try {
+    const { enMonitoreo, dispositivoId } = req.body;
+    if (enMonitoreo && dispositivoId) {
+      await Planta.updateMany(
+        {
+          usuarioId: req.usuarioId,
+          dispositivoId,
+          _id: { $ne: req.params.id },
+          enMonitoreo: true,
+        },
+        { $set: { enMonitoreo: false } }
+      );
+    }
+
     const planta = await Planta.findOneAndUpdate(
       { _id: req.params.id, usuarioId: req.usuarioId },
       req.body,
@@ -86,7 +106,7 @@ async function eliminarPlanta(req, res) {
 async function obtenerUmbralPorDispositivo(req, res) {
   try {
     const { dispositivoId } = req.params;
-    const planta = await Planta.findOne({ dispositivoId });
+    const planta = await Planta.findOne({ dispositivoId, enMonitoreo: true });
     if (!planta) return res.status(404).json({ error: 'Dispositivo no vinculado a ninguna planta' });
     res.json({ umbralHumedadMinimo: planta.umbralHumedadMinimo });
   } catch (error) {
