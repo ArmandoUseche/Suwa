@@ -10,6 +10,7 @@ async function crearPlanta(req, res) {
       temperaturaIdeal,
       umbralHumedadMinimo,
       dispositivoId,
+      enMonitoreo,
     } = req.body;
 
     if (!nombreComun || !nombreCientifico) {
@@ -25,6 +26,7 @@ async function crearPlanta(req, res) {
       temperaturaIdeal: temperaturaIdeal || null,
       umbralHumedadMinimo: umbralHumedadMinimo || 30,
       dispositivoId: dispositivoId || null,
+      enMonitoreo: Boolean(enMonitoreo && dispositivoId),
     });
 
     res.status(201).json(planta);

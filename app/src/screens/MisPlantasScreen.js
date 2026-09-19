@@ -33,20 +33,7 @@ import { moderateScale } from '../utils/responsive';
 //     acá también, sin recargar.
 export default function MisPlantasScreen({ navigation }) {
   const insets = useSafeAreaInsets();
-  const { tieneDispositivoVinculado, plantas } = useAppState();
-
-  if (!tieneDispositivoVinculado) {
-    return (
-      <EstadoVacio
-        insets={insets}
-        titulo="Vincula tu kit para empezar"
-        descripcion="Necesitás tu kit SUWA conectado para poder escanear y monitorear tus plantas."
-        botonLabel="Vincular dispositivo"
-        botonIcon="add"
-        onBotonPress={() => navigation.navigate('VincularDispositivo')}
-      />
-    );
-  }
+  const { plantas } = useAppState();
 
   if (plantas.length === 0) {
     return (

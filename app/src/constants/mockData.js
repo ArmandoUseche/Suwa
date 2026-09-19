@@ -25,13 +25,6 @@ export const mockEstadosLectura = {
   humedadAmbiente: 'Muy buena',
 };
 
-// Estado general de la planta y próximo riego automático programado,
-// para la tarjeta "Planta" del dashboard conectado.
-export const mockEstadoPlanta = {
-  estado: 'saludable',
-  proximoRiegoTexto: 'Automatización: próximo riego hoy a las 6:00pm',
-};
-
 // Datos del usuario logueado, para el saludo "Hola, {nombre}" en
 // Monitoreo y para la pantalla de Perfil (Paso 8). Placeholder hasta
 // que haya un estado de sesión real (login conectado al backend) del
@@ -44,12 +37,6 @@ export const mockUsuario = {
   correo: 'jose.perez@gmail.com',
   usuario: 'jose.perez',
 };
-
-// Si el usuario ya vinculó un dispositivo o no. Con esto en `false`,
-// Monitoreo muestra la pantalla de "Vincular dispositivo" (mockup);
-// en `true` mostraría el dashboard de sensores. Cuando haya backend real,
-// esto sale de si el usuario tiene o no una Planta/dispositivo asociado.
-export const mockTieneDispositivoVinculado = false;
 
 // Historial también tiene dos estados, pero son independientes del de
 // arriba: un usuario puede tener el kit vinculado desde hace un minuto
@@ -134,10 +121,7 @@ export const mockParametrosGemini = {
 // porque acá el estado "sin kit" y el estado "sin plantas" son cosas
 // separadas (podés tener el kit conectado y aun así no haber agregado
 // ninguna planta todavía):
-//  1. mockTieneDispositivoVinculado en false -> "vincular dispositivo"
-//     (misma bandera que ya usan Monitoreo/Historial/Escanear, no se
-//     repite acá).
-//  2. Con el kit vinculado y `plantas` vacío -> "Sin registros aún"
+//  1. Con el kit conectado y `plantas` vacío -> "Sin registros aún"
 //     con foto+cruz verde (mockup real). Antes esto tenía su propia
 //     bandera (mockTienePlantas) separada del array -- se sacó porque
 //     ahora que "Añadir a mis plantas" sí agrega de verdad (ver
@@ -186,7 +170,7 @@ export const mockPlantas = [
 // modelo Alerta del contrato de API (tipo, mensaje, dispositivoId,
 // leida, timestamp) -- el estado "leida" vive en AppStateContext
 // (marcarAlertaLeida), no acá, porque cambia en vivo al tocar una
-// alerta, igual que tieneDispositivoVinculado o plantas.
+// alerta, igual que el estado de conexión del kit o las plantas.
 export const mockAlertas = [
   {
     id: 'al1',
@@ -213,4 +197,3 @@ export const mockAlertas = [
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
   },
 ];
-

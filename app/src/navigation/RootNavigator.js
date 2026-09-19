@@ -9,7 +9,6 @@ import RegisterSuccessScreen from '../screens/RegisterSuccessScreen';
 import EscanearCameraScreen from '../screens/EscanearCameraScreen';
 import ResultadoEscaneoScreen from '../screens/ResultadoEscaneoScreen';
 import PlantaDetalleScreen from '../screens/PlantaDetalleScreen';
-import VincularDispositivoScreen from '../screens/VincularDispositivoScreen';
 import ConfigurarUmbralesScreen from '../screens/ConfigurarUmbralesScreen';
 import CambiarContrasenaScreen from '../screens/CambiarContrasenaScreen';
 import ConfiguracionScreen from '../screens/ConfiguracionScreen';
@@ -53,7 +52,6 @@ export default function RootNavigator() {
       />
       <Stack.Screen name="ResultadoEscaneo" component={ResultadoEscaneoScreen} />
       <Stack.Screen name="PlantaDetalle" component={PlantaDetalleScreen} />
-      <Stack.Screen name="VincularDispositivo" component={VincularDispositivoScreen} />
       <Stack.Screen name="ConfigurarUmbrales" component={ConfigurarUmbralesScreen} />
       <Stack.Screen name="CambiarContrasena" component={CambiarContrasenaScreen} />
       <Stack.Screen name="Configuracion" component={ConfiguracionScreen} />

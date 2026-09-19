@@ -11,7 +11,6 @@ import {
   emptyStateStyles,
 } from '../constants/emptyState';
 import { illustrations } from '../constants/images';
-import { useAppState } from '../context/AppStateContext';
 import { colors, radius, spacing } from '../constants/theme';
 
 // Intro de Escanear (Paso 7). Mismo esqueleto que Monitoreo/Historial
@@ -19,14 +18,8 @@ import { colors, radius, spacing } from '../constants/theme';
 // constantes compartidas de emptyState.js) para que las 3 pantallas se
 // vean del mismo tamaño y proporciones.
 //
-// Reusa tieneDispositivoVinculado del AppStateContext compartido (misma
-// bandera de Monitoreo, ya no es un mock fijo -- se actualiza en vivo
-// al vincular un kit real): sin kit vinculado no tiene sentido escanear
-// todavía (no hay dónde guardar el resultado), así que el CTA cambia a
-// "Vincular dispositivo" en vez de "Escanear ahora".
 export default function EscanearScreen({ navigation }) {
   const insets = useSafeAreaInsets();
-  const { tieneDispositivoVinculado } = useAppState();
 
   return (
     <View style={styles.container}>
@@ -57,32 +50,15 @@ export default function EscanearScreen({ navigation }) {
 
         <Text style={styles.title}>Identifica tu planta en segundos</Text>
 
-        {tieneDispositivoVinculado ? (
-          <>
-            <Text style={styles.description}>
-              Toma una foto para detectar su especie y conocer los
-              parámetros óptimos de sol y agua que necesita.
-            </Text>
-            <PrimaryButton
-              label="Escanear ahora"
-              onPress={() => navigation.navigate('EscanearCamara')}
-              style={styles.button}
-            />
-          </>
-        ) : (
-          <>
-            <Text style={styles.description}>
-              Primero necesitás vincular tu kit SUWA para poder guardar
-              los resultados del escaneo en tu planta.
-            </Text>
-            <PrimaryButton
-              label="Vincular dispositivo"
-              icon="add"
-              onPress={() => navigation.navigate('VincularDispositivo')}
-              style={styles.button}
-            />
-          </>
-        )}
+        <Text style={styles.description}>
+          Toma una foto para detectar su especie y conocer los parámetros
+          óptimos de sol y agua que necesita.
+        </Text>
+        <PrimaryButton
+          label="Escanear ahora"
+          onPress={() => navigation.navigate('EscanearCamara')}
+          style={styles.button}
+        />
       </ScrollView>
     </View>
   );

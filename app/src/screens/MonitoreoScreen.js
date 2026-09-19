@@ -15,7 +15,7 @@ import {
   emptyStateStyles,
 } from '../constants/emptyState';
 import { icons } from '../constants/images';
-import { mockEstadoPlanta } from '../constants/mockData';
+import { DISPOSITIVO_ID } from '../constants/device';
 import { useAppState } from '../context/AppStateContext';
 import { useAuth } from '../context/AuthContext';
 import { colors, radius, spacing, typography } from '../constants/theme';
@@ -23,13 +23,6 @@ import { moderateScale } from '../utils/responsive';
 import { activarRiegoAPI, getUltimaLecturaAPI } from '../services/api';
 
 const PLANT_PHOTO_SIZE = EMPTY_STATE_IMAGE_SIZE;
-
-// ID del kit físico. Coincide con el que usa el firmware (Arduino UNO
-// R4 WiFi) para reportar sus lecturas y con el que espera el backend.
-// Cuando exista vinculación real de dispositivo por usuario (pendiente,
-// ver VincularDispositivoScreen), esto debería venir del usuario/planta
-// en vez de estar fijo acá.
-const DISPOSITIVO_ID = 'suwa-kit-01';
 
 // Cada cuánto se refresca la lectura mientras la pantalla está
 // abierta. No es tiempo real instantáneo (para eso haría falta el
@@ -60,9 +53,12 @@ function estadoHumedadAmbiente(valor) {
 }
 
 export default function MonitoreoScreen({ navigation }) {
-  const { tieneDispositivoVinculado } = useAppState();
-  if (!tieneDispositivoVinculado) {
+  const { kitConectado, plantas } = useAppState();
+  if (!kitConectado) {
     return <SinDispositivo navigation={navigation} />;
+  }
+  if (plantas.length === 0) {
+    return <SinPlanta navigation={navigation} />;
   }
   return <ConDispositivo navigation={navigation} />;
 }
@@ -85,16 +81,44 @@ function SinDispositivo({ navigation }) {
           <PlantPhoto size={PLANT_PHOTO_SIZE} />
         </View>
 
-        <Text style={styles.emptyTitle}>¡Comencemos, {usuario?.nombre}!</Text>
+        <Text style={styles.emptyTitle}>Kit no conectado</Text>
         <Text style={styles.emptyDescription}>
-          Vincula tu kit automatizado SUWA para empezar a monitorear tus
-          sensores en tiempo real y programar tus riegos.
+          Enciende tu kit SUWA y conecta el teléfono a la misma red para
+          comenzar a recibir lecturas.
+        </Text>
+      </ScrollView>
+    </View>
+  );
+}
+
+function SinPlanta({ navigation }) {
+  const insets = useSafeAreaInsets();
+  const { usuario } = useAuth();
+
+  return (
+    <View style={styles.plainContainer}>
+      <ScrollView
+        contentContainerStyle={styles.emptyStateScroll}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.bannerSection, { paddingTop: insets.top + spacing.md }]}>
+          <PlantGreetingBanner nombre={usuario?.nombre} kitConectado />
+        </View>
+
+        <View style={styles.plantPhotoWrapper}>
+          <PlantPhoto size={PLANT_PHOTO_SIZE} />
+        </View>
+
+        <Text style={styles.emptyTitle}>Kit conectado</Text>
+        <Text style={styles.emptyDescription}>
+          Aún no has configurado una planta. Escanéala o regístrala para
+          comenzar el monitoreo y habilitar el riego automático.
         </Text>
 
         <PrimaryButton
-          label="Vincular dispositivo"
+          label="Agregar planta"
           icon="add"
-          onPress={() => navigation.navigate('VincularDispositivo')}
+          onPress={() => navigation.navigate('Escanear')}
           style={styles.linkButton}
         />
       </ScrollView>
@@ -205,7 +229,7 @@ function ConDispositivo({ navigation }) {
           <Text style={styles.plantCardTitle}>Planta</Text>
           <View style={styles.estadoPill}>
             <View style={styles.estadoDot} />
-            <Text style={styles.estadoText}>Estado: {mockEstadoPlanta.estado}</Text>
+            <Text style={styles.estadoText}>Estado: saludable</Text>
           </View>
 
           <PlantPhoto size={PLANT_PHOTO_SIZE} />
@@ -239,7 +263,9 @@ function ConDispositivo({ navigation }) {
           style={styles.regarButton}
         />
 
-        <Text style={styles.automationCaption}>{mockEstadoPlanta.proximoRiegoTexto}</Text>
+        <Text style={styles.automationCaption}>
+          Riego automático según el umbral de la planta
+        </Text>
       </ScrollView>
     </View>
   );

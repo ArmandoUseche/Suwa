@@ -22,6 +22,7 @@ import {
 } from '../constants/mockData';
 import { colors, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
+import { useAppState } from '../context/AppStateContext';
 
 // Pantalla de Historial (Paso 6).
 //
@@ -33,13 +34,14 @@ import { moderateScale } from '../utils/responsive';
 //  - Con datos: selector Día/Semana/Año + pestañas de sensor + gráfica
 //    + lista de "Registros recientes".
 export default function HistorialScreen() {
+  const { kitConectado } = useAppState();
   if (!mockTieneDatosHistorial) {
-    return <SinDatos />;
+    return <SinDatos kitConectado={kitConectado} />;
   }
   return <ConDatos />;
 }
 
-function SinDatos() {
+function SinDatos({ kitConectado }) {
   const insets = useSafeAreaInsets();
 
   return (
@@ -66,19 +68,14 @@ function SinDatos() {
           />
         </View>
 
-        <Text style={styles.emptyTitle}>Sin registros aún</Text>
-        <Text style={styles.emptyDescription}>
-          Una vez que tu kit SUWA esté activo, aquí podrás ver las gráficas
-          de evolución de tus sensores (humedad y temperatura) y el
-          registro exacto de cada riego automatizado.
+        <Text style={styles.emptyTitle}>
+          {kitConectado ? 'Sin registros aún' : 'Kit no conectado'}
         </Text>
-
-        <PrimaryButton
-          label="Vincular dispositivo"
-          icon="add"
-          onPress={() => {}}
-          style={styles.linkButton}
-        />
+        <Text style={styles.emptyDescription}>
+          {kitConectado
+            ? 'Cuando el kit genere lecturas o ejecute un riego, aquí podrás ver la evolución de tus sensores y el registro de actividad.'
+            : 'Enciende tu kit SUWA y conecta el teléfono a la misma red para comenzar a recibir lecturas.'}
+        </Text>
       </ScrollView>
     </View>
   );

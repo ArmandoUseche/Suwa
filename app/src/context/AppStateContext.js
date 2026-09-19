@@ -1,31 +1,50 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { mockAlertas, mockTieneDispositivoVinculado } from '../constants/mockData';
-import { crearPlantaAPI, obtenerPlantasAPI } from '../services/api';
+import { DISPOSITIVO_ID } from '../constants/device';
+import { crearPlantaAPI, getUltimaLecturaAPI, obtenerPlantasAPI } from '../services/api';
 import { useAuth } from './AuthContext';
 
 const AppStateContext = createContext(null);
 
 export function AppStateProvider({ children }) {
   const { usuario } = useAuth();
-  const [tieneDispositivoVinculado, setTieneDispositivoVinculado] = useState(
-    mockTieneDispositivoVinculado
-  );
+  const [kitConectado, setKitConectado] = useState(false);
+  const [cargandoKit, setCargandoKit] = useState(false);
   const [plantas, setPlantas] = useState([]);
-  const [alertas, setAlertas] = useState(mockAlertas);
+  const [alertas, setAlertas] = useState([]);
   const [cargandoPlantas, setCargandoPlantas] = useState(false);
 
-  // Carga las plantas del usuario desde MongoDB al iniciar sesión
+  const cargarEstadoKit = async () => {
+    setCargandoKit(true);
+    try {
+      const res = await getUltimaLecturaAPI(DISPOSITIVO_ID);
+      const timestamp = new Date(res.data.timestamp).getTime();
+      const lecturaReciente = Number.isFinite(timestamp)
+        && Date.now() - timestamp <= 30000;
+      setKitConectado(lecturaReciente);
+    } catch (error) {
+      setKitConectado(false);
+    } finally {
+      setCargandoKit(false);
+    }
+  };
+
+  // Carga el estado real del kit y las plantas del usuario al iniciar sesión.
   useEffect(() => {
-  if (!usuario) {
-    setPlantas([]);
-    return;
-  }
-  // Pequeño delay para asegurar que el token ya está en AsyncStorage
-  const timer = setTimeout(() => {
-    cargarPlantas();
-  }, 500);
-  return () => clearTimeout(timer);
-}, [usuario]);
+    if (!usuario) {
+      setKitConectado(false);
+      setPlantas([]);
+      setAlertas([]);
+      return undefined;
+    }
+
+    const cargarDatos = async () => {
+      await Promise.all([cargarEstadoKit(), cargarPlantas()]);
+    };
+
+    cargarDatos();
+    const intervalo = setInterval(cargarEstadoKit, 10000);
+    return () => clearInterval(intervalo);
+  }, [usuario]);
 
   const cargarPlantas = async () => {
     setCargandoPlantas(true);
@@ -53,8 +72,6 @@ export function AppStateProvider({ children }) {
     }
   };
 
-  const vincularDispositivo = () => setTieneDispositivoVinculado(true);
-
   const marcarAlertaLeida = (alertaId) => {
     setAlertas((prev) =>
       prev.map((a) => (a.id === alertaId ? { ...a, leida: true } : a))
@@ -75,6 +92,8 @@ export function AppStateProvider({ children }) {
       luzIdeal: datos.luzIdeal || null,
       temperaturaIdeal: datos.temperaturaIdeal || null,
       umbralHumedadMinimo: datos.umbralHumedadMinimo || 30,
+      dispositivoId: DISPOSITIVO_ID,
+      enMonitoreo: true,
     });
 
     const nuevaPlanta = {
@@ -99,8 +118,8 @@ export function AppStateProvider({ children }) {
   return (
     <AppStateContext.Provider
       value={{
-        tieneDispositivoVinculado,
-        vincularDispositivo,
+        kitConectado,
+        cargandoKit,
         plantas,
         cargandoPlantas,
         cargarPlantas,
