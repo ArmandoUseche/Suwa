@@ -21,6 +21,7 @@ import MainTabNavigator from './MainTabNavigator';
 import OlvideContrasenaScreen from '../screens/OlvideContrasenaScreen';
 import VerificarCodigoScreen from '../screens/VerificarCodigoScreen';
 import NuevaContrasenaScreen from '../screens/NuevaContrasenaScreen';
+import EditarPerfilScreen from '../screens/EditarPerfilScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -54,6 +55,7 @@ export default function RootNavigator() {
       <Stack.Screen name="PlantaDetalle" component={PlantaDetalleScreen} />
       <Stack.Screen name="ConfigurarUmbrales" component={ConfigurarUmbralesScreen} />
       <Stack.Screen name="CambiarContrasena" component={CambiarContrasenaScreen} />
+      <Stack.Screen name="EditarPerfil" component={EditarPerfilScreen} />
       <Stack.Screen name="Configuracion" component={ConfiguracionScreen} />
       <Stack.Screen name="Notificaciones" component={NotificacionesScreen} />
       <Stack.Screen name="TerminosDeUso" component={TerminosDeUsoScreen} />
