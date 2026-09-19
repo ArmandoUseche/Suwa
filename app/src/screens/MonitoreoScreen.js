@@ -20,7 +20,7 @@ import { useAppState } from '../context/AppStateContext';
 import { useAuth } from '../context/AuthContext';
 import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
-import { activarRiegoAPI, getUltimaLecturaAPI } from '../services/api';
+import { activarRiegoAPI, analizarEstadoRiegoAPI, getUltimaLecturaAPI } from '../services/api';
 
 const PLANT_PHOTO_SIZE = EMPTY_STATE_IMAGE_SIZE;
 
@@ -50,6 +50,22 @@ function estadoHumedadAmbiente(valor) {
   if (valor < 30) return 'Seca';
   if (valor > 80) return 'Muy alta';
   return 'Buena';
+}
+
+function confirmarRiego({ lectura, humedadAlta }, nombrePlanta) {
+  if (!humedadAlta) return Promise.resolve(true);
+
+  return new Promise((resolve) => {
+    Alert.alert(
+      'Humedad alta',
+      `${nombrePlanta} registra ${lectura.humedadSuelo}% de humedad, por encima de su umbral. ¿Quieres regar de todas formas?`,
+      [
+        { text: 'Cancelar', style: 'cancel', onPress: () => resolve(false) },
+        { text: 'Regar de todas formas', onPress: () => resolve(true) },
+      ],
+      { cancelable: true, onDismiss: () => resolve(false) }
+    );
+  });
 }
 
 export default function MonitoreoScreen({ navigation }) {
@@ -169,13 +185,21 @@ function ConDispositivo({ navigation }) {
     if (regando) return; // Evita doble-tap mientras ya hay un riego en curso
     setRegando(true);
     try {
+      const analisis = await analizarEstadoRiegoAPI(
+        DISPOSITIVO_ID,
+        planta.umbralHumedadMinimo
+      );
+      const continuar = await confirmarRiego(analisis, planta.nombreComun);
+      if (!continuar) return;
       await activarRiegoAPI(DISPOSITIVO_ID, 10);
       Alert.alert('Riego activado', 'La orden de riego manual se envió al kit.');
     } catch (error) {
-      const mensaje = error.code === 'BACKEND_LOCAL_NO_DISPONIBLE'
-        ? 'La app no pudo comunicarse con el backend local que consulta la placa. '
-          + 'Inicia el backend en el PC y verifica que ambos dispositivos estén en la misma red.'
-        : 'Revisa que el kit esté conectado e inténtalo de nuevo.';
+      const mensaje = error.code === 'LECTURA_KIT_DESACTUALIZADA'
+        ? 'No hay una lectura reciente del kit. Espera unos segundos y vuelve a intentarlo.'
+        : error.code === 'BACKEND_LOCAL_NO_DISPONIBLE'
+          ? 'La app no pudo comunicarse con el backend local que consulta la placa. '
+            + 'Inicia el backend en el PC y verifica que ambos dispositivos estén en la misma red.'
+          : 'Revisa que el kit esté conectado e inténtalo de nuevo.';
       Alert.alert(
         'No se pudo activar el riego',
         mensaje
@@ -183,6 +207,7 @@ function ConDispositivo({ navigation }) {
     } finally {
       setRegando(false);
     }
+
   };
 
   if (cargandoInicial) {
