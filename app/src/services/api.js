@@ -56,8 +56,10 @@ export const activarRiegoAPI = async (dispositivoId, duracionSegundos = 10) => {
 
   if (localResult.status === 'rejected') {
     const error = new Error(
-      'No se pudo entregar la orden al backend local que consulta el kit.'
+      'No se pudo entregar la orden al backend local que consulta el kit. '
+      + 'Verifica que el backend esté iniciado y que el teléfono y el PC estén en la misma red.'
     );
+    error.code = 'BACKEND_LOCAL_NO_DISPONIBLE';
     error.causa = localResult.reason;
     throw error;
   }
