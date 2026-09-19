@@ -15,7 +15,7 @@ import { moderateScale } from '../utils/responsive';
 //    la vez): punto gris + "Sin conectar", sin humedad, botón
 //    "Ver detalle" en vez de "Ver monitoreo" (no hay nada en vivo que
 //    mostrar todavía).
-export default function PlantaCard({ planta, onPress }) {
+export default function PlantaCard({ planta, onPress, onEliminar }) {
   const { nombreComun, foto, enMonitoreo, humedadActual, humedadEstado } = planta;
 
   return (
@@ -28,13 +28,27 @@ export default function PlantaCard({ planta, onPress }) {
             <Text style={styles.nombre} numberOfLines={1}>
               {nombreComun}
             </Text>
-            {/* Editar/eliminar -- mock por ahora (Paso 8), solo para no
-                dejar la tarjeta "coja" respecto al mockup. */}
             <PressableScale
               onPress={() =>
                 Alert.alert(nombreComun, undefined, [
                   { text: 'Editar', onPress: () => {} },
-                  { text: 'Eliminar', style: 'destructive', onPress: () => {} },
+                  {
+                    text: 'Eliminar',
+                    style: 'destructive',
+                    onPress: () =>
+                      Alert.alert(
+                        'Eliminar planta',
+                        `¿Seguro que quieres eliminar ${nombreComun}?`,
+                        [
+                          { text: 'Cancelar', style: 'cancel' },
+                          {
+                            text: 'Eliminar',
+                            style: 'destructive',
+                            onPress: onEliminar,
+                          },
+                        ]
+                      ),
+                  },
                   { text: 'Cancelar', style: 'cancel' },
                 ])
               }
