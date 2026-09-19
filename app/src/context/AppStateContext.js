@@ -7,6 +7,7 @@ import {
   obtenerPlantasAPI,
 } from '../services/api';
 import { useAuth } from './AuthContext';
+import { illustrations } from '../constants/images';
 
 const AppStateContext = createContext(null);
 
@@ -59,7 +60,7 @@ export function AppStateProvider({ children }) {
         id: p._id,
         nombreComun: p.nombreComun,
         nombreCientifico: p.nombreCientifico,
-        foto: p.fotoUri ? { uri: p.fotoUri } : null,
+        foto: p.fotoUri ? { uri: p.fotoUri } : illustrations.escanearEjemplo,
         luzIdeal: p.luzIdeal,
         temperaturaIdeal: p.temperaturaIdeal,
         umbralHumedadMinimo: p.umbralHumedadMinimo,
