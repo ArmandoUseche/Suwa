@@ -41,6 +41,7 @@ async function registro(req, res) {
         id: usuario._id,
         nombre: usuario.nombre,
         apellidos: usuario.apellidos,
+        usuario: usuario.usuario,
         correoOTelefono: usuario.correoOTelefono,
       },
     });
@@ -75,10 +76,56 @@ async function login(req, res) {
         id: usuario._id,
         nombre: usuario.nombre,
         apellidos: usuario.apellidos,
+        usuario: usuario.usuario,
         correoOTelefono: usuario.correoOTelefono,
       },
     });
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+
+}
+
+async function actualizarPerfil(req, res) {
+  try {
+    const { nombre, apellidos, correoOTelefono, usuario } = req.body;
+    const cambios = {};
+    if (typeof nombre === 'string' && nombre.trim()) cambios.nombre = nombre.trim();
+    if (typeof apellidos === 'string' && apellidos.trim()) cambios.apellidos = apellidos.trim();
+    if (typeof correoOTelefono === 'string' && correoOTelefono.trim()) {
+      cambios.correoOTelefono = correoOTelefono.trim();
+    }
+    if (typeof usuario === 'string' && usuario.trim()) {
+      cambios.usuario = usuario.trim().toLowerCase();
+    }
+    if (!Object.keys(cambios).length) {
+      return res.status(400).json({ error: 'Debes proporcionar al menos un dato válido' });
+    }
+    const conflicto = await Usuario.findOne({
+      $or: [
+        ...(cambios.correoOTelefono ? [{ correoOTelefono: cambios.correoOTelefono }] : []),
+        ...(cambios.usuario ? [{ usuario: cambios.usuario }] : []),
+      ],
+      _id: { $ne: req.usuarioId },
+    });
+    if (conflicto) return res.status(409).json({ error: 'El correo o usuario ya está en uso' });
+    const usuarioActualizado = await Usuario.findByIdAndUpdate(
+      req.usuarioId,
+      cambios,
+      { new: true, runValidators: true }
+    );
+    if (!usuarioActualizado) return res.status(404).json({ error: 'Usuario no encontrado' });
+    res.json({
+      usuario: {
+        id: usuarioActualizado._id,
+        nombre: usuarioActualizado.nombre,
+        apellidos: usuarioActualizado.apellidos,
+        correoOTelefono: usuarioActualizado.correoOTelefono,
+        usuario: usuarioActualizado.usuario,
+      },
+    });
+  } catch (error) {
+    if (error.code === 11000) return res.status(409).json({ error: 'El correo o usuario ya está en uso' });
     res.status(500).json({ error: error.message });
   }
 }
@@ -194,4 +241,12 @@ async function nuevaContrasena(req, res) {
   }
 }
 
-module.exports = { registro, login, cambiarContrasena, olvidoContrasena, verificarCodigo, nuevaContrasena };
+module.exports = {
+  registro,
+  login,
+  cambiarContrasena,
+  actualizarPerfil,
+  olvidoContrasena,
+  verificarCodigo,
+  nuevaContrasena,
+};
