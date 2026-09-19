@@ -13,7 +13,13 @@ import { DISPOSITIVO_ID } from '../constants/device';
 import { useAppState } from '../context/AppStateContext';
 import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
-import { activarRiegoAPI, analizarEstadoRiegoAPI, getHistorialSensoresAPI } from '../services/api';
+import {
+  activarRiegoAPI,
+  analizarEstadoRiegoAPI,
+  cancelarRiegoProgramadoAPI,
+  getHistorialSensoresAPI,
+  obtenerRiegoProgramadoAPI,
+} from '../services/api';
 
 function confirmarRiego({ lectura, humedadAlta }, nombrePlanta) {
   if (!humedadAlta) return Promise.resolve(true);
@@ -47,6 +53,7 @@ export default function PlantaDetalleScreen({ route, navigation }) {
   const [regando, setRegando] = useState(false);
   const [lecturas, setLecturas] = useState([]);
   const [cargandoHistorial, setCargandoHistorial] = useState(false);
+  const [programacionActual, setProgramacionActual] = useState(null);
 
   // Resguardo: esta pantalla solo debería alcanzarse con al menos una
   // planta ya cargada (se llega desde un item de la lista de Mis
@@ -71,6 +78,24 @@ export default function PlantaDetalleScreen({ route, navigation }) {
       })
       .finally(() => {
         if (activo) setCargandoHistorial(false);
+      });
+    return () => {
+      activo = false;
+    };
+  }, [planta?.enMonitoreo]);
+
+  useEffect(() => {
+    if (!planta?.enMonitoreo) {
+      setProgramacionActual(null);
+      return undefined;
+    }
+    let activo = true;
+    obtenerRiegoProgramadoAPI(DISPOSITIVO_ID)
+      .then((res) => {
+        if (activo) setProgramacionActual(res.data || null);
+      })
+      .catch(() => {
+        if (activo) setProgramacionActual(null);
       });
     return () => {
       activo = false;
@@ -157,6 +182,16 @@ export default function PlantaDetalleScreen({ route, navigation }) {
 
   };
 
+  const cancelarRiegoProgramado = async () => {
+    try {
+      await cancelarRiegoProgramadoAPI(DISPOSITIVO_ID);
+      setProgramacionActual(null);
+      Alert.alert('Programación cancelada', 'El riego diario fue cancelado.');
+    } catch (error) {
+      Alert.alert('No se pudo cancelar', 'Intenta nuevamente en unos momentos.');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView
@@ -222,6 +257,14 @@ export default function PlantaDetalleScreen({ route, navigation }) {
                 style={styles.actionButton}
               />
             </View>
+            {programacionActual && (
+              <PressableScale onPress={cancelarRiegoProgramado} style={styles.programacionActiva}>
+                <Text style={styles.programacionTexto}>
+                  Riego diario a las {String(programacionActual.hora).padStart(2, '0')}:
+                  {String(programacionActual.minuto).padStart(2, '0')} · Toca para cancelar
+                </Text>
+              </PressableScale>
+            )}
 
             <View style={styles.humedadBlock}>
               <Text style={styles.humedadLabel}>
@@ -285,6 +328,8 @@ export default function PlantaDetalleScreen({ route, navigation }) {
         visible={showProgramarRiego}
         onClose={() => setShowProgramarRiego(false)}
         nombrePlanta={planta.nombreComun}
+        programacionActual={programacionActual}
+        onGuardado={setProgramacionActual}
       />
     </View>
   );
@@ -390,6 +435,18 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     paddingHorizontal: spacing.lg,
     marginTop: spacing.lg,
+  },
+  programacionActiva: {
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    backgroundColor: colors.surface,
+  },
+  programacionTexto: {
+    ...typography.caption,
+    color: colors.primary,
+    textAlign: 'center',
   },
   actionButton: {
     flex: 1,

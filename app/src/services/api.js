@@ -89,6 +89,55 @@ export const activarRiegoAPI = async (dispositivoId, duracionSegundos = 10) => {
 export const getHistorialRiegoAPI = (dispositivoId) =>
   api.get(`/api/riego/${dispositivoId}/historial`);
 
+const enviarProgramacionLocal = (datos) =>
+  axios.post(`${LOCAL_RIEGO_URL}/api/riego/programado`, datos, { timeout: 5000 });
+
+export const programarRiegoAPI = async (datos) => {
+  if (USAR_BACKEND_LOCAL) return api.post('/api/riego/programado', datos);
+
+  const [renderResult, localResult] = await Promise.allSettled([
+    api.post('/api/riego/programado', datos),
+    enviarProgramacionLocal(datos),
+  ]);
+  if (localResult.status === 'rejected') {
+    const error = new Error('No se pudo entregar la programación al backend local que consulta el kit.');
+    error.code = 'BACKEND_LOCAL_NO_DISPONIBLE';
+    error.causa = localResult.reason;
+    throw error;
+  }
+  return renderResult.status === 'fulfilled' ? renderResult.value : localResult.value;
+};
+
+export const obtenerRiegoProgramadoAPI = async (dispositivoId) => {
+  if (USAR_BACKEND_LOCAL) {
+    return api.get(`/api/riego/programado/${dispositivoId}`);
+  }
+
+  const [renderResult, localResult] = await Promise.allSettled([
+    api.get(`/api/riego/programado/${dispositivoId}`),
+    axios.get(`${LOCAL_RIEGO_URL}/api/riego/programado/${dispositivoId}`, { timeout: 5000 }),
+  ]);
+  if (renderResult.status === 'fulfilled') return renderResult.value;
+  if (localResult.status === 'fulfilled') return localResult.value;
+  throw renderResult.reason || localResult.reason;
+};
+
+export const cancelarRiegoProgramadoAPI = async (dispositivoId) => {
+  if (USAR_BACKEND_LOCAL) return api.delete(`/api/riego/programado/${dispositivoId}`);
+
+  const [renderResult, localResult] = await Promise.allSettled([
+    api.delete(`/api/riego/programado/${dispositivoId}`),
+    axios.delete(`${LOCAL_RIEGO_URL}/api/riego/programado/${dispositivoId}`, { timeout: 5000 }),
+  ]);
+  if (localResult.status === 'rejected') {
+    const error = new Error('No se pudo cancelar la programación en el backend local.');
+    error.code = 'BACKEND_LOCAL_NO_DISPONIBLE';
+    error.causa = localResult.reason;
+    throw error;
+  }
+  return renderResult.status === 'fulfilled' ? renderResult.value : localResult.value;
+};
+
 // ── ALERTAS ──
 export const getAlertasAPI = (dispositivoId) =>
   api.get(`/api/alertas/${dispositivoId}`);

@@ -11,6 +11,7 @@ const alertaRoutes = require('./routes/alertaRoutes');
 const authRoutes = require('./routes/authRoutes');
 const escaneoRoutes = require('./routes/escaneoRoutes');
 const plantaRoutes = require('./routes/plantaRoutes');
+const { procesarRiegosProgramados } = require('./controllers/riegoController');
 
 const app = express();
 const server = http.createServer(app);
@@ -47,5 +48,10 @@ const PORT = process.env.PORT || 3000;
 connectDB().then(() => {
   server.listen(PORT, '0.0.0.0', () => {
     console.log(`SUWA backend escuchando en todas las interfaces de red en el puerto ${PORT}`);
+    setInterval(() => {
+      procesarRiegosProgramados().catch((error) => {
+        console.error('Error procesando riegos programados:', error.message);
+      });
+    }, 30000);
   });
 });

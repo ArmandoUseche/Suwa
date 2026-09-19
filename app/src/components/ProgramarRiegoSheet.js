@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Platform, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -8,6 +8,8 @@ import PressableScale from './PressableScale';
 import { PrimaryButton } from './Buttons';
 import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
+import { programarRiegoAPI } from '../services/api';
+import { DISPOSITIVO_ID } from '../constants/device';
 
 // Modal de "Programar riego" (Paso 7, se abre desde el detalle de una
 // planta). Chrome (header, botón, tipografía) con la estética SUWA de
@@ -15,19 +17,54 @@ import { moderateScale } from '../utils/responsive';
 // (@react-native-community/datetimepicker) -- construir una rueda de
 // hora propia desde cero es mucho trabajo para algo que el picker
 // nativo ya resuelve bien y de forma accesible.
-export default function ProgramarRiegoSheet({ visible, onClose, nombrePlanta }) {
+export default function ProgramarRiegoSheet({
+  visible,
+  onClose,
+  nombrePlanta,
+  programacionActual,
+  onGuardado,
+}) {
   const insets = useSafeAreaInsets();
   const [hora, setHora] = useState(new Date());
+  const [guardando, setGuardando] = useState(false);
+
+  useEffect(() => {
+    if (!visible || !programacionActual) return;
+    const fecha = new Date();
+    fecha.setHours(programacionActual.hora, programacionActual.minuto, 0, 0);
+    setHora(fecha);
+  }, [visible, programacionActual]);
 
   if (!visible) return null;
 
-  const handleGuardar = () => {
-    // Mock -- todavía no hay endpoint para programar riegos (no está en
-    // el contrato de API original). Cuando exista, acá se manda `hora`
-    // al backend en vez de solo mostrar la confirmación.
+  const handleGuardar = async () => {
     const horaTexto = hora.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
-    onClose();
-    Alert.alert('Riego programado', `${nombrePlanta} se va a regar todos los días a las ${horaTexto}.`);
+    const ahora = new Date();
+    const proxima = new Date(ahora);
+    proxima.setHours(hora.getHours(), hora.getMinutes(), 0, 0);
+    if (proxima <= ahora) proxima.setDate(proxima.getDate() + 1);
+
+    setGuardando(true);
+    try {
+      await programarRiegoAPI({
+        dispositivoId: DISPOSITIVO_ID,
+        hora: hora.getHours(),
+        minuto: hora.getMinutes(),
+        proximaEjecucion: proxima.toISOString(),
+      });
+      onGuardado?.({ hora: hora.getHours(), minuto: hora.getMinutes() });
+      onClose();
+      Alert.alert('Riego programado', `${nombrePlanta} se regará todos los días a las ${horaTexto}.`);
+    } catch (error) {
+      Alert.alert(
+        'No se pudo programar el riego',
+        error.code === 'BACKEND_LOCAL_NO_DISPONIBLE'
+          ? 'No se pudo comunicar con el backend local que consulta la placa.'
+          : 'Intenta nuevamente en unos momentos.'
+      );
+    } finally {
+      setGuardando(false);
+    }
   };
 
   return (
@@ -56,7 +93,12 @@ export default function ProgramarRiegoSheet({ visible, onClose, nombrePlanta }) 
           />
         </View>
 
-        <PrimaryButton label="Guardar" onPress={handleGuardar} style={styles.saveButton} />
+        <PrimaryButton
+          label={guardando ? 'Guardando...' : 'Guardar'}
+          onPress={handleGuardar}
+          disabled={guardando}
+          style={styles.saveButton}
+        />
       </View>
     </View>
   );
