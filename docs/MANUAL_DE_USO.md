@@ -16,6 +16,7 @@ La aplicación permite:
 - Guardar y consultar las plantas del usuario.
 - Seleccionar una planta para monitoreo.
 - Consultar humedad del suelo, temperatura y humedad ambiental.
+- Consultar el porcentaje estimado de agua disponible en el depósito.
 - Activar un riego manual.
 - Programar un riego diario.
 - Consultar el historial.
@@ -156,8 +157,15 @@ En **Monitoreo** se muestran:
 - Humedad del suelo.
 - Temperatura.
 - Humedad ambiental.
+- Nivel estimado de agua del depósito.
 - Estado general de la planta.
 - Estado de conexión del kit.
+
+El nivel se calcula con el sensor ultrasónico situado sobre el depósito. Para
+la configuración actual, el sensor está aproximadamente a 30 cm del fondo y
+el recipiente tiene 15 cm de altura. Por eso, una lectura cercana a 100%
+corresponde a un depósito lleno y una cercana a 0% a un depósito vacío. Es
+una estimación y puede variar si cambia la posición del sensor.
 
 La aplicación consulta la lectura más reciente disponible. En una demostración
 local puede consultar el backend remoto y el backend local, y seleccionar la
@@ -238,4 +246,3 @@ preparado para `soporte@suwa.app`.
 3. Detener la aplicación Expo.
 4. Detener el backend con `Ctrl+C`.
 5. Desconectar la placa si no se va a utilizar.
-

@@ -4,6 +4,7 @@ const lecturaSensorSchema = new mongoose.Schema({
   humedadSuelo: { type: Number, required: true }, // %
   temperatura: { type: Number, required: true },  // °C
   humedadAmbiente: { type: Number, required: true }, // %
+  nivelAgua: { type: Number, min: 0, max: 100 }, // %
   dispositivoId: { type: String, required: true },
   timestamp: { type: Date, default: Date.now },
 });

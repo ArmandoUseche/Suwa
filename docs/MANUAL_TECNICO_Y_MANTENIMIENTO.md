@@ -428,9 +428,10 @@ GET /api/riego/comando-pendiente/suwa-kit-01
 - Las preferencias de notificaciones de la aplicación no son push
   notifications del sistema operativo.
 - El nivel de agua enciende un LED, pero todavía no genera una alerta
-  persistente ni bloquea automáticamente la bomba.
+- se calcula con el ultrasónico usando un sensor situado a 30 cm del fondo y
+  un recipiente de 15 cm; se envía como `nivelAgua` y genera alerta cuando
+  baja a 20% o menos. El nivel no bloquea automáticamente la bomba.
 - Los endpoints de sensores y alertas se identifican por dispositivo y deben
   protegerse adicionalmente si el sistema se expone a redes no confiables.
 - La aplicación consulta algunas operaciones del kit local y otras del
   backend remoto; la IP local debe estar actualizada durante las demos.
-
