@@ -163,7 +163,7 @@ En **Monitoreo** se muestran:
 
 El nivel se calcula con el sensor ultrasónico situado sobre el depósito. Para
 la configuración actual, el sensor está aproximadamente a 30 cm del fondo y
-el recipiente tiene 12 cm de altura. Por eso, una lectura cercana a 100%
+el recipiente tiene 15 cm de altura. Por eso, una lectura cercana a 100%
 corresponde a un depósito lleno y una cercana a 0% a un depósito vacío. Es
 una estimación y puede variar si cambia la posición del sensor.
 
