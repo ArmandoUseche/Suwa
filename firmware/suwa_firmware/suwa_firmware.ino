@@ -65,7 +65,7 @@ const int PIN_HUMEDAD_SUELO = A0;
 const int CRUDO_SECO = 1023;
 const int CRUDO_HUMEDO = 450;
 const float ALTURA_SENSOR_SUELO_CM = 30.0;
-const float ALTURA_RECIPIENTE_CM = 15.0;
+const float ALTURA_RECIPIENTE_CM = 12.0;
 const int UMBRAL_NIVEL_AGUA_BAJO = 20;
 
 // Umbral de humedad (%) por debajo del cual se activa el riego
