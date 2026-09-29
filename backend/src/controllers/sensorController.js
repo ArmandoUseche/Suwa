@@ -5,13 +5,7 @@ const UMBRAL_ANOMALIA_HUMEDAD = 5; // % - por debajo de esto se considera lectur
 
 async function registrarLectura(req, res) {
   try {
-    const {
-      humedadSuelo,
-      temperatura,
-      humedadAmbiente,
-      nivelAgua,
-      dispositivoId,
-    } = req.body;
+    const { humedadSuelo, temperatura, humedadAmbiente, dispositivoId } = req.body;
 
     if (
       humedadSuelo === undefined ||
@@ -26,7 +20,6 @@ async function registrarLectura(req, res) {
       humedadSuelo,
       temperatura,
       humedadAmbiente,
-      ...(nivelAgua !== undefined ? { nivelAgua } : {}),
       dispositivoId,
     });
 
@@ -35,24 +28,6 @@ async function registrarLectura(req, res) {
       const alerta = await Alerta.create({
         tipo: 'lectura_anomala',
         mensaje: `Humedad de suelo anómalamente baja (${humedadSuelo}%)`,
-        dispositivoId,
-      });
-      req.app.get('io').emit('nueva_alerta', alerta);
-    }
-
-    const alertaAguaReciente = Number.isFinite(Number(nivelAgua))
-      && Number(nivelAgua) <= 20
-      ? await Alerta.findOne({
-        tipo: 'nivel_agua_bajo',
-        dispositivoId,
-        timestamp: { $gte: new Date(Date.now() - 10 * 60 * 1000) },
-      })
-      : null;
-
-    if (Number.isFinite(Number(nivelAgua)) && Number(nivelAgua) <= 20 && !alertaAguaReciente) {
-      const alerta = await Alerta.create({
-        tipo: 'nivel_agua_bajo',
-        mensaje: `Nivel de agua bajo (${nivelAgua}%). Rellena el depósito pronto.`,
         dispositivoId,
       });
       req.app.get('io').emit('nueva_alerta', alerta);

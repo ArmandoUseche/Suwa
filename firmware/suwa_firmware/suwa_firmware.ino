@@ -64,9 +64,6 @@ const int PIN_BOMBA = 7;
 const int PIN_HUMEDAD_SUELO = A0;
 const int CRUDO_SECO = 1023;
 const int CRUDO_HUMEDO = 450;
-const float ALTURA_SENSOR_SUELO_CM = 30.0;
-const float ALTURA_RECIPIENTE_CM = 15.0;
-const int UMBRAL_NIVEL_AGUA_BAJO = 20;
 
 // Umbral de humedad (%) por debajo del cual se activa el riego
 // automático. Ya NO es fijo -- arranca en 30% (mismo default que el
@@ -511,21 +508,15 @@ void cicloDeSensoresYRiegoAutomatico() {
   int humedadSueloPorcentaje = convertirHumedadAPorcentaje(valorCrudoSuelo);
   ultimaHumedadSueloPorcentaje = humedadSueloPorcentaje;
 
-  int nivelAguaPorcentaje = medirNivelDeAgua();
+  medirNivelDeAgua();
   controlarRiegoAutomatico(humedadSueloPorcentaje);
 
   Serial.println("--- Lectura actual ---");
   Serial.print("Temperatura: "); Serial.println(temperatura);
   Serial.print("Humedad ambiente: "); Serial.println(humedadAmbiente);
   Serial.print("Humedad suelo (%): "); Serial.println(humedadSueloPorcentaje);
-  Serial.print("Nivel de agua (%): "); Serial.println(nivelAguaPorcentaje);
 
-  enviarLecturaAlBackend(
-    temperatura,
-    humedadAmbiente,
-    humedadSueloPorcentaje,
-    nivelAguaPorcentaje
-  );
+  enviarLecturaAlBackend(temperatura, humedadAmbiente, humedadSueloPorcentaje);
 }
 
 void controlarRiegoAutomatico(int humedadPorcentaje) {
@@ -547,23 +538,19 @@ void controlarRiegoAutomatico(int humedadPorcentaje) {
   }
 }
 
-int medirNivelDeAgua() {
+void medirNivelDeAgua() {
   digitalWrite(TRIG, HIGH);
   delay(1);
   digitalWrite(TRIG, LOW);
-  unsigned long duracion = pulseIn(ECO, HIGH, 30000);
+  int duracion = pulseIn(ECO, HIGH);
 
   if (duracion == 0) {
     digitalWrite(LED, LOW);
-    return -1;
+    return;
   }
 
-  float distanciaCm = duracion / 58.2;
-  int nivel = (int)(((ALTURA_SENSOR_SUELO_CM - distanciaCm)
-    / (ALTURA_SENSOR_SUELO_CM - ALTURA_RECIPIENTE_CM)) * 100.0);
-  nivel = constrain(nivel, 0, 100);
-  digitalWrite(LED, nivel <= UMBRAL_NIVEL_AGUA_BAJO ? HIGH : LOW);
-  return nivel;
+  int distanciaCm = duracion / 58.2;
+  digitalWrite(LED, (distanciaCm >= 0 && distanciaCm <= 20) ? HIGH : LOW);
 }
 
 void consultarYEjecutarRiegoManual() {
@@ -678,12 +665,7 @@ String leerCuerpoDeRespuesta() {
   return cuerpo;
 }
 
-void enviarLecturaAlBackend(
-  float temperatura,
-  float humedadAmbiente,
-  int humedadSuelo,
-  int nivelAgua
-) {
+void enviarLecturaAlBackend(float temperatura, float humedadAmbiente, int humedadSuelo) {
   if (!client.connect(servidorHost.c_str(), SERVER_PORT)) {
     reportarError("BACKEND", "no se pudo conectar (envío de lectura)");
     return;
@@ -693,9 +675,6 @@ void enviarLecturaAlBackend(
   doc["humedadSuelo"] = humedadSuelo;
   doc["temperatura"] = temperatura;
   doc["humedadAmbiente"] = humedadAmbiente;
-  if (nivelAgua >= 0) {
-    doc["nivelAgua"] = nivelAgua;
-  }
   doc["dispositivoId"] = DISPOSITIVO_ID;
 
   String cuerpo;

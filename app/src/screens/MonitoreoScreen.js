@@ -52,13 +52,6 @@ function estadoHumedadAmbiente(valor) {
   return 'Buena';
 }
 
-function estadoNivelAgua(valor) {
-  if (!Number.isFinite(Number(valor))) return 'Sin lectura';
-  if (Number(valor) <= 20) return 'Bajo';
-  if (Number(valor) >= 70) return 'Adecuado';
-  return 'Medio';
-}
-
 function confirmarRiego({ lectura, humedadAlta }, nombrePlanta) {
   if (!humedadAlta) return Promise.resolve(true);
 
@@ -287,12 +280,6 @@ function ConDispositivo({ navigation }) {
             value={lectura.humedadAmbiente}
             unit="%"
             status={estadoHumedadAmbiente(lectura.humedadAmbiente)}
-          />
-          <StatChip
-            icon={icons.gotaAgua}
-            value={Number.isFinite(Number(lectura.nivelAgua)) ? lectura.nivelAgua : '--'}
-            unit="%"
-            status={estadoNivelAgua(lectura.nivelAgua)}
           />
         </View>
 

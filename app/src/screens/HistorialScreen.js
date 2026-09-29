@@ -231,7 +231,6 @@ function agruparLecturas(lecturas, periodo) {
     humedadSuelo: promedio(valores, 'humedadSuelo'),
     temperatura: promedio(valores, 'temperatura'),
     humedadAmbiente: promedio(valores, 'humedadAmbiente'),
-    nivelAgua: promedioOpcional(valores, 'nivelAgua'),
   }));
 }
 
@@ -262,18 +261,12 @@ function promedio(valores, campo) {
   return Math.round(numeros.reduce((total, valor) => total + valor, 0) / numeros.length);
 }
 
-function promedioOpcional(valores, campo) {
-  const numeros = valores.map((valor) => Number(valor[campo])).filter(Number.isFinite);
-  if (numeros.length === 0) return null;
-  return Math.round(numeros.reduce((total, valor) => total + valor, 0) / numeros.length);
-}
-
 function construirRegistros(lecturas, riegos) {
   const registrosLecturas = lecturas.slice(0, 10).map((lectura) => ({
     id: `lectura-${lectura._id}`,
     tipo: 'alerta',
     titulo: 'Lectura registrada',
-    descripcion: `Humedad del suelo: ${lectura.humedadSuelo}%${Number.isFinite(Number(lectura.nivelAgua)) ? ` · Agua: ${lectura.nivelAgua}%` : ''}`,
+    descripcion: `Humedad del suelo: ${lectura.humedadSuelo}%`,
     horaTexto: formatearHora(lectura.timestamp),
     horaTimestamp: new Date(lectura.timestamp).getTime(),
   }));
