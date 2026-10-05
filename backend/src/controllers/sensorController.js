@@ -22,6 +22,27 @@ async function registrarLectura(req, res) {
       return res.status(400).json({ error: 'Faltan campos requeridos' });
     }
 
+    const valoresPorcentaje = [
+      ['humedadSuelo', humedadSuelo],
+      ['humedadAmbiente', humedadAmbiente],
+      ['nivelAgua', nivelAgua],
+    ];
+    const porcentajeInvalido = valoresPorcentaje.find(([, valor]) => (
+      valor !== undefined
+      && (!Number.isFinite(Number(valor)) || Number(valor) < 0 || Number(valor) > 100)
+    ));
+    if (porcentajeInvalido) {
+      return res.status(400).json({
+        error: `${porcentajeInvalido[0]} debe estar entre 0 y 100`,
+      });
+    }
+
+    if (!Number.isFinite(Number(temperatura)) || Number(temperatura) < -50 || Number(temperatura) > 80) {
+      return res.status(400).json({
+        error: 'temperatura debe estar entre -50 y 80 °C',
+      });
+    }
+
     const lectura = await LecturaSensor.create({
       humedadSuelo,
       temperatura,
