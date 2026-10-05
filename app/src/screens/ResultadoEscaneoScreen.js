@@ -164,11 +164,17 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
             <View style={styles.nameBlock}>
               <Text style={styles.nombreComun}>{identificacion.nombreComun}</Text>
               <Text style={styles.nombreCientifico}>{identificacion.nombreCientifico}</Text>
-              <View style={styles.coincidenciaPill}>
-                <Text style={styles.coincidenciaText}>
-                  {identificacion.coincidencia}% de coincidencia
-                </Text>
-              </View>
+              {Number.isFinite(Number(identificacion.coincidencia)) ? (
+                <View style={styles.coincidenciaPill}>
+                  <Text style={styles.coincidenciaText}>
+                    {identificacion.coincidencia}% de coincidencia
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.coincidenciaPill}>
+                  <Text style={styles.coincidenciaText}>Nombre ingresado manualmente</Text>
+                </View>
+              )}
             </View>
 
             <Text style={styles.statsTitle}>Parámetros óptimos para esta planta</Text>
