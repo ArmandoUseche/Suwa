@@ -6,7 +6,7 @@ import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
 
 const OPCIONES_INICIALES = [
-  { key: 'riego', label: 'Alertas de riego', descripcion: 'Cuando el kit riegue automáticamente.' },
+  { key: 'riego', label: 'Riego y depósito', descripcion: 'Riego automático o nivel bajo de agua.' },
   { key: 'humedad', label: 'Humedad baja', descripcion: 'Cuando el suelo esté por debajo del umbral.' },
   { key: 'sistema', label: 'Alertas del sistema', descripcion: 'Fallas del kit o pérdida de conexión.' },
 ];

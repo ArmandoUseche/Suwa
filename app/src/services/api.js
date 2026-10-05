@@ -130,8 +130,26 @@ export const analizarEstadoRiegoAPI = async (dispositivoId, umbralHumedadMinimo)
   };
 };
 
-export const getHistorialSensoresAPI = (dispositivoId) =>
-  api.get(`/api/sensores/${dispositivoId}`);
+export const getHistorialSensoresAPI = async (dispositivoId) => {
+  if (USAR_BACKEND_LOCAL) {
+    return api.get(`/api/sensores/${dispositivoId}`);
+  }
+
+  const [remoto, local] = await Promise.allSettled([
+    api.get(`/api/sensores/${dispositivoId}`),
+    consultarBackendLocal(`/api/sensores/${dispositivoId}`, 'get'),
+  ]);
+
+  if (
+    local.status === 'fulfilled'
+    && Array.isArray(local.value.data)
+    && local.value.data.length > 0
+  ) {
+    return local.value;
+  }
+  if (remoto.status === 'fulfilled') return remoto.value;
+  throw local.status === 'rejected' ? local.reason : remoto.reason;
+};
 
 // ── RIEGO ──
 export const activarRiegoAPI = async (dispositivoId, duracionSegundos = 10) => {
@@ -159,8 +177,26 @@ export const activarRiegoAPI = async (dispositivoId, duracionSegundos = 10) => {
   return renderResult.status === 'fulfilled' ? renderResult.value : localResult.value;
 };
 
-export const getHistorialRiegoAPI = (dispositivoId) =>
-  api.get(`/api/riego/${dispositivoId}/historial`);
+export const getHistorialRiegoAPI = async (dispositivoId) => {
+  if (USAR_BACKEND_LOCAL) {
+    return api.get(`/api/riego/${dispositivoId}/historial`);
+  }
+
+  const [remoto, local] = await Promise.allSettled([
+    api.get(`/api/riego/${dispositivoId}/historial`),
+    consultarBackendLocal(`/api/riego/${dispositivoId}/historial`, 'get'),
+  ]);
+
+  if (
+    local.status === 'fulfilled'
+    && Array.isArray(local.value.data)
+    && local.value.data.length > 0
+  ) {
+    return local.value;
+  }
+  if (remoto.status === 'fulfilled') return remoto.value;
+  throw local.status === 'rejected' ? local.reason : remoto.reason;
+};
 
 const enviarProgramacionLocal = (datos) =>
   consultarBackendLocal('/api/riego/programado', 'post', datos);
