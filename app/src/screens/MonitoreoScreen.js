@@ -20,7 +20,12 @@ import { useAppState } from '../context/AppStateContext';
 import { useAuth } from '../context/AuthContext';
 import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
-import { activarRiegoAPI, analizarEstadoRiegoAPI, getUltimaLecturaAPI } from '../services/api';
+import {
+  activarRiegoAPI,
+  analizarEstadoRiegoAPI,
+  esperarConfirmacionRiegoAPI,
+  getUltimaLecturaAPI,
+} from '../services/api';
 
 const PLANT_PHOTO_SIZE = EMPTY_STATE_IMAGE_SIZE;
 
@@ -216,8 +221,15 @@ function ConDispositivo({ navigation }) {
       );
       const continuar = await confirmarRiego(analisis, planta.nombreComun);
       if (!continuar) return;
+      const desdeTimestamp = Date.now();
       await activarRiegoAPI(DISPOSITIVO_ID, 10);
-      Alert.alert('Riego activado', 'La orden de riego manual se envió al kit.');
+      const evento = await esperarConfirmacionRiegoAPI(DISPOSITIVO_ID, desdeTimestamp);
+      Alert.alert(
+        evento ? 'Riego ejecutado' : 'Orden enviada',
+        evento
+          ? 'El kit confirmó que la bomba terminó el riego.'
+          : 'La orden llegó al backend, pero el kit no confirmó el riego dentro del tiempo esperado.'
+      );
     } catch (error) {
       const mensaje = error.code === 'LECTURA_KIT_DESACTUALIZADA'
         ? 'No hay una lectura reciente del kit. Espera unos segundos y vuelve a intentarlo.'

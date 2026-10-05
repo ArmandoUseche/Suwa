@@ -17,6 +17,7 @@ import {
   activarRiegoAPI,
   analizarEstadoRiegoAPI,
   cancelarRiegoProgramadoAPI,
+  esperarConfirmacionRiegoAPI,
   getHistorialSensoresAPI,
   obtenerRiegoProgramadoAPI,
 } from '../services/api';
@@ -163,8 +164,15 @@ export default function PlantaDetalleScreen({ route, navigation }) {
       );
       const continuar = await confirmarRiego(analisis, planta.nombreComun);
       if (!continuar) return;
+      const desdeTimestamp = Date.now();
       await activarRiegoAPI(DISPOSITIVO_ID, 10);
-      Alert.alert('Riego activado', `La orden de riego de ${planta.nombreComun} se envió al kit.`);
+      const evento = await esperarConfirmacionRiegoAPI(DISPOSITIVO_ID, desdeTimestamp);
+      Alert.alert(
+        evento ? 'Riego ejecutado' : 'Orden enviada',
+        evento
+          ? `El kit confirmó que ${planta.nombreComun} recibió el riego.`
+          : 'La orden llegó al backend, pero el kit no confirmó el riego dentro del tiempo esperado.'
+      );
     } catch (error) {
       const mensaje = error.code === 'LECTURA_KIT_DESACTUALIZADA'
         ? 'No hay una lectura reciente del kit. Espera unos segundos y vuelve a intentarlo.'

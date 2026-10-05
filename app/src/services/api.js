@@ -215,6 +215,29 @@ export const getHistorialRiegoAPI = async (dispositivoId) => {
   throw local.status === 'rejected' ? local.reason : remoto.reason;
 };
 
+export const esperarConfirmacionRiegoAPI = async (
+  dispositivoId,
+  desdeTimestamp,
+  timeoutMs = 20000
+) => {
+  const inicio = Date.now();
+  while (Date.now() - inicio < timeoutMs) {
+    try {
+      const respuesta = await getHistorialRiegoAPI(dispositivoId);
+      const evento = (Array.isArray(respuesta.data) ? respuesta.data : []).find((item) => {
+        const timestamp = new Date(item.timestamp).getTime();
+        return Number.isFinite(timestamp) && timestamp >= desdeTimestamp;
+      });
+      if (evento) return evento;
+    } catch (error) {
+      // La orden ya fue enviada; un fallo temporal al consultar el historial
+      // no debe convertir una ejecución posible en un error falso.
+    }
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+  }
+  return null;
+};
+
 const enviarProgramacionLocal = (datos) =>
   consultarBackendLocal('/api/riego/programado', 'post', datos);
 
