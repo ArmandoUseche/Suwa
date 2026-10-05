@@ -162,7 +162,7 @@ En **Monitoreo** se muestran:
 - Estado de conexión del kit.
 
 El nivel se calcula con el sensor ultrasónico situado sobre el depósito. Para
-la configuración actual, el sensor está aproximadamente a 30 cm del fondo y
+La configuración actual, el sensor está aproximadamente a 21,5 cm del fondo y
 el recipiente tiene 12 cm de altura. Por eso, una lectura cercana a 100%
 corresponde a un depósito lleno y una cercana a 0% a un depósito vacío. Es
 una estimación y puede variar si cambia la posición del sensor.

@@ -64,7 +64,7 @@ const int PIN_BOMBA = 7;
 const int PIN_HUMEDAD_SUELO = A0;
 const int CRUDO_SECO = 1023;
 const int CRUDO_HUMEDO = 450;
-const float ALTURA_SENSOR_SUELO_CM = 30.0;
+const float ALTURA_SENSOR_SUELO_CM = 21.5;
 const float ALTURA_RECIPIENTE_CM = 12.0;
 const int UMBRAL_NIVEL_AGUA_BAJO = 20;
 
