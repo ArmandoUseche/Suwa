@@ -9,6 +9,10 @@ const plantaSchema = new mongoose.Schema({
   luzIdeal: { type: String, default: null },
   temperaturaIdeal: { type: Number, default: null },
   umbralHumedadMinimo: { type: Number, default: 30 },
+  pulsoRiegoSegundos: { type: Number, default: 3, min: 1, max: 10 },
+  pausaAbsorcionSegundos: { type: Number, default: 20, min: 10, max: 120 },
+  maxPulsosRiego: { type: Number, default: 3, min: 1, max: 10 },
+  tiempoMaximoRiegoSegundos: { type: Number, default: 90, min: 1, max: 120 },
   enMonitoreo: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 });

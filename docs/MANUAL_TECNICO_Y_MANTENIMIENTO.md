@@ -177,6 +177,26 @@ El relé es activo en bajo:
 | Comprobación Wi-Fi | 5 segundos |
 | Resumen de diagnóstico | 60 segundos |
 
+### 7.2.1 Riego automático por pulsos
+
+La configuración de riego se obtiene desde la planta vinculada al dispositivo
+mediante `GET /api/plantas/dispositivo/:dispositivoId`. El firmware conserva
+valores predeterminados para instalaciones existentes y limita cada parámetro
+antes de utilizarlo:
+
+| Parámetro | Predeterminado | Rango |
+|---|---:|---:|
+| `pulsoRiegoSegundos` | 3 s | 1–10 s |
+| `pausaAbsorcionSegundos` | 20 s | 10–120 s |
+| `maxPulsosRiego` | 3 | 1–10 |
+| `tiempoMaximoRiegoSegundos` | 90 s | 1–120 s |
+
+El ciclo no usa una espera bloqueante: enciende la bomba durante el pulso,
+la apaga durante la absorción y vuelve a comprobar la última humedad medida.
+También se registra la duración acumulada de los pulsos cuando el ciclo
+termina. El nivel bajo del depósito continúa siendo una alerta y no bloquea
+el riego.
+
 ### 7.3 Subir una versión del firmware
 
 1. Abrir el archivo `.ino` en Arduino IDE.

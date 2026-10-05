@@ -18,12 +18,8 @@ const OPCIONES_LUZ = ['Baja', 'Media', 'Alta'];
 // inventar componentes nuevos (inputs de texto ya existentes +
 // selector tipo chip como el de Historial).
 //
-// El contrato de API original solo tiene `umbralHumedadMinimo` (un
-// número) en el modelo Planta -- acá se editan 3 valores porque son
-// los que ya veníamos mostrando (humedad/temperatura/luz ideal, los
-// que calcula Gemini). Si el backend termina guardando menos de estos
-// 3 campos, es sacar el que sobre del formulario, no rehacerlo (ver
-// puntos-abiertos-backend.md, punto 2).
+// Además de las condiciones ambientales, esta pantalla configura la
+// estrategia segura de riego por pulsos específica de cada planta.
 export default function ConfigurarUmbralesScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
   const { plantaId } = route.params ?? {};
@@ -37,6 +33,10 @@ export default function ConfigurarUmbralesScreen({ route, navigation }) {
   const [humedad, setHumedad] = useState(String(planta?.umbralHumedadMinimo ?? 30));
   const [temperatura, setTemperatura] = useState(String(planta?.temperaturaIdeal ?? ''));
   const [luz, setLuz] = useState(planta?.luzIdeal ?? 'Media');
+  const [pulso, setPulso] = useState(String(planta?.pulsoRiegoSegundos ?? 3));
+  const [pausa, setPausa] = useState(String(planta?.pausaAbsorcionSegundos ?? 20));
+  const [maxPulsos, setMaxPulsos] = useState(String(planta?.maxPulsosRiego ?? 3));
+  const [tiempoMaximo, setTiempoMaximo] = useState(String(planta?.tiempoMaximoRiegoSegundos ?? 90));
   const [guardando, setGuardando] = useState(false);
 
   // Mismo resguardo que en PlantaDetalleScreen: esta pantalla solo
@@ -66,6 +66,18 @@ export default function ConfigurarUmbralesScreen({ route, navigation }) {
       Alert.alert('Valor inválido', 'La temperatura debe estar entre -50 y 80 °C.');
       return;
     }
+    const parametrosRiego = [
+      ['pulso', pulso, 1, 10, 'El pulso debe estar entre 1 y 10 segundos.'],
+      ['pausa', pausa, 10, 120, 'La pausa debe estar entre 10 y 120 segundos.'],
+      ['maxPulsos', maxPulsos, 1, 10, 'Los pulsos deben estar entre 1 y 10.'],
+      ['tiempoMaximo', tiempoMaximo, 1, 120, 'El tiempo máximo debe estar entre 1 y 120 segundos.'],
+    ];
+    for (const [, valor, minimo, maximo, mensaje] of parametrosRiego) {
+      if (!Number.isInteger(Number(valor)) || Number(valor) < minimo || Number(valor) > maximo) {
+        Alert.alert('Valor inválido', mensaje);
+        return;
+      }
+    }
 
     setGuardando(true);
     try {
@@ -73,6 +85,10 @@ export default function ConfigurarUmbralesScreen({ route, navigation }) {
         umbralHumedadMinimo: humedadNumero,
         temperaturaIdeal: temperaturaNumero,
         luzIdeal: luz,
+        pulsoRiegoSegundos: Number(pulso),
+        pausaAbsorcionSegundos: Number(pausa),
+        maxPulsosRiego: Number(maxPulsos),
+        tiempoMaximoRiegoSegundos: Number(tiempoMaximo),
       });
       navigation.goBack();
     } catch (error) {
@@ -139,6 +155,18 @@ export default function ConfigurarUmbralesScreen({ route, navigation }) {
             );
           })}
         </View>
+
+        <Text style={styles.fieldLabel}>Duración de cada pulso (segundos)</Text>
+        <FormTextInput label="Ej: 3" value={pulso} onChangeText={setPulso} keyboardType="numeric" style={styles.input} />
+
+        <Text style={styles.fieldLabel}>Espera de absorción (segundos)</Text>
+        <FormTextInput label="Ej: 20" value={pausa} onChangeText={setPausa} keyboardType="numeric" style={styles.input} />
+
+        <Text style={styles.fieldLabel}>Máximo de pulsos por riego</Text>
+        <FormTextInput label="Ej: 3" value={maxPulsos} onChangeText={setMaxPulsos} keyboardType="numeric" style={styles.input} />
+
+        <Text style={styles.fieldLabel}>Tiempo máximo total (segundos)</Text>
+        <FormTextInput label="Ej: 90" value={tiempoMaximo} onChangeText={setTiempoMaximo} keyboardType="numeric" style={styles.input} />
 
         <PrimaryButton
           label={guardando ? 'Guardando...' : 'Guardar'}

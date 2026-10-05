@@ -73,6 +73,10 @@ const int UMBRAL_NIVEL_AGUA_BAJO = 20;
 // modelo Planta en Mongo) y se actualiza solo desde el backend en
 // consultarUmbralPlanta(), sin necesitar reflashear la placa.
 int umbralHumedadMinimo = 30;
+int pulsoRiegoSegundos = 3;
+int pausaAbsorcionSegundos = 20;
+int maxPulsosRiego = 3;
+int tiempoMaximoRiegoSegundos = 90;
 
 DHT dht(DHT11_PIN, DHT11);
 WiFiClient client;
@@ -94,7 +98,12 @@ const unsigned long INTERVALO_CONSULTA_UMBRAL = 30000;
 
 // ---- Estado del riego automático ----
 bool riegoAutomaticoActivo = false;
+bool riegoAutomaticoEnPausa = false;
 unsigned long inicioRiegoAutomatico = 0;
+unsigned long inicioPulsoRiego = 0;
+unsigned long inicioPausaRiego = 0;
+unsigned long aguaAplicadaRiegoMs = 0;
+int pulsosAplicadosRiego = 0;
 int humedadAlIniciarRiego = 0;
 int ultimaHumedadSueloPorcentaje = 0;
 
@@ -392,6 +401,7 @@ void setup() {
   pinMode(ECO, INPUT);
   pinMode(LED, OUTPUT);
   pinMode(PIN_HUMEDAD_SUELO, INPUT);
+  digitalWrite(PIN_BOMBA, HIGH);
   pinMode(PIN_BOMBA, OUTPUT);
   digitalWrite(PIN_BOMBA, HIGH);
   dht.begin();
@@ -430,8 +440,11 @@ void loop() {
   }
 
   if (WiFi.status() != WL_CONNECTED) {
+    gestionarRiegoAutomatico();
     return;
   }
+
+  gestionarRiegoAutomatico();
 
   if (ahora - ultimoEnvioLecturas >= INTERVALO_ENVIO_LECTURAS) {
     ultimoEnvioLecturas = ahora;
@@ -531,19 +544,77 @@ void cicloDeSensoresYRiegoAutomatico() {
 void controlarRiegoAutomatico(int humedadPorcentaje) {
   bool debeRegar = humedadPorcentaje <= umbralHumedadMinimo;
 
-  if (debeRegar && !riegoAutomaticoActivo) {
+  if (debeRegar && !riegoAutomaticoActivo && !riegoAutomaticoEnPausa) {
     riegoAutomaticoActivo = true;
     inicioRiegoAutomatico = millis();
+    inicioPulsoRiego = inicioRiegoAutomatico;
+    aguaAplicadaRiegoMs = 0;
+    pulsosAplicadosRiego = 1;
     humedadAlIniciarRiego = humedadPorcentaje;
     digitalWrite(PIN_BOMBA, LOW);
-    Serial.println("Riego automático: INICIA");
-  } else if (!debeRegar && riegoAutomaticoActivo) {
-    riegoAutomaticoActivo = false;
+    Serial.println("Riego automático: inicia pulso 1");
+  } else if (riegoAutomaticoEnPausa && !debeRegar) {
+    finalizarRiegoAutomatico("humedad suficiente");
+  }
+}
+
+void finalizarRiegoAutomatico(const char* motivo) {
+  bool habiaRiego = riegoAutomaticoActivo || riegoAutomaticoEnPausa || pulsosAplicadosRiego > 0;
+  if (riegoAutomaticoActivo) {
     digitalWrite(PIN_BOMBA, HIGH);
-    unsigned long duracionMs = millis() - inicioRiegoAutomatico;
-    int duracionSegundos = duracionMs / 1000;
-    Serial.println("Riego automático: TERMINA");
+  }
+  riegoAutomaticoActivo = false;
+  riegoAutomaticoEnPausa = false;
+  if (habiaRiego) {
+    int duracionSegundos = max(1UL, aguaAplicadaRiegoMs / 1000);
+    Serial.print("Riego automático: TERMINA (");
+    Serial.print(motivo);
+    Serial.println(")");
     reportarEventoRiego("automatico", duracionSegundos, humedadAlIniciarRiego);
+  }
+  pulsosAplicadosRiego = 0;
+  aguaAplicadaRiegoMs = 0;
+}
+
+void gestionarRiegoAutomatico() {
+  unsigned long ahora = millis();
+
+  if (riegoAutomaticoActivo) {
+    unsigned long duracionPulso = ahora - inicioPulsoRiego;
+    unsigned long tiempoMaximo = (unsigned long)tiempoMaximoRiegoSegundos * 1000UL;
+    if (
+      duracionPulso >= (unsigned long)pulsoRiegoSegundos * 1000UL
+      || aguaAplicadaRiegoMs + duracionPulso >= tiempoMaximo
+    ) {
+      digitalWrite(PIN_BOMBA, HIGH);
+      aguaAplicadaRiegoMs += duracionPulso;
+      riegoAutomaticoActivo = false;
+      if (aguaAplicadaRiegoMs >= tiempoMaximo || pulsosAplicadosRiego >= maxPulsosRiego) {
+        finalizarRiegoAutomatico("límite de seguridad");
+      } else {
+        riegoAutomaticoEnPausa = true;
+        inicioPausaRiego = ahora;
+        Serial.print("Riego automático: pausa de absorción después del pulso ");
+        Serial.println(pulsosAplicadosRiego);
+      }
+    }
+    return;
+  }
+
+  if (riegoAutomaticoEnPausa && ahora - inicioPausaRiego >= (unsigned long)pausaAbsorcionSegundos * 1000UL) {
+    if (ultimaHumedadSueloPorcentaje > umbralHumedadMinimo) {
+      finalizarRiegoAutomatico("humedad suficiente");
+    } else if (pulsosAplicadosRiego >= maxPulsosRiego) {
+      finalizarRiegoAutomatico("máximo de pulsos");
+    } else {
+      riegoAutomaticoEnPausa = false;
+      riegoAutomaticoActivo = true;
+      inicioPulsoRiego = ahora;
+      pulsosAplicadosRiego++;
+      digitalWrite(PIN_BOMBA, LOW);
+      Serial.print("Riego automático: inicia pulso ");
+      Serial.println(pulsosAplicadosRiego);
+    }
   }
 }
 
@@ -638,6 +709,10 @@ void consultarUmbralPlanta() {
       Serial.print(umbralHumedadMinimo);
       Serial.println("%");
     }
+    if (doc["pulsoRiegoSegundos"].is<int>()) pulsoRiegoSegundos = constrain((int)doc["pulsoRiegoSegundos"], 1, 10);
+    if (doc["pausaAbsorcionSegundos"].is<int>()) pausaAbsorcionSegundos = constrain((int)doc["pausaAbsorcionSegundos"], 10, 120);
+    if (doc["maxPulsosRiego"].is<int>()) maxPulsosRiego = constrain((int)doc["maxPulsosRiego"], 1, 10);
+    if (doc["tiempoMaximoRiegoSegundos"].is<int>()) tiempoMaximoRiegoSegundos = constrain((int)doc["tiempoMaximoRiegoSegundos"], 1, 120);
   }
 }
 

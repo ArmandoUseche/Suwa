@@ -7,7 +7,8 @@ const RiegoProgramado = require('../models/RiegoProgramado');
 // Si el backend se reinicia, se pierden los pendientes sin consumir - es
 // un trade-off aceptable para este alcance (no es información crítica que
 // necesite sobrevivir un reinicio del servidor).
-const comandosPendientes = new Map(); // dispositivoId -> { duracionSegundos }
+const comandosPendientes = new Map(); // dispositivoId -> { duracionSegundos, tipo, creadoEn }
+const VIGENCIA_COMANDO_MANUAL_MS = 30000;
 
 function siguienteEjecucion(proximaEjecucion) {
   const siguiente = new Date(proximaEjecucion);
@@ -34,7 +35,11 @@ async function activarRiego(req, res) {
       return res.status(400).json({ error: 'duracionSegundos debe ser un entero entre 1 y 120' });
     }
 
-    comandosPendientes.set(dispositivoId, { duracionSegundos: duracionNumero });
+    comandosPendientes.set(dispositivoId, {
+      duracionSegundos: duracionNumero,
+      tipo: 'manual',
+      creadoEn: Date.now(),
+    });
 
     req.app.get('io').emit('comando_riego', {
       dispositivoId,
@@ -62,6 +67,13 @@ async function consultarComandoPendiente(req, res) {
 
   if (comando) {
     comandosPendientes.delete(dispositivoId);
+    if (
+      comando.tipo === 'manual'
+      && (!Number.isFinite(comando.creadoEn)
+        || Date.now() - comando.creadoEn > VIGENCIA_COMANDO_MANUAL_MS)
+    ) {
+      return res.json({ pendiente: false });
+    }
     return res.json({ pendiente: true, duracionSegundos: comando.duracionSegundos });
   }
 
@@ -230,6 +242,7 @@ async function procesarRiegosProgramados() {
 
     comandosPendientes.set(programacion.dispositivoId, {
       duracionSegundos: programacion.duracionSegundos,
+      tipo: 'programado',
     });
   }
 }

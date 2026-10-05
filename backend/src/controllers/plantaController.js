@@ -9,6 +9,10 @@ async function crearPlanta(req, res) {
       luzIdeal,
       temperaturaIdeal,
       umbralHumedadMinimo,
+      pulsoRiegoSegundos,
+      pausaAbsorcionSegundos,
+      maxPulsosRiego,
+      tiempoMaximoRiegoSegundos,
       dispositivoId,
       enMonitoreo,
     } = req.body;
@@ -26,6 +30,23 @@ async function crearPlanta(req, res) {
       return res.status(400).json({ error: 'umbralHumedadMinimo debe estar entre 0 y 100' });
     }
 
+    const parametrosRiego = [
+      ['pulsoRiegoSegundos', pulsoRiegoSegundos, 1, 10],
+      ['pausaAbsorcionSegundos', pausaAbsorcionSegundos, 10, 120],
+      ['maxPulsosRiego', maxPulsosRiego, 1, 10],
+      ['tiempoMaximoRiegoSegundos', tiempoMaximoRiegoSegundos, 1, 120],
+    ];
+    for (const [nombre, valor, minimo, maximo] of parametrosRiego) {
+      if (
+        valor !== undefined
+        && (!Number.isInteger(Number(valor)) || Number(valor) < minimo || Number(valor) > maximo)
+      ) {
+        return res.status(400).json({
+          error: `${nombre} debe ser un número entero entre ${minimo} y ${maximo}`,
+        });
+      }
+    }
+
     if (enMonitoreo && dispositivoId) {
       await Planta.updateMany(
         { usuarioId: req.usuarioId, dispositivoId, enMonitoreo: true },
@@ -41,6 +62,10 @@ async function crearPlanta(req, res) {
       luzIdeal: luzIdeal || null,
       temperaturaIdeal: temperaturaIdeal || null,
       umbralHumedadMinimo: umbralHumedadMinimo ?? 30,
+      pulsoRiegoSegundos: pulsoRiegoSegundos ?? 3,
+      pausaAbsorcionSegundos: pausaAbsorcionSegundos ?? 20,
+      maxPulsosRiego: maxPulsosRiego ?? 3,
+      tiempoMaximoRiegoSegundos: tiempoMaximoRiegoSegundos ?? 90,
       dispositivoId: dispositivoId || null,
       enMonitoreo: Boolean(enMonitoreo && dispositivoId),
     });
@@ -78,11 +103,19 @@ async function actualizarPlanta(req, res) {
       umbralHumedadMinimo,
       temperaturaIdeal,
       luzIdeal,
+      pulsoRiegoSegundos,
+      pausaAbsorcionSegundos,
+      maxPulsosRiego,
+      tiempoMaximoRiegoSegundos,
     } = req.body;
     const camposPermitidos = {
       umbralHumedadMinimo,
       temperaturaIdeal,
       luzIdeal,
+      pulsoRiegoSegundos,
+      pausaAbsorcionSegundos,
+      maxPulsosRiego,
+      tiempoMaximoRiegoSegundos,
       enMonitoreo,
       dispositivoId,
     };
@@ -105,6 +138,23 @@ async function actualizarPlanta(req, res) {
       && !Number.isFinite(Number(temperaturaIdeal))
     ) {
       return res.status(400).json({ error: 'temperaturaIdeal debe ser un número válido' });
+    }
+
+    const parametrosRiego = [
+      ['pulsoRiegoSegundos', pulsoRiegoSegundos, 1, 10],
+      ['pausaAbsorcionSegundos', pausaAbsorcionSegundos, 10, 120],
+      ['maxPulsosRiego', maxPulsosRiego, 1, 10],
+      ['tiempoMaximoRiegoSegundos', tiempoMaximoRiegoSegundos, 1, 120],
+    ];
+    for (const [nombre, valor, minimo, maximo] of parametrosRiego) {
+      if (
+        valor !== undefined
+        && (!Number.isInteger(Number(valor)) || Number(valor) < minimo || Number(valor) > maximo)
+      ) {
+        return res.status(400).json({
+          error: `${nombre} debe ser un número entero entre ${minimo} y ${maximo}`,
+        });
+      }
     }
 
     if (enMonitoreo && dispositivoId) {
@@ -170,7 +220,13 @@ async function obtenerUmbralPorDispositivo(req, res) {
     const { dispositivoId } = req.params;
     const planta = await Planta.findOne({ dispositivoId, enMonitoreo: true });
     if (!planta) return res.status(404).json({ error: 'Dispositivo no vinculado a ninguna planta' });
-    res.json({ umbralHumedadMinimo: planta.umbralHumedadMinimo });
+    res.json({
+      umbralHumedadMinimo: planta.umbralHumedadMinimo,
+      pulsoRiegoSegundos: planta.pulsoRiegoSegundos,
+      pausaAbsorcionSegundos: planta.pausaAbsorcionSegundos,
+      maxPulsosRiego: planta.maxPulsosRiego,
+      tiempoMaximoRiegoSegundos: planta.tiempoMaximoRiegoSegundos,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

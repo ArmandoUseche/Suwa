@@ -171,7 +171,23 @@ La aplicación consulta la lectura más reciente disponible. En una demostració
 local puede consultar el backend remoto y el backend local, y seleccionar la
 lectura con el timestamp más reciente.
 
-## 8. Activar riego manual
+## 8. Configurar el riego por planta
+
+Desde **Configurar umbrales** se puede personalizar la estrategia de riego
+automático de la planta:
+
+- **Humedad mínima**: porcentaje que inicia el riego.
+- **Duración de cada pulso**: segundos que permanece encendida la bomba.
+- **Espera de absorción**: tiempo que se espera antes de volver a medir.
+- **Máximo de pulsos**: límite de pulsos en un ciclo.
+- **Tiempo máximo total**: límite de seguridad de bomba encendida.
+
+SUWA aplica un pulso, espera la absorción y vuelve a evaluar la humedad. Si
+la planta continúa seca, aplica otro pulso hasta alcanzar la humedad suficiente
+o alguno de los límites configurados. Los valores predeterminados son 3
+segundos por pulso, 20 segundos de absorción, 3 pulsos y 90 segundos máximos.
+
+## 9. Activar riego manual
 
 1. Abrir **Monitoreo** o el detalle de una planta en monitoreo.
 2. Pulsar **Regar ahora**.
@@ -184,7 +200,7 @@ indicada y registra el evento al terminar.
 
 No se debe desconectar el backend local mientras la orden esté pendiente.
 
-## 9. Programar el riego
+## 10. Programar el riego
 
 1. Abrir el detalle de la planta en monitoreo.
 2. Pulsar **Programar riego**.
