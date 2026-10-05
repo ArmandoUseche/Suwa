@@ -153,6 +153,15 @@ export const getHistorialSensoresAPI = async (dispositivoId) => {
 
 // ── RIEGO ──
 export const activarRiegoAPI = async (dispositivoId, duracionSegundos = 10) => {
+  if (
+    !Number.isInteger(Number(duracionSegundos))
+    || Number(duracionSegundos) < 1
+    || Number(duracionSegundos) > 120
+  ) {
+    const error = new Error('La duración del riego debe ser un entero entre 1 y 120 segundos.');
+    error.code = 'DURACION_RIEGO_INVALIDA';
+    throw error;
+  }
   const datos = { dispositivoId, duracionSegundos };
 
   if (USAR_BACKEND_LOCAL) {

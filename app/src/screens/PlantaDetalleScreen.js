@@ -168,6 +168,8 @@ export default function PlantaDetalleScreen({ route, navigation }) {
     } catch (error) {
       const mensaje = error.code === 'LECTURA_KIT_DESACTUALIZADA'
         ? 'No hay una lectura reciente del kit. Espera unos segundos y vuelve a intentarlo.'
+        : error.code === 'DURACION_RIEGO_INVALIDA'
+          ? 'La duración configurada para el riego no es válida.'
         : error.code === 'BACKEND_LOCAL_NO_DISPONIBLE'
           ? 'La app no pudo comunicarse con el backend local que consulta la placa. '
             + 'Inicia el backend en el PC y verifica que ambos dispositivos estén en la misma red.'

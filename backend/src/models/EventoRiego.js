@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 
 const eventoRiegoSchema = new mongoose.Schema({
   tipo: { type: String, enum: ['automatico', 'manual'], required: true },
-  duracionSegundos: { type: Number },
-  humedadInicial: { type: Number },
+  duracionSegundos: { type: Number, min: 0, max: 120 },
+  humedadInicial: { type: Number, min: 0, max: 100 },
   dispositivoId: { type: String, required: true },
   timestamp: { type: Date, default: Date.now },
 });

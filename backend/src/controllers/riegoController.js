@@ -21,16 +21,32 @@ function siguienteEjecucion(proximaEjecucion) {
 async function activarRiego(req, res) {
   try {
     const { dispositivoId, duracionSegundos = 10 } = req.body;
+    const duracionNumero = Number(duracionSegundos);
 
     if (!dispositivoId) {
       return res.status(400).json({ error: 'dispositivoId es requerido' });
     }
+    if (
+      !Number.isInteger(duracionNumero)
+      || duracionNumero < 1
+      || duracionNumero > 120
+    ) {
+      return res.status(400).json({ error: 'duracionSegundos debe ser un entero entre 1 y 120' });
+    }
 
-    comandosPendientes.set(dispositivoId, { duracionSegundos });
+    comandosPendientes.set(dispositivoId, { duracionSegundos: duracionNumero });
 
-    req.app.get('io').emit('comando_riego', { dispositivoId, duracionSegundos });
+    req.app.get('io').emit('comando_riego', {
+      dispositivoId,
+      duracionSegundos: duracionNumero,
+    });
 
-    res.json({ ok: true, mensaje: 'Comando de riego enviado', dispositivoId, duracionSegundos });
+    res.json({
+      ok: true,
+      mensaje: 'Comando de riego enviado',
+      dispositivoId,
+      duracionSegundos: duracionNumero,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -67,14 +83,30 @@ async function consultarComandoPendiente(req, res) {
 async function registrarEvento(req, res) {
   try {
     const { tipo, duracionSegundos, humedadInicial, dispositivoId } = req.body;
+    const duracionNumero = Number(duracionSegundos);
 
     if (!tipo || !dispositivoId) {
       return res.status(400).json({ error: 'tipo y dispositivoId son requeridos' });
     }
+    if (
+      !Number.isInteger(duracionNumero)
+      || duracionNumero < 0
+      || duracionNumero > 120
+    ) {
+      return res.status(400).json({ error: 'duracionSegundos debe ser un entero entre 0 y 120' });
+    }
+    if (
+      humedadInicial !== undefined
+      && (!Number.isFinite(Number(humedadInicial))
+        || Number(humedadInicial) < 0
+        || Number(humedadInicial) > 100)
+    ) {
+      return res.status(400).json({ error: 'humedadInicial debe estar entre 0 y 100' });
+    }
 
     const evento = await EventoRiego.create({
       tipo,
-      duracionSegundos,
+      duracionSegundos: duracionNumero,
       humedadInicial,
       dispositivoId,
     });
