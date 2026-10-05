@@ -17,6 +17,15 @@ async function crearPlanta(req, res) {
       return res.status(400).json({ error: 'nombreComun y nombreCientifico son requeridos' });
     }
 
+    if (
+      umbralHumedadMinimo !== undefined
+      && (!Number.isFinite(Number(umbralHumedadMinimo))
+        || Number(umbralHumedadMinimo) < 0
+        || Number(umbralHumedadMinimo) > 100)
+    ) {
+      return res.status(400).json({ error: 'umbralHumedadMinimo debe estar entre 0 y 100' });
+    }
+
     if (enMonitoreo && dispositivoId) {
       await Planta.updateMany(
         { usuarioId: req.usuarioId, dispositivoId, enMonitoreo: true },
@@ -31,7 +40,7 @@ async function crearPlanta(req, res) {
       fotoUri: fotoUri || null,
       luzIdeal: luzIdeal || null,
       temperaturaIdeal: temperaturaIdeal || null,
-      umbralHumedadMinimo: umbralHumedadMinimo || 30,
+      umbralHumedadMinimo: umbralHumedadMinimo ?? 30,
       dispositivoId: dispositivoId || null,
       enMonitoreo: Boolean(enMonitoreo && dispositivoId),
     });
@@ -63,7 +72,41 @@ async function obtenerPlanta(req, res) {
 
 async function actualizarPlanta(req, res) {
   try {
-    const { enMonitoreo, dispositivoId } = req.body;
+    const {
+      enMonitoreo,
+      dispositivoId,
+      umbralHumedadMinimo,
+      temperaturaIdeal,
+      luzIdeal,
+    } = req.body;
+    const camposPermitidos = {
+      umbralHumedadMinimo,
+      temperaturaIdeal,
+      luzIdeal,
+      enMonitoreo,
+      dispositivoId,
+    };
+    const cambios = Object.fromEntries(
+      Object.entries(camposPermitidos).filter(([, valor]) => valor !== undefined)
+    );
+
+    if (
+      umbralHumedadMinimo !== undefined
+      && (!Number.isFinite(Number(umbralHumedadMinimo))
+        || Number(umbralHumedadMinimo) < 0
+        || Number(umbralHumedadMinimo) > 100)
+    ) {
+      return res.status(400).json({ error: 'umbralHumedadMinimo debe estar entre 0 y 100' });
+    }
+
+    if (
+      temperaturaIdeal !== undefined
+      && temperaturaIdeal !== null
+      && !Number.isFinite(Number(temperaturaIdeal))
+    ) {
+      return res.status(400).json({ error: 'temperaturaIdeal debe ser un número válido' });
+    }
+
     if (enMonitoreo && dispositivoId) {
       await Planta.updateMany(
         {
@@ -78,8 +121,8 @@ async function actualizarPlanta(req, res) {
 
     const planta = await Planta.findOneAndUpdate(
       { _id: req.params.id, usuarioId: req.usuarioId },
-      req.body,
-      { new: true }
+      cambios,
+      { new: true, runValidators: true }
     );
     if (!planta) return res.status(404).json({ error: 'Planta no encontrada' });
     res.json(planta);

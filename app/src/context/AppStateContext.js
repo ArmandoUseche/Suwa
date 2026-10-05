@@ -193,10 +193,21 @@ export function AppStateProvider({ children }) {
     setAlertas((prev) => prev.map((alerta) => ({ ...alerta, leida: true })));
   };
 
-  const actualizarUmbrales = (plantaId, cambios) => {
-    setPlantas((prev) =>
-      prev.map((p) => (p.id === plantaId ? { ...p, ...cambios } : p))
-    );
+  const actualizarUmbrales = async (plantaId, cambios) => {
+    const plantaActualizada = await actualizarPlantaAPI(plantaId, cambios);
+    const planta = plantaActualizada.data;
+    setPlantas((prev) => prev.map((item) => (
+      item.id === plantaId
+        ? {
+          ...item,
+          ...cambios,
+          umbralHumedadMinimo: planta.umbralHumedadMinimo,
+          temperaturaIdeal: planta.temperaturaIdeal,
+          luzIdeal: planta.luzIdeal,
+        }
+        : item
+    )));
+    return planta;
   };
 
   const agregarPlanta = async (datos) => {

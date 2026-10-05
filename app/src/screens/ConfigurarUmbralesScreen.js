@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -34,9 +34,10 @@ export default function ConfigurarUmbralesScreen({ route, navigation }) {
   // que truene ANTES de llegar al resguardo de abajo si `planta` viniera
   // undefined (plantas vacío) -- el resguardo en sí no puede ir antes de
   // estas líneas por la misma razón (reglas de hooks de React).
-  const [humedad, setHumedad] = useState(String(planta?.humedadActual ?? ''));
+  const [humedad, setHumedad] = useState(String(planta?.umbralHumedadMinimo ?? 30));
   const [temperatura, setTemperatura] = useState(String(planta?.temperaturaIdeal ?? ''));
   const [luz, setLuz] = useState(planta?.luzIdeal ?? 'Media');
+  const [guardando, setGuardando] = useState(false);
 
   // Mismo resguardo que en PlantaDetalleScreen: esta pantalla solo
   // debería alcanzarse con una planta ya cargada, pero si `plantas`
@@ -50,13 +51,38 @@ export default function ConfigurarUmbralesScreen({ route, navigation }) {
     );
   }
 
-  const handleGuardar = () => {
-    actualizarUmbrales(planta.id, {
-      humedadActual: Number(humedad) || planta.humedadActual,
-      temperaturaIdeal: Number(temperatura) || planta.temperaturaIdeal,
-      luzIdeal: luz,
-    });
-    navigation.goBack();
+  const handleGuardar = async () => {
+    const humedadNumero = Number(humedad);
+    const temperaturaNumero = temperatura.trim() === '' ? null : Number(temperatura);
+
+    if (!Number.isFinite(humedadNumero) || humedadNumero < 0 || humedadNumero > 100) {
+      Alert.alert('Valor inválido', 'La humedad debe estar entre 0 y 100%.');
+      return;
+    }
+    if (
+      temperaturaNumero !== null
+      && (!Number.isFinite(temperaturaNumero) || temperaturaNumero < -50 || temperaturaNumero > 80)
+    ) {
+      Alert.alert('Valor inválido', 'La temperatura debe estar entre -50 y 80 °C.');
+      return;
+    }
+
+    setGuardando(true);
+    try {
+      await actualizarUmbrales(planta.id, {
+        umbralHumedadMinimo: humedadNumero,
+        temperaturaIdeal: temperaturaNumero,
+        luzIdeal: luz,
+      });
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert(
+        'No se pudieron guardar los cambios',
+        error.response?.data?.error || 'Verifica la conexión e inténtalo nuevamente.'
+      );
+    } finally {
+      setGuardando(false);
+    }
   };
 
   return (
@@ -114,7 +140,12 @@ export default function ConfigurarUmbralesScreen({ route, navigation }) {
           })}
         </View>
 
-        <PrimaryButton label="Guardar" onPress={handleGuardar} style={styles.saveButton} />
+        <PrimaryButton
+          label={guardando ? 'Guardando...' : 'Guardar'}
+          onPress={handleGuardar}
+          disabled={guardando}
+          style={styles.saveButton}
+        />
       </ScrollView>
     </View>
   );
