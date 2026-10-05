@@ -59,6 +59,17 @@ function estadoNivelAgua(valor) {
   return 'Medio';
 }
 
+function textoUltimaLectura(timestamp) {
+  const fecha = new Date(timestamp);
+  if (!Number.isFinite(fecha.getTime())) return 'Última lectura sin fecha';
+  const segundos = Math.max(0, Math.floor((Date.now() - fecha.getTime()) / 1000));
+  if (segundos < 60) return 'Actualizado hace menos de un minuto';
+  const minutos = Math.floor(segundos / 60);
+  if (minutos < 60) return `Actualizado hace ${minutos} min`;
+  const horas = Math.floor(minutos / 60);
+  return `Actualizado hace ${horas} h`;
+}
+
 function confirmarRiego({ lectura, humedadAlta }, nombrePlanta) {
   if (!humedadAlta) return Promise.resolve(true);
 
@@ -296,6 +307,10 @@ function ConDispositivo({ navigation }) {
           />
         </View>
 
+        <Text style={styles.ultimaLectura}>
+          {textoUltimaLectura(lectura.timestamp)}
+        </Text>
+
         <PrimaryButton
           label={regando ? 'Regando...' : 'Regar ahora'}
           onPress={handleRegarAhora}
@@ -435,5 +450,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing.sm,
     paddingHorizontal: spacing.lg,
+  },
+  ultimaLectura: {
+    ...typography.caption,
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginTop: spacing.sm,
   },
 });

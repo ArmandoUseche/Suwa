@@ -29,6 +29,12 @@ export const SENSOR_TYPES = [
       { field: 'humedadAmbiente', label: 'Humedad ambiente', unit: '%', color: '#3B82C4' },
     ],
   },
+  {
+    key: 'nivelAgua',
+    label: 'Depósito',
+    icon: icons.gotaAgua,
+    sensors: [{ field: 'nivelAgua', label: 'Nivel de agua', unit: '%', color: '#2F8F83' }],
+  },
 ];
 
 // Fila de chips (ícono + label) para elegir qué sensor mostrar en la

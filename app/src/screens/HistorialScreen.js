@@ -149,12 +149,15 @@ function ConDatos({ lecturas, riegos }) {
     [lecturas, periodo]
   );
   const sensorType = SENSOR_TYPES.find((s) => s.key === sensorKey);
-  const labels = datosPeriodo.map((l) => l.label);
+  const datosGrafica = sensorKey === 'nivelAgua'
+    ? datosPeriodo.filter((lectura) => Number.isFinite(Number(lectura.nivelAgua)))
+    : datosPeriodo;
+  const labels = datosGrafica.map((l) => l.label);
   const series = sensorType.sensors.map((s) => ({
     label: s.label,
     unit: s.unit,
     color: s.color,
-    values: datosPeriodo.map((l) => l[s.field]),
+    values: datosGrafica.map((l) => l[s.field]),
   }));
   const registros = useMemo(
     () => construirRegistros(lecturas, riegos),
@@ -180,7 +183,7 @@ function ConDatos({ lecturas, riegos }) {
         </View>
 
         <View style={styles.chartSection}>
-          {datosPeriodo.length > 0 ? (
+          {datosGrafica.length > 0 ? (
             <HistorialChart labels={labels} series={series} />
           ) : (
             <Text style={styles.sinLecturas}>No hay lecturas en este período.</Text>
@@ -252,6 +255,7 @@ function agruparCadaCincoMinutos(lecturas) {
       humedadSuelo: promedio(grupo, 'humedadSuelo'),
       temperatura: promedio(grupo, 'temperatura'),
       humedadAmbiente: promedio(grupo, 'humedadAmbiente'),
+      nivelAgua: promedioOpcional(grupo, 'nivelAgua'),
     }))
     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 }
