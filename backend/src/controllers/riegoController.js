@@ -21,7 +21,7 @@ function siguienteEjecucion(proximaEjecucion) {
 // el firmware, que no puede escuchar sockets, lo recoja por polling).
 async function activarRiego(req, res) {
   try {
-    const { dispositivoId, duracionSegundos = 10 } = req.body;
+    const { dispositivoId, duracionSegundos = 3 } = req.body;
     const duracionNumero = Number(duracionSegundos);
 
     if (!dispositivoId) {

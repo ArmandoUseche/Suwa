@@ -165,7 +165,7 @@ export default function PlantaDetalleScreen({ route, navigation }) {
       const continuar = await confirmarRiego(analisis, planta.nombreComun);
       if (!continuar) return;
       const desdeTimestamp = Date.now();
-      await activarRiegoAPI(DISPOSITIVO_ID, 10);
+      await activarRiegoAPI(DISPOSITIVO_ID, planta.pulsoRiegoSegundos ?? 3);
       const evento = await esperarConfirmacionRiegoAPI(DISPOSITIVO_ID, desdeTimestamp);
       Alert.alert(
         evento ? 'Riego ejecutado' : 'Orden enviada',

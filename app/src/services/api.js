@@ -160,7 +160,7 @@ export const getHistorialSensoresAPI = async (dispositivoId) => {
 };
 
 // ── RIEGO ──
-export const activarRiegoAPI = async (dispositivoId, duracionSegundos = 10) => {
+export const activarRiegoAPI = async (dispositivoId, duracionSegundos = 3) => {
   if (
     !Number.isInteger(Number(duracionSegundos))
     || Number(duracionSegundos) < 1
