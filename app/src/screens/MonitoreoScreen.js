@@ -168,6 +168,7 @@ function ConDispositivo({ navigation }) {
   const [lectura, setLectura] = useState(null);
   const [cargandoInicial, setCargandoInicial] = useState(true);
   const [errorCarga, setErrorCarga] = useState(false);
+  const [mensajeErrorCarga, setMensajeErrorCarga] = useState('');
   const [regando, setRegando] = useState(false);
 
   const cargarUltimaLectura = useCallback(async () => {
@@ -175,6 +176,7 @@ function ConDispositivo({ navigation }) {
       const respuesta = await getUltimaLecturaAPI(DISPOSITIVO_ID);
       setLectura(respuesta.data);
       setErrorCarga(false);
+      setMensajeErrorCarga('');
     } catch (error) {
       // Si ya teníamos una lectura previa, la dejamos en pantalla en
       // vez de reemplazarla por un error -- es mejor mostrar el
@@ -182,6 +184,13 @@ function ConDispositivo({ navigation }) {
       // backend/la placa estén momentáneamente caídos.
       if (!lectura) {
         setErrorCarga(true);
+        setMensajeErrorCarga(
+          error.code === 'SIN_LECTURAS_KIT'
+            ? 'El kit todavía no ha enviado lecturas. Enciéndelo y espera unos segundos.'
+            : error.code === 'BACKEND_NO_DISPONIBLE'
+              ? 'No se pudo comunicar con el backend. Verifica que esté iniciado y conectado a la red.'
+              : 'No se pudo obtener la lectura del kit. Verifica la conexión e inténtalo de nuevo.'
+        );
       }
     } finally {
       setCargandoInicial(false);
@@ -241,7 +250,7 @@ function ConDispositivo({ navigation }) {
       <View style={[styles.plainContainer, styles.centered, styles.errorPadding]}>
         <Text style={typography.h2}>No se pudo cargar el monitoreo</Text>
         <Text style={[typography.body, styles.errorText]}>
-          Revisa que el kit SUWA y el backend estén encendidos y conectados a la misma red.
+          {mensajeErrorCarga}
         </Text>
         <PrimaryButton label="Reintentar" onPress={cargarUltimaLectura} style={styles.retryButton} />
       </View>

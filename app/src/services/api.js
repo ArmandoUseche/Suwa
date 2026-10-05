@@ -101,6 +101,14 @@ export const getUltimaLecturaAPI = async (dispositivoId) => {
   if (lecturas.length === 0) {
     const error = resultados.find((resultado) => resultado.status === 'rejected')?.reason
       || new Error('No se pudo obtener la última lectura del kit.');
+    const respuestasSinLectura = resultados.filter((resultado) => (
+      resultado.status === 'rejected' && resultado.reason?.response?.status === 404
+    ));
+    if (respuestasSinLectura.length === resultados.length) {
+      error.code = 'SIN_LECTURAS_KIT';
+    } else if (resultados.every((resultado) => resultado.status === 'rejected')) {
+      error.code = 'BACKEND_NO_DISPONIBLE';
+    }
     throw error;
   }
 
