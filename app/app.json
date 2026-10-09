@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "app",
+    "name": "SUWA",
     "slug": "app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -15,12 +15,17 @@
     },
     "android": {
       "package": "com.suwa.app",
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -38,7 +43,13 @@
           "photosPermission": "SUWA necesita acceso a tus fotos para que puedas elegir una imagen ya tomada al escanear una planta."
         }
       ],
-      "@react-native-community/datetimepicker"
-    ]
+      "@react-native-community/datetimepicker",
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "0a7be764-e5e4-46a9-9cb3-1dcf8be92b02"
+      }
+    }
   }
 }
