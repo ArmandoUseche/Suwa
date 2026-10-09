@@ -14,6 +14,7 @@
       }
     },
     "android": {
+      "package": "com.suwa.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",

@@ -13,6 +13,13 @@ const plantaSchema = new mongoose.Schema({
   pausaAbsorcionSegundos: { type: Number, default: 20, min: 10, max: 120 },
   maxPulsosRiego: { type: Number, default: 3, min: 1, max: 10 },
   tiempoMaximoRiegoSegundos: { type: Number, default: 90, min: 1, max: 120 },
+  fuenteParametros: {
+    type: String,
+    enum: ['gemini', 'catalogo', 'usuario', 'respaldo'],
+    default: 'usuario',
+  },
+  parametrosProvisionales: { type: Boolean, default: false },
+  confianzaParametros: { type: Number, min: 0, max: 100, default: null },
   enMonitoreo: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 });

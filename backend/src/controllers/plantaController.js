@@ -13,6 +13,9 @@ async function crearPlanta(req, res) {
       pausaAbsorcionSegundos,
       maxPulsosRiego,
       tiempoMaximoRiegoSegundos,
+      fuenteParametros,
+      parametrosProvisionales,
+      confianzaParametros,
       dispositivoId,
       enMonitoreo,
     } = req.body;
@@ -66,6 +69,9 @@ async function crearPlanta(req, res) {
       pausaAbsorcionSegundos: pausaAbsorcionSegundos ?? 20,
       maxPulsosRiego: maxPulsosRiego ?? 3,
       tiempoMaximoRiegoSegundos: tiempoMaximoRiegoSegundos ?? 90,
+      fuenteParametros: fuenteParametros || 'usuario',
+      parametrosProvisionales: Boolean(parametrosProvisionales),
+      confianzaParametros: confianzaParametros ?? null,
       dispositivoId: dispositivoId || null,
       enMonitoreo: Boolean(enMonitoreo && dispositivoId),
     });

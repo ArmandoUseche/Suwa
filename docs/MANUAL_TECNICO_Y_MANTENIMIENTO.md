@@ -248,6 +248,18 @@ Para recalibrar:
 4. Subir el firmware.
 5. Confirmar que la humedad mostrada sea razonable.
 
+### 7.6 Parámetros de cuidado obtenidos durante el escaneo
+
+La identificación de una planta y el cálculo de sus parámetros son procesos
+separados. Gemini puede proponer humedad, temperatura y luz, pero el backend
+valida que la respuesta tenga valores numéricos coherentes antes de usarla.
+
+Si Gemini está temporalmente saturado, devuelve una respuesta inválida o no
+está disponible, la aplicación recibe parámetros provisionales conservadores
+en lugar de cancelar el registro. Estos valores se guardan con
+`fuenteParametros: respaldo` y `parametrosProvisionales: true` para que el
+usuario sepa que debe revisarlos y ajustarlos con pruebas reales.
+
 ## 8. API y contratos principales
 
 ### Sensores
@@ -447,9 +459,9 @@ GET /api/riego/comando-pendiente/suwa-kit-01
 - El firmware consulta por polling HTTP; no usa Socket.io.
 - Las preferencias de notificaciones de la aplicación no son push
   notifications del sistema operativo.
-- El nivel de agua enciende un LED, pero todavía no genera una alerta
-- se calcula con el ultrasónico usando un sensor situado a 21,5 cm del fondo y
-  un recipiente de 12 cm; se envía como `nivelAgua` y genera alerta cuando
+- El nivel de agua enciende un LED, pero todavía no genera una alerta.
+- Se calcula con el ultrasónico usando una distancia calibrada de 22 cm para
+  vacío y 15 cm para lleno; se envía como `nivelAgua` y genera alerta cuando
   baja a 20% o menos. El nivel no bloquea automáticamente la bomba.
 - Los endpoints de sensores y alertas se identifican por dispositivo y deben
   protegerse adicionalmente si el sistema se expone a redes no confiables.

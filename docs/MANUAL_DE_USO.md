@@ -161,11 +161,12 @@ En **Monitoreo** se muestran:
 - Estado general de la planta.
 - Estado de conexión del kit.
 
-El nivel se calcula con el sensor ultrasónico situado sobre el depósito. Para
-La configuración actual, el sensor está aproximadamente a 21,5 cm del fondo y
-el recipiente tiene 12 cm de altura. Por eso, una lectura cercana a 100%
-corresponde a un depósito lleno y una cercana a 0% a un depósito vacío. Es
-una estimación y puede variar si cambia la posición del sensor.
+El nivel se calcula con el sensor ultrasónico situado sobre el depósito. En la
+calibración actual, una distancia de aproximadamente 22 cm hasta la superficie
+del agua corresponde a un depósito vacío (0%), y una distancia de 15 cm
+corresponde aproximadamente a un depósito lleno (100%). Es una estimación y
+debe recalibrarse si cambia la posición del sensor, el recipiente o el nivel
+máximo permitido.
 
 La aplicación consulta la lectura más reciente disponible. En una demostración
 local puede consultar el backend remoto y el backend local, y seleccionar la

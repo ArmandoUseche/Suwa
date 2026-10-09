@@ -41,6 +41,7 @@ export function AppStateProvider({ children }) {
   const [alertas, setAlertas] = useState([]);
   const [preferenciasNotificaciones, setPreferenciasNotificaciones] = useState(PREFERENCIAS_POR_DEFECTO);
   const [cargandoPlantas, setCargandoPlantas] = useState(false);
+  const [backendDisponible, setBackendDisponible] = useState(false);
   const consultandoKit = useRef(false);
   const clavePreferencias = obtenerClavePreferencias(usuario);
 
@@ -86,8 +87,10 @@ export function AppStateProvider({ children }) {
       const lecturaReciente = Number.isFinite(timestamp)
         && Date.now() - timestamp <= 30000;
       setKitConectado(lecturaReciente);
+      setBackendDisponible(true);
     } catch (error) {
       setKitConectado(false);
+      setBackendDisponible(false);
     } finally {
       setCargandoKit(false);
       consultandoKit.current = false;
@@ -98,6 +101,7 @@ export function AppStateProvider({ children }) {
   useEffect(() => {
     if (!usuario) {
       setKitConectado(false);
+      setBackendDisponible(false);
       setPlantas([]);
       setAlertas([]);
       setPreferenciasNotificaciones(PREFERENCIAS_POR_DEFECTO);
@@ -114,18 +118,23 @@ export function AppStateProvider({ children }) {
     };
 
     cargarDatos();
-    const intervaloKit = setInterval(cargarEstadoKit, 10000);
-    const intervaloAlertas = setInterval(cargarAlertas, 30000);
+    // Mantiene los reintentos aunque la app se haya abierto antes que el
+    // backend. También actualiza plantas que no pudieron cargarse al inicio.
+    const intervaloSincronizacion = setInterval(() => {
+      cargarEstadoKit();
+      cargarPlantas();
+      cargarAlertas();
+    }, 15000);
     const suscripcionApp = AppState?.addEventListener?.('change', (estado) => {
       if (estado === 'active') {
         cargarEstadoKit();
+        cargarPlantas();
         cargarAlertas();
         cargarPreferenciasNotificaciones();
       }
     });
     return () => {
-      clearInterval(intervaloKit);
-      clearInterval(intervaloAlertas);
+      clearInterval(intervaloSincronizacion);
       suscripcionApp?.remove?.();
     };
 
@@ -147,6 +156,9 @@ export function AppStateProvider({ children }) {
         pausaAbsorcionSegundos: p.pausaAbsorcionSegundos,
         maxPulsosRiego: p.maxPulsosRiego,
         tiempoMaximoRiegoSegundos: p.tiempoMaximoRiegoSegundos,
+        fuenteParametros: p.fuenteParametros,
+        parametrosProvisionales: p.parametrosProvisionales,
+        confianzaParametros: p.confianzaParametros,
         enMonitoreo: p.enMonitoreo,
         dispositivoId: p.dispositivoId,
         humedadActual: null,
@@ -226,6 +238,9 @@ export function AppStateProvider({ children }) {
       luzIdeal: datos.luzIdeal || null,
       temperaturaIdeal: datos.temperaturaIdeal || null,
       umbralHumedadMinimo: datos.umbralHumedadMinimo || 30,
+      fuenteParametros: datos.fuenteParametros || 'usuario',
+      parametrosProvisionales: Boolean(datos.parametrosProvisionales),
+      confianzaParametros: datos.confianzaParametros ?? null,
       dispositivoId: DISPOSITIVO_ID,
       enMonitoreo: true,
     });
@@ -248,6 +263,9 @@ export function AppStateProvider({ children }) {
       pausaAbsorcionSegundos: plantaGuardada.pausaAbsorcionSegundos,
       maxPulsosRiego: plantaGuardada.maxPulsosRiego,
       tiempoMaximoRiegoSegundos: plantaGuardada.tiempoMaximoRiegoSegundos,
+      fuenteParametros: plantaGuardada.fuenteParametros,
+      parametrosProvisionales: plantaGuardada.parametrosProvisionales,
+      confianzaParametros: plantaGuardada.confianzaParametros,
       enMonitoreo: plantaGuardada.enMonitoreo,
       dispositivoId: plantaGuardada.dispositivoId,
       humedadActual: null,
@@ -304,6 +322,7 @@ export function AppStateProvider({ children }) {
     <AppStateContext.Provider
       value={{
         kitConectado,
+        backendDisponible,
         cargandoKit,
         plantas,
         cargandoPlantas,

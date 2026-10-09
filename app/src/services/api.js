@@ -1,15 +1,17 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Cambia esto según el contexto: true = backend local (para demos con
-// el Arduino, que no puede hablarle a Render por HTTPS), false = Render.
-const USAR_BACKEND_LOCAL = false;
+// En un build independiente, EXPO_PUBLIC_API_URL queda incorporada en la
+// aplicación. Usa la IP del computador, no localhost.
+const BACKEND_LOCAL_URL = process.env.EXPO_PUBLIC_API_URL;
+const USAR_BACKEND_LOCAL = Boolean(BACKEND_LOCAL_URL);
 
 const BASE_URL = USAR_BACKEND_LOCAL
-  ? 'http://192.168.101.5:3000' 
+  ? BACKEND_LOCAL_URL
   : 'https://suwa-rrg5.onrender.com';
 
 const LOCAL_RIEGO_URLS = [
+  BACKEND_LOCAL_URL,
   process.env.EXPO_PUBLIC_LOCAL_RIEGO_URL,
   'http://192.168.101.5:3000',
   'http://10.238.0.16:3000',

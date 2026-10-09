@@ -6,6 +6,49 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const PLANTNET_TIMEOUT_MS = 120000;
 const PLANTNET_RESULTADOS = 5;
 const GEMINI_MODELO = 'gemini-3.6-flash';
+const PARAMETROS_PROVISIONALES = {
+  humedadIdeal: 50,
+  temperaturaIdeal: 22,
+  luzIdeal: 'Media',
+  umbralHumedadMinimo: 35,
+  fuenteParametros: 'respaldo',
+  parametrosProvisionales: true,
+  confianzaParametros: 0,
+};
+
+function normalizarParametros(parametros) {
+  const humedadIdeal = Number(parametros?.humedadIdeal);
+  const temperaturaIdeal = Number(parametros?.temperaturaIdeal);
+  const umbralHumedadMinimo = Number(parametros?.umbralHumedadMinimo);
+  const luzIdeal = String(parametros?.luzIdeal || '').trim();
+  const lucesValidas = ['Baja', 'Media', 'Alta'];
+
+  if (
+    !Number.isFinite(humedadIdeal)
+    || humedadIdeal < 0
+    || humedadIdeal > 100
+    || !Number.isFinite(temperaturaIdeal)
+    || temperaturaIdeal < -10
+    || temperaturaIdeal > 60
+    || !Number.isFinite(umbralHumedadMinimo)
+    || umbralHumedadMinimo < 0
+    || umbralHumedadMinimo > 100
+    || umbralHumedadMinimo > humedadIdeal
+    || !lucesValidas.includes(luzIdeal)
+  ) {
+    throw new Error('Gemini devolvió parámetros de cuidado inválidos o incoherentes');
+  }
+
+  return {
+    humedadIdeal,
+    temperaturaIdeal,
+    luzIdeal,
+    umbralHumedadMinimo,
+    fuenteParametros: 'gemini',
+    parametrosProvisionales: false,
+    confianzaParametros: null,
+  };
+}
 
 // ── PLANTNET ──
 async function identificarConPlantNet(fotoBuffer, mimeType = 'image/jpeg') {
@@ -52,9 +95,7 @@ async function obtenerParametrosConGemini(nombreCientifico) {
 
   // Limpia por si Gemini manda bloques de código
   const limpio = texto.replace(/```json|```/g, '').trim();
-  const parametros = JSON.parse(limpio);
-
-  return parametros;
+  return normalizarParametros(JSON.parse(limpio));
 }
 
 async function identificarConGemini(fotoBuffer, mimeType = 'image/jpeg') {
@@ -109,4 +150,5 @@ module.exports = {
   identificarConPlantNet,
   identificarConGemini,
   obtenerParametrosConGemini,
+  PARAMETROS_PROVISIONALES,
 };

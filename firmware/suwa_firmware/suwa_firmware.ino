@@ -64,8 +64,10 @@ const int PIN_BOMBA = 7;
 const int PIN_HUMEDAD_SUELO = A0;
 const int CRUDO_SECO = 1023;
 const int CRUDO_HUMEDO = 450;
-const float ALTURA_SENSOR_SUELO_CM = 21.5;
-const float ALTURA_RECIPIENTE_CM = 12.0;
+// Distancias del sensor ultrasónico a la superficie del agua:
+// 22 cm corresponde al depósito vacío y 15 cm al nivel lleno.
+const float DISTANCIA_DEPOSITO_VACIO_CM = 22.0;
+const float DISTANCIA_DEPOSITO_LLENO_CM = 15.0;
 const int UMBRAL_NIVEL_AGUA_BAJO = 20;
 
 // Umbral de humedad (%) por debajo del cual se activa el riego
@@ -630,8 +632,8 @@ int medirNivelDeAgua() {
   }
 
   float distanciaCm = duracion / 58.2;
-  int nivel = (int)(((ALTURA_SENSOR_SUELO_CM - distanciaCm)
-    / (ALTURA_SENSOR_SUELO_CM - ALTURA_RECIPIENTE_CM)) * 100.0);
+  int nivel = (int)(((DISTANCIA_DEPOSITO_VACIO_CM - distanciaCm)
+    / (DISTANCIA_DEPOSITO_VACIO_CM - DISTANCIA_DEPOSITO_LLENO_CM)) * 100.0);
   nivel = constrain(nivel, 0, 100);
   digitalWrite(LED, nivel <= UMBRAL_NIVEL_AGUA_BAJO ? HIGH : LOW);
   return nivel;

@@ -20,6 +20,8 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
   const [parametros, setParametros] = useState(null);
   const [candidatas, setCandidatas] = useState([]);
   const [fuenteIdentificacion, setFuenteIdentificacion] = useState(null);
+  const [advertenciaIdentificacion, setAdvertenciaIdentificacion] = useState('');
+  const [advertenciaParametros, setAdvertenciaParametros] = useState('');
   const [mensajeRechazo, setMensajeRechazo] = useState('');
 
   useEffect(() => {
@@ -48,22 +50,18 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
         clearTimeout(timerCalculando);
         setCandidatas(res.data.candidatas);
         setFuenteIdentificacion(res.data.fuente);
+        setAdvertenciaIdentificacion(res.data.advertencia || '');
         setEtapa('confirmando');
       })
       .catch((error) => {
         clearTimeout(timerCalculando);
         const data = error.response?.data;
 
-        if (data?.rechazado) {
-          setMensajeRechazo(data.error);
-          setEtapa('rechazado');
-        } else {
-          Alert.alert(
-            'Error',
-            data?.error || 'No se pudo escanear la planta. Intenta de nuevo.',
-            [{ text: 'OK', onPress: () => navigation.goBack() }]
-          );
-        }
+        setMensajeRechazo(
+          data?.error
+          || 'No se pudo completar la identificación. Puedes intentar otra foto o ingresar el nombre manualmente.'
+        );
+        setEtapa('rechazado');
       });
 
     return () => clearTimeout(timerCalculando);
@@ -75,6 +73,7 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
     try {
       const res = await obtenerParametrosPlantaAPI(candidata.nombreCientifico);
       setParametros(res.data.parametros);
+      setAdvertenciaParametros(res.data.advertencia || '');
       setEtapa('listo');
     } catch (error) {
       setMensajeRechazo(error.response?.data?.error || 'No se pudieron calcular los parámetros de la planta.');
@@ -91,6 +90,9 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
       luzIdeal: parametros.luzIdeal,
       temperaturaIdeal: parametros.temperaturaIdeal,
       umbralHumedadMinimo: parametros.umbralHumedadMinimo,
+      fuenteParametros: parametros.fuenteParametros || 'usuario',
+      parametrosProvisionales: Boolean(parametros.parametrosProvisionales),
+      confianzaParametros: parametros.confianzaParametros ?? null,
     });
     navigation.navigate('Main', { screen: 'MisPlantas' });
   } catch (error) {
@@ -133,6 +135,9 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
                   ? 'PlantNet no encontró una coincidencia clara. Gemini propone:'
                   : 'Selecciona la planta correcta'}
             </Text>
+            {advertenciaIdentificacion ? (
+              <Text style={styles.advertencia}>{advertenciaIdentificacion}</Text>
+            ) : null}
             {!manualNombre && candidatas.map((candidata) => (
               <SecondaryButton
                 key={candidata.nombreCientifico}
@@ -153,6 +158,11 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
             <SecondaryButton
               label="Escanear de nuevo"
               onPress={() => navigation.goBack()}
+              style={styles.secondaryButton}
+            />
+            <SecondaryButton
+              label="Ingresar nombre manualmente"
+              onPress={() => navigation.navigate('Main', { screen: 'Escanear' })}
               style={styles.secondaryButton}
             />
           </View>
@@ -178,6 +188,9 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
             </View>
 
             <Text style={styles.statsTitle}>Parámetros óptimos para esta planta</Text>
+            {advertenciaParametros ? (
+              <Text style={styles.advertencia}>{advertenciaParametros}</Text>
+            ) : null}
             <View style={styles.statsRow}>
               <StatChip
                 icon={icons.gotaAgua}
@@ -253,6 +266,12 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(20),
     textAlign: 'center',
     marginBottom: spacing.lg,
+  },
+  advertencia: {
+    ...typography.body,
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginBottom: spacing.md,
   },
   candidateButton: {
     marginBottom: spacing.sm,
