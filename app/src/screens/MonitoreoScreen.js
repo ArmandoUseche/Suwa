@@ -92,10 +92,13 @@ function confirmarRiego({ lectura, humedadAlta }, nombrePlanta) {
 }
 
 export default function MonitoreoScreen({ navigation }) {
-  const { plantas } = useAppState();
+  const { plantas, kitConectado } = useAppState();
   const plantaEnMonitoreo = plantas.some((planta) => planta.enMonitoreo);
   if (!plantaEnMonitoreo) {
     return <SinPlanta navigation={navigation} />;
+  }
+  if (!kitConectado) {
+    return <SinDispositivo navigation={navigation} />;
   }
   return <ConDispositivo navigation={navigation} />;
 }

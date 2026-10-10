@@ -33,8 +33,12 @@
   Con estos cambios, cambiar de red (casa, hotspot, red de la
   universidad) es: escribir BORRAR por Serial, conectarse a
   SUWA-Config desde el celular, y llenar el formulario con la red
-  nueva y la IP de la laptop en esa red -- sin Arduino IDE, sin
-  reflashear.
+  nueva y la IP de la laptop en esa red -- sin reflashear.
+
+  Si ya hay credenciales guardadas, la placa reintenta la conexión
+  automáticamente hasta que el hotspot esté disponible. Esto evita que
+  dependa de abrir Arduino IDE para reiniciarla cuando el hotspot tarda
+  más en iniciar.
 
   Todo lo demás (sensores, riego, umbral dinámico, diagnóstico) es
   igual al Paso 8.
@@ -224,6 +228,8 @@ void cargarHostGuardadoSiExiste() {
   Serial.println(servidorHost);
 }
 
+void revisarComandoDeBorrado();
+
 bool conectarConCredencialesGuardadas() {
   if (!hayCredencialesGuardadas()) {
     return false;
@@ -255,6 +261,30 @@ bool conectarConCredencialesGuardadas() {
   Serial.println();
 
   return WiFi.status() == WL_CONNECTED && WiFi.localIP() != IPAddress(0, 0, 0, 0);
+}
+
+bool esperarConexionConCredencialesGuardadas() {
+  if (!hayCredencialesGuardadas()) {
+    return false;
+  }
+
+  while (true) {
+    if (conectarConCredencialesGuardadas()) {
+      return true;
+    }
+
+    Serial.println("No se pudo conectar al hotspot. Reintentando en 5 segundos...");
+    Serial.println("Escribe BORRAR y Enter para configurar otra red.");
+
+    unsigned long inicioEspera = millis();
+    while (millis() - inicioEspera < 5000) {
+      revisarComandoDeBorrado();
+      if (!hayCredencialesGuardadas()) {
+        return false;
+      }
+      delay(100);
+    }
+  }
 }
 
 String urlDecode(const String& texto) {
@@ -410,7 +440,7 @@ void setup() {
 
   cargarHostGuardadoSiExiste();
 
-  if (!conectarConCredencialesGuardadas()) {
+  if (!esperarConexionConCredencialesGuardadas()) {
     iniciarModoConfiguracion();
   }
 

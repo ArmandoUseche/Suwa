@@ -208,6 +208,12 @@ el riego.
 7. Abrir el monitor serial a 9600 baudios.
 8. Confirmar el host y la conexión.
 
+Después de cargar el firmware y guardar las credenciales una vez, la placa
+puede ejecutarse de forma independiente. Al encenderla, reintenta
+automáticamente la conexión al hotspot guardado hasta obtener una IP. No es
+necesario abrir Arduino IDE para iniciar esa conexión; el monitor serial solo
+se utiliza para diagnóstico o reconfiguración.
+
 El firmware actual utiliza como host predeterminado:
 
 ```text
