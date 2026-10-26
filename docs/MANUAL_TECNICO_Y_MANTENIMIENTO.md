@@ -257,14 +257,32 @@ Para recalibrar:
 ### 7.6 Parámetros de cuidado obtenidos durante el escaneo
 
 La identificación de una planta y el cálculo de sus parámetros son procesos
-separados. Gemini puede proponer humedad, temperatura y luz, pero el backend
-valida que la respuesta tenga valores numéricos coherentes antes de usarla.
+separados. Gemini puede proponer la especie y después humedad, temperatura y
+luz, pero el backend valida las respuestas antes de usarlas.
+
+El ingreso manual sigue este flujo:
+
+1. La aplicación envía el texto a `POST /api/escaneo/nombre`.
+2. El backend solicita a Gemini una lista limitada de candidatas.
+3. El backend valida que cada candidata tenga `nombreComun`,
+   `nombreCientifico` y una `coincidencia` entera entre 0 y 100.
+4. La aplicación muestra las candidatas y espera la selección explícita del
+   usuario.
+5. La aplicación envía el nombre científico seleccionado a
+   `POST /api/escaneo/parametros`.
+
+La normalización acepta nombres científicos, comunes, coloquiales, regionales
+y errores menores de escritura. Un nombre ambiguo puede devolver varias
+candidatas; el backend no elige arbitrariamente una especie. Las respuestas
+inválidas, vacías o malformadas de Gemini se rechazan y no se envían como una
+identificación válida al cliente.
 
 Si Gemini está temporalmente saturado, devuelve una respuesta inválida o no
 está disponible, la aplicación recibe parámetros provisionales conservadores
-en lugar de cancelar el registro. Estos valores se guardan con
-`fuenteParametros: respaldo` y `parametrosProvisionales: true` para que el
-usuario sepa que debe revisarlos y ajustarlos con pruebas reales.
+al consultar los parámetros después de confirmar una especie. En cambio, si
+falla la normalización del nombre manual, la aplicación muestra un error
+controlado y permite reintentar o usar la cámara. Estos comportamientos son
+independientes: una falla de normalización no altera el flujo de cámara.
 
 ## 8. API y contratos principales
 
@@ -319,6 +337,57 @@ DELETE /api/plantas/:id
 La ruta del umbral por dispositivo no usa JWT porque la placa no implementa
 autenticación. Las rutas de gestión de plantas sí requieren autenticación.
 
+### Escaneo e identificación
+
+```text
+POST /api/escaneo
+POST /api/escaneo/nombre
+POST /api/escaneo/parametros
+```
+
+Las tres rutas requieren autenticación. `/api/escaneo` recibe una imagen
+multipart y conserva el flujo de cámara con PlantNet y Gemini. No debe
+reemplazarse por la ruta de normalización manual.
+
+`/api/escaneo/nombre` recibe:
+
+```json
+{
+  "nombre": "lengua de suegra"
+}
+```
+
+Una respuesta válida tiene esta forma:
+
+```json
+{
+  "candidatas": [
+    {
+      "nombreComun": "Lengua de suegra",
+      "nombreCientifico": "Dracaena trifasciata",
+      "coincidencia": 95
+    }
+  ],
+  "fuente": "gemini"
+}
+```
+
+El backend limita la respuesta a cinco candidatas. Devuelve `422` cuando no
+reconoce el nombre y `502` cuando Gemini no está disponible o responde con
+datos inválidos. La aplicación debe mostrar esos errores sin inventar una
+especie ni cerrar la sesión.
+
+`/api/escaneo/parametros` recibe únicamente el nombre científico confirmado:
+
+```json
+{
+  "nombreCientifico": "Dracaena trifasciata"
+}
+```
+
+La instancia y el modelo de Gemini se comparten con el resto del servicio de
+escaneo; no se debe crear una inicialización adicional.
+
 ### Alertas
 
 ```text
@@ -346,7 +415,71 @@ Las fotos de plantas se almacenan como Data URI Base64 en MongoDB. Por ese
 motivo debe controlarse el tamaño de las imágenes y el crecimiento de la base
 de datos.
 
-## 10. Mantenimiento preventivo
+## 10. Despliegue del backend en la nube
+
+El backend puede desplegarse como un servicio web en Render para que las
+operaciones generales de la aplicación no dependan del computador local.
+
+### 10.1 Crear el servicio
+
+1. Iniciar sesión en Render.
+2. Crear un **Web Service** conectado al repositorio de SUWA.
+3. Seleccionar la rama `main`.
+4. Establecer como directorio raíz:
+
+   ```text
+   backend
+   ```
+
+5. Usar los siguientes comandos:
+
+   ```text
+   Build Command: npm install
+   Start Command: npm start
+   ```
+
+6. Seleccionar una instancia compatible con el alcance de la demostración.
+
+### 10.2 Variables de entorno
+
+Configurar en Render, sin escribir valores reales en este manual:
+
+```text
+PORT=10000
+MONGODB_URI=<URI_DE_MONGODB>
+JWT_SECRET=<SECRETO_LARGO_Y_ALEATORIO>
+GEMINI_API_KEY=<CLAVE_DE_GEMINI>
+PLANTNET_API_KEY=<CLAVE_DE_PLANTNET>
+GMAIL_USER=<CUENTA_DE_CORREO>
+GMAIL_PASS=<CREDENCIAL_DEL_SERVICIO_DE_CORREO>
+```
+
+Render asigna el puerto mediante la variable `PORT`. El servidor debe
+escuchar en `0.0.0.0`, como ya está implementado en `backend/src/index.js`.
+
+### 10.3 Verificación del despliegue
+
+Cuando el servicio termine de desplegarse, consultar:
+
+```text
+https://<dominio-del-servicio>/
+```
+
+La respuesta esperada es:
+
+```json
+{"status":"ok","service":"suwa-backend"}
+```
+
+También se deben revisar los registros del servicio y probar registro,
+inicio de sesión, ingreso manual de plantas, escaneo por cámara, plantas,
+lecturas y riego. Para probar el ingreso manual, verificar que
+`POST /api/escaneo/nombre` ya no devuelva `404` y que una selección continúe
+hacia `POST /api/escaneo/parametros`. Si el kit físico se encuentra en
+una red local, las operaciones que dependen directamente de la placa deben
+mantener configurado el backend local accesible desde esa red.
+
+## 11. Mantenimiento preventivo
 
 ### Antes de una demostración
 
@@ -389,7 +522,7 @@ node --check src/index.js
 node --check src/controllers/riegoController.js
 ```
 
-## 11. Solución de problemas
+## 12. Solución de problemas
 
 ### El backend no inicia
 
@@ -414,6 +547,18 @@ Get-NetIPAddress -AddressFamily IPv4
 4. Revisar el monitor serial.
 5. Comprobar que aparecen lecturas cada cinco segundos.
 6. Confirmar que el teléfono y el computador estén en la misma red.
+
+### El ingreso manual de una planta falla rápidamente
+
+1. Confirmar que la aplicación apunta al backend desplegado actualizado.
+2. Revisar en Render que el despliegue de la rama `main` haya terminado.
+3. Comprobar que `GEMINI_API_KEY` esté configurada en Render sin mostrarla en
+   logs ni documentación.
+4. Confirmar que `POST /api/escaneo/nombre` no responda `404`.
+5. Revisar el mensaje de la aplicación. Un nombre no reconocido debe producir
+   un error controlado y permitir reintentar.
+6. Probar el escaneo por cámara como alternativa. Su ruta continúa siendo
+   `POST /api/escaneo`.
 
 ### La placa no envía lecturas
 
@@ -457,7 +602,7 @@ GET /api/riego/comando-pendiente/suwa-kit-01
 4. Revisar que la respuesta de la planta incluya `fotoUri`.
 5. Revisar el tamaño de la imagen y el límite de 5 MB.
 
-## 12. Límites conocidos
+## 13. Límites conocidos
 
 - El kit físico utiliza actualmente el identificador `suwa-kit-01`.
 - Los comandos manuales pendientes en memoria se pierden si el backend se

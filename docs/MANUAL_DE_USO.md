@@ -2,12 +2,8 @@
 
 ## 1. Propósito
 
-SUWA es un sistema de monitoreo y riego para plantas compuesto por:
-
-- Un kit físico con sensores y bomba.
-- Un backend Node.js que recibe lecturas y administra los comandos.
-- Una aplicación móvil React Native/Expo para consultar el estado y controlar el riego.
-- MongoDB para conservar usuarios, plantas, lecturas, alertas y eventos de riego.
+SUWA es una plataforma para monitorear plantas y controlar su riego mediante
+una aplicación móvil y un kit físico.
 
 La aplicación permite:
 
@@ -23,94 +19,27 @@ La aplicación permite:
 - Revisar y marcar alertas.
 - Editar los datos del perfil.
 
-## 2. Requisitos para una demostración
+## 2. Requisitos para utilizar SUWA
 
 ### 2.1 Equipo
 
-- Computador con Node.js instalado.
-- Teléfono Android o iOS con la aplicación SUWA.
-- Placa del kit SUWA programada con el firmware estable.
+- Teléfono Android o iOS con SUWA preparado por el responsable de la
+  instalación.
+- Kit SUWA encendido y preparado.
 - Sensores conectados.
 - Relé y bomba conectados correctamente.
 - Depósito de agua lleno.
-- Cable USB para programar o alimentar la placa, según el montaje.
 
-### 2.2 Red
+Durante una demostración, el responsable de la instalación debe dejar
+preparada la conexión del kit y abrir la aplicación antes de entregar el
+teléfono al usuario final.
 
-Durante una demostración local, el teléfono, el computador y la placa deben
-estar en la misma red. El flujo recomendado es:
+## 3. Abrir SUWA
 
-1. Activar el hotspot del teléfono.
-2. Conectar el computador a ese hotspot.
-3. Encender o reiniciar la placa.
-4. Iniciar el backend en el computador.
-5. Abrir la aplicación en el teléfono.
-
-La placa no se comunica directamente con MongoDB ni con la aplicación. La
-placa se comunica por HTTP con el backend local del computador.
-
-## 3. Inicio de una sesión de uso
-
-### 3.1 Iniciar el backend local
-
-En PowerShell:
-
-```powershell
-cd C:\Users\marti\Desktop\Suwa\backend
-npm run dev
-```
-
-El resultado esperado incluye:
-
-```text
-Conectado a MongoDB
-SUWA backend escuchando en todas las interfaces de red en el puerto 3000
-```
-
-Para comprobar el backend desde el computador:
-
-```powershell
-Invoke-RestMethod http://localhost:3000/
-```
-
-La respuesta esperada es:
-
-```json
-{"status":"ok","service":"suwa-backend"}
-```
-
-### 3.2 Iniciar la aplicación
-
-```powershell
-cd C:\Users\marti\Desktop\Suwa\app
-npx expo start
-```
-
-La aplicación puede abrirse con Expo Go o con la instalación de Android
-disponible para el proyecto. Si se cambió la configuración del entorno:
-
-```powershell
-npx expo start --clear
-```
-
-### 3.3 Comprobar la placa
-
-En el monitor serial del Arduino IDE, usar **9600 baudios**. La placa debe
-mostrar:
-
-```text
-Host del backend en uso: <IP_DEL_COMPUTADOR>
-Conectado. IP: <IP_DE_LA_PLACA>
-```
-
-Después deben aparecer lecturas aproximadamente cada cinco segundos:
-
-```text
---- Lectura actual ---
-Temperatura: ...
-Humedad ambiente: ...
-Humedad suelo (%): ...
-```
+1. Abrir la aplicación SUWA.
+2. Esperar a que aparezca la pantalla principal.
+3. Si se muestra **Kit no conectado**, solicitar al responsable que revise la
+   conexión del kit antes de continuar.
 
 ## 4. Registro e inicio de sesión
 
@@ -125,15 +54,34 @@ sesión localmente mientras el token siga siendo válido.
 ## 5. Agregar una planta
 
 1. Entrar a **Escanear**.
-2. Tomar una fotografía o escoger una imagen de la galería.
-3. Esperar el resultado de identificación.
-4. Revisar la candidata propuesta.
-5. Confirmar la planta o utilizar el nombre manual cuando sea necesario.
-6. Revisar los parámetros sugeridos.
-7. Guardar la planta.
+2. Elegir una de estas opciones:
+   - **Escanear ahora** para identificarla con la cámara.
+   - Escribir un nombre común, científico o regional y pulsar **Usar este
+     nombre**.
+3. Si se ingresó un nombre manualmente, esperar la normalización y revisar las
+   candidatas mostradas.
+4. Seleccionar la especie correcta. Para nombres ambiguos, como **helecho**, no
+   se selecciona una especie automáticamente.
+5. Si se usó la cámara, revisar las candidatas propuestas y seleccionar la
+   correcta.
+6. Esperar los parámetros sugeridos de cuidado.
+7. Revisar y guardar la planta.
 
-La imagen se sube al backend y queda almacenada para que pueda aparecer al
-iniciar sesión desde otro dispositivo.
+El ingreso manual acepta nombres científicos, nombres comunes, nombres
+coloquiales o regionales y errores menores de escritura. Por ejemplo:
+
+- **lengua de suegra** puede proponer *Dracaena trifasciata*.
+- **potus** puede proponer *Epipremnum aureum*.
+- **sábila** puede proponer *Aloe vera*.
+- **cinta** puede proponer *Chlorophytum comosum*.
+- **monstera** puede proponer *Monstera deliciosa*.
+
+La aplicación no debe inventar una especie si el nombre no se reconoce o si el
+servicio de normalización no está disponible. En ese caso muestra un mensaje
+de error y permite volver al ingreso manual o utilizar el escaneo por cámara.
+
+La imagen queda guardada en la cuenta para que pueda aparecer al iniciar sesión
+desde otro dispositivo.
 
 También es posible cambiar posteriormente la foto desde el detalle de la
 planta.
@@ -168,9 +116,7 @@ corresponde aproximadamente a un depósito lleno (100%). Es una estimación y
 debe recalibrarse si cambia la posición del sensor, el recipiente o el nivel
 máximo permitido.
 
-La aplicación consulta la lectura más reciente disponible. En una demostración
-local puede consultar el backend remoto y el backend local, y seleccionar la
-lectura con el timestamp más reciente.
+La aplicación muestra la lectura más reciente disponible.
 
 ## 8. Configurar el riego por planta
 
@@ -195,11 +141,8 @@ segundos por pulso, 20 segundos de absorción, 3 pulsos y 90 segundos máximos.
 3. Si la humedad está por encima del umbral, confirmar que se desea regar.
 4. Esperar el mensaje de confirmación.
 
-La aplicación envía el comando al backend local. La placa consulta los
-comandos pendientes cada pocos segundos, activa la bomba durante la duración
-indicada y registra el evento al terminar.
-
-No se debe desconectar el backend local mientras la orden esté pendiente.
+La aplicación envía la orden al sistema y el kit la ejecuta durante la
+duración indicada. Al terminar, la aplicación muestra el resultado disponible.
 
 ## 10. Programar el riego
 
@@ -208,9 +151,8 @@ No se debe desconectar el backend local mientras la orden esté pendiente.
 3. Seleccionar la hora.
 4. Pulsar **Guardar**.
 
-La programación se ejecuta diariamente. El backend revisa las programaciones
-vencidas aproximadamente cada cinco segundos y deja un comando pendiente para
-que la placa lo recoja.
+La programación se ejecuta diariamente mientras el kit y el sistema de control
+estén disponibles.
 
 Para cancelar:
 
@@ -218,7 +160,7 @@ Para cancelar:
 2. Pulsar la programación o la acción de cancelar.
 3. Confirmar la cancelación.
 
-## 10. Alertas
+## 11. Alertas
 
 La campana de **Monitoreo** abre el centro de alertas. Desde allí se puede:
 
@@ -230,7 +172,7 @@ Las preferencias de **Notificaciones** controlan las categorías visibles en la
 aplicación. Actualmente son preferencias locales de visualización; no son
 notificaciones push del sistema operativo.
 
-## 11. Historial
+## 12. Historial
 
 En **Historial** se consultan:
 
@@ -238,10 +180,10 @@ En **Historial** se consultan:
 - Gráficas por periodo.
 - Registros de riego manual y automático.
 
-Si no existen registros, se muestra el estado vacío. Si el backend no responde,
-se muestra un error con la opción **Reintentar**.
+Si no existen registros, se muestra el estado vacío. Si no se puede actualizar
+la información, se muestra un aviso con la opción **Reintentar**.
 
-## 12. Perfil y configuración
+## 13. Perfil y configuración
 
 Desde **Perfil** se puede:
 
@@ -256,10 +198,27 @@ Desde **Perfil** se puede:
 El botón de contacto abre el cliente de correo del dispositivo con un mensaje
 preparado para `soporte@suwa.app`.
 
-## 13. Cierre de la demostración
+## 14. Capturas de pantalla
+
+El manual final debe incluir capturas de la interfaz, con una breve explicación
+debajo de cada imagen. Se recomienda incluir, como mínimo:
+
+1. Pantalla de inicio de sesión.
+2. Pantalla principal de monitoreo.
+3. Pantalla **Mis plantas**.
+4. Resultado del escaneo o ingreso manual de una planta.
+5. Configuración de umbrales y riego.
+6. Confirmación de un riego manual.
+7. Historial.
+8. Centro de alertas.
+9. Perfil y preferencias.
+
+Las capturas deben tomarse durante una ejecución real de la aplicación y no
+deben mostrar contraseñas, claves, tokens ni información personal innecesaria.
+
+## 15. Cierre de la demostración
 
 1. Cancelar cualquier programación que no deba quedar activa.
 2. Apagar la bomba o retirar el suministro de agua si corresponde.
-3. Detener la aplicación Expo.
-4. Detener el backend con `Ctrl+C`.
-5. Desconectar la placa si no se va a utilizar.
+3. Cerrar SUWA.
+4. Desconectar la placa si no se va a utilizar.
