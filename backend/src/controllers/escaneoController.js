@@ -1,6 +1,7 @@
 const {
   identificarConGemini,
   identificarConPlantNet,
+  normalizarNombreConGemini,
   obtenerParametrosConGemini,
   PARAMETROS_PROVISIONALES,
 } = require('../services/escaneoService');
@@ -98,4 +99,31 @@ async function obtenerParametros(req, res) {
   }
 }
 
-module.exports = { escanearPlanta, obtenerParametros };
+async function normalizarNombre(req, res) {
+  try {
+    const { nombre } = req.body;
+    if (!nombre || typeof nombre !== 'string' || !nombre.trim()) {
+      return res.status(400).json({ error: 'nombre es requerido' });
+    }
+
+    const candidatas = await normalizarNombreConGemini(nombre.trim());
+    if (candidatas.length === 0) {
+      return res.status(422).json({
+        rechazado: true,
+        codigo: 'NOMBRE_NO_RECONOCIDO',
+        error: 'No se reconoció una planta con ese nombre. Revisa la escritura o intenta con otro nombre.',
+      });
+    }
+
+    return res.json({ candidatas, fuente: 'gemini' });
+  } catch (error) {
+    console.error('Error normalizando nombre manual:', error.message);
+    return res.status(502).json({
+      rechazado: true,
+      codigo: 'NORMALIZACION_NO_DISPONIBLE',
+      error: 'No se pudo validar el nombre de la planta. Intenta de nuevo o usa el escaneo por cámara.',
+    });
+  }
+}
+
+module.exports = { escanearPlanta, obtenerParametros, normalizarNombre };

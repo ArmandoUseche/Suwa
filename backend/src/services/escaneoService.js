@@ -146,9 +146,62 @@ async function identificarConGemini(fotoBuffer, mimeType = 'image/jpeg') {
     }));
 }
 
+async function normalizarNombreConGemini(nombre) {
+  const model = genAI.getGenerativeModel({ model: GEMINI_MODELO });
+  const prompt = `
+    Normaliza el nombre de planta "${nombre}".
+    Acepta nombres científicos, comunes, coloquiales, regionales y errores menores de escritura.
+    Devuelve únicamente un objeto JSON válido, sin bloques de código ni texto adicional:
+    {
+      "candidatas": [
+        {
+          "nombreComun": "nombre común",
+          "nombreCientifico": "nombre científico",
+          "coincidencia": número entero entre 0 y 100
+        }
+      ]
+    }
+    Devuelve hasta 5 candidatas, ordenadas por coincidencia.
+    Si el nombre es ambiguo, devuelve varias especies posibles; no elijas arbitrariamente una sola.
+    Si no reconoces una planta, devuelve {"candidatas": []}.
+  `;
+
+  const result = await model.generateContent(prompt);
+  const texto = result.response.text().trim().replace(/```json|```/g, '').trim();
+  const respuesta = JSON.parse(texto);
+
+  if (!respuesta || !Array.isArray(respuesta.candidatas)) {
+    throw new Error('Gemini devolvió una respuesta de normalización inválida');
+  }
+
+  return respuesta.candidatas.slice(0, 5).map((candidata) => {
+    const nombreComun = typeof candidata?.nombreComun === 'string'
+      ? candidata.nombreComun.trim()
+      : '';
+    const nombreCientifico = typeof candidata?.nombreCientifico === 'string'
+      ? candidata.nombreCientifico.trim()
+      : '';
+    const coincidencia = candidata?.coincidencia;
+
+    if (
+      !nombreComun
+      || !nombreCientifico
+      || !Number.isFinite(coincidencia)
+      || !Number.isInteger(coincidencia)
+      || coincidencia < 0
+      || coincidencia > 100
+    ) {
+      throw new Error('Gemini devolvió una candidata de normalización inválida');
+    }
+
+    return { nombreComun, nombreCientifico, coincidencia };
+  });
+}
+
 module.exports = {
   identificarConPlantNet,
   identificarConGemini,
+  normalizarNombreConGemini,
   obtenerParametrosConGemini,
   PARAMETROS_PROVISIONALES,
 };

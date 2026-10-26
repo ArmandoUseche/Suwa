@@ -9,13 +9,17 @@ import { icons, illustrations } from '../constants/images';
 import { useAppState } from '../context/AppStateContext';
 import { colors, radius, spacing, typography } from '../constants/theme';
 import { moderateScale } from '../utils/responsive';
-import { escanearPlantaAPI, obtenerParametrosPlantaAPI } from '../services/api';
+import {
+  escanearPlantaAPI,
+  normalizarNombrePlantaAPI,
+  obtenerParametrosPlantaAPI,
+} from '../services/api';
 
 export default function ResultadoEscaneoScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
   const { fotoUri, manualNombre } = route.params ?? {};
   const { agregarPlanta } = useAppState();
-  const [etapa, setEtapa] = useState(manualNombre ? 'confirmando' : 'identificando');
+  const [etapa, setEtapa] = useState(manualNombre ? 'normalizando' : 'identificando');
   const [identificacion, setIdentificacion] = useState(null);
   const [parametros, setParametros] = useState(null);
   const [candidatas, setCandidatas] = useState([]);
@@ -26,16 +30,24 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
 
   useEffect(() => {
     if (manualNombre) {
-      setIdentificacion({
-        nombreComun: manualNombre,
-        nombreCientifico: manualNombre,
-        coincidencia: null,
-      });
-      confirmarPlanta({
-        nombreComun: manualNombre,
-        nombreCientifico: manualNombre,
-        coincidencia: null,
-      });
+      setEtapa('normalizando');
+      normalizarNombrePlantaAPI(manualNombre)
+        .then((res) => {
+          const nuevasCandidatas = res.data?.candidatas;
+          if (!Array.isArray(nuevasCandidatas) || nuevasCandidatas.length === 0) {
+            throw new Error('No se reconoció una planta con ese nombre.');
+          }
+          setCandidatas(nuevasCandidatas);
+          setFuenteIdentificacion(res.data.fuente);
+          setEtapa('confirmando');
+        })
+        .catch((error) => {
+          setMensajeRechazo(
+            error.response?.data?.error
+            || 'No se pudo validar el nombre. Intenta de nuevo o usa el escaneo por cámara.'
+          );
+          setEtapa('rechazado');
+        });
       return undefined;
     }
     if (!fotoUri) return undefined;
@@ -115,11 +127,13 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
         )}
 
         {/* Estado: cargando */}
-        {(etapa === 'identificando' || etapa === 'calculando') && (
+        {(etapa === 'normalizando' || etapa === 'identificando' || etapa === 'calculando') && (
           <View style={styles.loadingBlock}>
             <ActivityIndicator size="large" color={colors.primary} />
             <Text style={styles.loadingText}>
-              {etapa === 'identificando'
+              {etapa === 'normalizando'
+                ? 'Validando el nombre de tu planta...'
+                : etapa === 'identificando'
                 ? 'Identificando tu planta...'
                 : 'Calculando los parámetros de riego...'}
             </Text>
@@ -130,7 +144,7 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
           <View style={styles.candidatesBlock}>
             <Text style={styles.candidatesTitle}>
               {manualNombre
-                ? 'Confirmando planta'
+                ? 'Selecciona la planta correcta'
                 : fuenteIdentificacion === 'gemini'
                   ? 'PlantNet no encontró una coincidencia clara. Gemini propone:'
                   : 'Selecciona la planta correcta'}
@@ -138,7 +152,7 @@ export default function ResultadoEscaneoScreen({ route, navigation }) {
             {advertenciaIdentificacion ? (
               <Text style={styles.advertencia}>{advertenciaIdentificacion}</Text>
             ) : null}
-            {!manualNombre && candidatas.map((candidata) => (
+            {candidatas.map((candidata) => (
               <SecondaryButton
                 key={candidata.nombreCientifico}
                 label={`${candidata.nombreComun} (${candidata.coincidencia}%)`}

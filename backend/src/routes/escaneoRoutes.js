@@ -18,6 +18,7 @@ const upload = multer({
 
 // Multer va ANTES que authMiddleware para que procese el multipart correctamente
 router.post('/parametros', authMiddleware, escaneoController.obtenerParametros);
+router.post('/nombre', authMiddleware, escaneoController.normalizarNombre);
 router.post('/', upload.single('foto'), authMiddleware, escaneoController.escanearPlanta);
 
 module.exports = router;

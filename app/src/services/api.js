@@ -310,6 +310,9 @@ export const nuevaContrasenaAPI = (correoOTelefono, codigo, contrasenaNueva) =>
   api.post('/api/auth/nueva-contrasena', { correoOTelefono, codigo, contrasenaNueva });
 
 // ── ESCANEO ──
+export const normalizarNombrePlantaAPI = (nombre) =>
+  api.post('/api/escaneo/nombre', { nombre });
+
 export const escanearPlantaAPI = async (fotoUri) => {
   const formData = new FormData();
   formData.append('foto', {
