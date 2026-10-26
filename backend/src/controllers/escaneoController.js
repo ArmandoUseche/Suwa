@@ -22,13 +22,16 @@ async function escanearPlanta(req, res) {
       console.warn('PlantNet no disponible, se usará Gemini:', error.message);
     }
 
-    if (
-      candidatasPlantNet.length > 0
-      && candidatasPlantNet[0].coincidencia >= COINCIDENCIA_MINIMA_PLANTNET
-    ) {
+    if (candidatasPlantNet.length > 0) {
+      const confianzaBaja = candidatasPlantNet[0].coincidencia < COINCIDENCIA_MINIMA_PLANTNET;
       return res.json({
         candidatas: candidatasPlantNet,
         fuente: 'plantnet',
+        ...(confianzaBaja
+          ? {
+            advertencia: 'La coincidencia visual es baja. Revisa todas las candidatas antes de confirmar la especie.',
+          }
+          : {}),
       });
     }
 
