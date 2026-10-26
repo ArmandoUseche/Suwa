@@ -358,6 +358,14 @@ const char* PAGINA_CONFIGURACION =
 void iniciarModoConfiguracion() {
   Serial.println("=== Entrando en modo de configuración de WiFi ===");
 
+  // La configuración puede quedar bloqueada esperando al usuario. La bomba
+  // debe quedar apagada si se perdió la conexión mientras regaba.
+  digitalWrite(PIN_BOMBA, HIGH);
+  riegoAutomaticoActivo = false;
+  riegoAutomaticoEnPausa = false;
+  pulsosAplicadosRiego = 0;
+  aguaAplicadaRiegoMs = 0;
+
   WiFi.beginAP("SUWA-Config");
   delay(1000);
 
@@ -528,6 +536,20 @@ void asegurarConexionWiFi() {
   if (WiFi.status() == WL_CONNECTED) {
     return;
   }
+
+  // Nunca mantener la bomba encendida mientras una reconexión o el portal
+  // de configuración pueden bloquear el loop.
+  if (riegoAutomaticoActivo || riegoAutomaticoEnPausa) {
+    digitalWrite(PIN_BOMBA, HIGH);
+    riegoAutomaticoActivo = false;
+    riegoAutomaticoEnPausa = false;
+    pulsosAplicadosRiego = 0;
+    aguaAplicadaRiegoMs = 0;
+    Serial.println("Riego automático detenido por pérdida de conexión WiFi.");
+  } else {
+    digitalWrite(PIN_BOMBA, HIGH);
+  }
+
   reportarError("WIFI", "desconectado, reintentando con red guardada");
   if (!conectarConCredencialesGuardadas()) {
     reportarError("WIFI", "no se pudo reconectar, entrando a modo configuración");
